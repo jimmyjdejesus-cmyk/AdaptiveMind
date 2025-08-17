@@ -1,45 +1,46 @@
 import streamlit as st
-import yaml
-import streamlit_authenticator as stauth
-from yaml.loader import SafeLoader
+from agent.core import JanusAgent
+import agent.tools as tools
+import agent.human_in_loop as human_in_loop
+import os
 
-from database import init_db
-from ui.auth import render_auth_screen
-from ui.sidebar import render_sidebar
-from ui.chat import render_chat_interface
-from ui.file_browser import render_file_browser
-from ui.token_tracker import render_token_tracker
+st.set_page_config(page_title="Janus Agentic AI", layout="wide")
+st.title("Janus Agentic AI")
 
-init_db()
+# Agent Persona
+persona_prompt = st.text_area("Agent Persona Prompt", value="You are an expert assistant working with the user.")
 
-try:
-    with open('config.yaml') as file:
-        config = yaml.load(file, Loader=SafeLoader)
-except FileNotFoundError:
-    st.error("`config.yaml` not found. Please create it and restart the app.")
-    st.stop()
+# File Upload
+uploaded_files = st.file_uploader("Upload any files (images, docs, code, audio, etc.)", accept_multiple_files=True)
+if uploaded_files:
+    os.makedirs("uploads", exist_ok=True)
+    for f in uploaded_files:
+        with open(os.path.join("uploads", f.name), "wb") as out_f:
+            out_f.write(f.getbuffer())
 
-authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookies']['cookie_name'],
-    config['cookies']['key'],
-    config['cookies']['cookie_expiry_days']
-)
+# Chat History
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-if not st.session_state.get("authentication_status"):
-    render_auth_screen(authenticator)
-else:
-    with st.sidebar:
-        render_sidebar(config, authenticator)
-        # Place file browser as a small expander in the sidebar
-        render_file_browser(start_path=".", max_items=10)
-    tabs = st.tabs(["💬 Chat", "🧮 Performance Log"])
-    with tabs[0]:
-        render_chat_interface()
-    with tabs[1]:
-        render_token_tracker(
-            token_count=st.session_state.get("token_count", 0),
-            performance_score=st.session_state.get("performance_score", 1.0),
-            last_latency=st.session_state.get("last_latency", None),
-            hardware_info=st.session_state.get("hardware_info", None),
-        )
+st.markdown("## Chat")
+for msg in st.session_state.chat_history:
+    st.chat_message(msg["role"]).write(msg["content"])
+
+user_msg = st.chat_input(
+    "Type your request here (e.g. 'Summarize my PDF', 'Generate an image of a rocket', 'Browse to google.com')")
+if user_msg:
+    st.session_state.chat_history.append({"role": "user", "content": user_msg})
+
+    agent = JanusAgent(persona_prompt, tools, human_in_loop.approval_callback)
+    plan = agent.parse_natural_language(user_msg, uploaded_files)
+
+    st.markdown("### Agent Plan")
+    for i, step in enumerate(plan):
+        st.write(f"{i + 1}. Tool: `{step['tool']}` Args: `{step['args']}`")
+
+    # Execute plan with approval for each step
+    results = agent.execute_plan(plan)
+    for result in results:
+        st.session_state.chat_history.append({"role": "assistant", "content": str(result['result'])})
+        if result['step']['tool'] == "image_generation" and result['result'] is not None:
+            st.image(result['result'], caption="Generated Image")
