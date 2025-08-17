@@ -128,27 +128,19 @@ class JarvisAgent:
         
         # Existing logic for other commands
         elif any(w in msg_lower for w in ["what", "how", "why", "explain", "summarize", "analyze", "reason", "context", "rag"]):
-            if available_files:
-                plan.append({
-                    "tool": "llm_rag",
-                    "args": {
-                        "prompt": user_msg,
-                        "files": available_files,
-                        "chat_history": chat_history or [],
-                        "user": self.user,
-                        "rag_endpoint": self.rag_endpoint
-                    }
-                })
-            else:
-                plan.append({
-                    "tool": "llm_task",
-                    "args": {
-                        "prompt": user_msg,
-                        "chat_history": chat_history or [],
-                        "user": self.user,
-                        "llm_endpoint": self.llm_endpoint
-                    }
-                })
+            # Let user choose between file context or DuckDuckGo search
+            mode = "file" if available_files else "search"
+            plan.append({
+                "tool": "llm_rag",
+                "args": {
+                    "prompt": user_msg,
+                    "files": available_files,
+                    "chat_history": chat_history or [],
+                    "user": self.user,
+                    "rag_endpoint": self.rag_endpoint,
+                    "mode": mode
+                }
+            })
         elif any(w in msg_lower for w in ["show files", "list files", "what files", "display files"]):
             plan.append({"tool": "file_list", "args": {"files": available_files}})
         elif any(w in msg_lower for w in ["open file", "ingest file", "read file", "extract file"]):
@@ -164,12 +156,8 @@ class JarvisAgent:
             if files_to_ingest:
                 plan.append({"tool": "file_ingest", "args": {"files": files_to_ingest}})
         elif "browse" in msg_lower or "go to" in msg_lower or "scrape" in msg_lower or "update file" in msg_lower or "automate" in msg_lower:
-            import re
-            match = re.search(r"(https?://[^\s]+)", user_msg)
-            actions = []
-            if match:
-                actions.append({"type": "goto", "url": match.group(1)})
-            plan.append({"tool": "browser_automation", "args": {"actions": actions}})
+            # Pass the natural language command for browser automation
+            plan.append({"tool": "browser_automation", "args": {"actions": user_msg}})
         elif "image" in msg_lower or "picture" in msg_lower or "generate" in msg_lower:
             plan.append({"tool": "image_generation", "args": {"prompt": user_msg}})
         else:

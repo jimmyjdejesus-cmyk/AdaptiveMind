@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 
 def rag_answer(prompt: str, files: List[str], expert_model: str = None, 
                chat_history: List[Dict] = None, user: str = None, 
-               endpoint: str = None) -> str:
+               endpoint: str = None, mode: str = "file") -> str:
     """
     Generate an answer using RAG with provided files as context.
     
@@ -24,29 +24,58 @@ def rag_answer(prompt: str, files: List[str], expert_model: str = None,
     Returns:
         Generated response with context from files
     """
-    if not files:
-        return "No files provided for context."
-    
-    # Read and prepare context from files
     context = []
-    for file_path in files:
-        try:
-            if os.path.exists(file_path):
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    context.append(f"File: {os.path.basename(file_path)}\n{content[:2000]}...")  # Limit content size
-        except Exception as e:
-            context.append(f"Error reading {file_path}: {str(e)}")
-    
+    if mode == "file":
+        if not files:
+            return "No files provided for context."
+        # Read and prepare context from files
+        for file_path in files:
+            try:
+                if os.path.exists(file_path):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        context.append(f"File: {os.path.basename(file_path)}\n{content[:2000]}...")  # Limit content size
+            except Exception as e:
+                context.append(f"Error reading {file_path}: {str(e)}")
+        context_header = "Context from uploaded files:"
+    elif mode == "search":
+        # Use DuckDuckGo search for context
+        search_results = duckduckgo_search(prompt)
+        context.append(search_results)
+        context_header = "Context from DuckDuckGo search:"
+    else:
+        return "Unsupported RAG mode."
+
     # Combine context with prompt
     contextual_prompt = f"""
-Context from uploaded files:
+{context_header}
 {chr(10).join(context)}
 
 User Question: {prompt}
 
 Please answer the user's question using the provided context. If the context doesn't contain relevant information, mention this in your response.
 """
+def duckduckgo_search(query: str, max_results: int = 5) -> str:
+    """
+    Perform a DuckDuckGo search and return summarized results.
+    """
+    try:
+        url = f"https://duckduckgo.com/html/?q={query}"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.ok:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(resp.text, "html.parser")
+            results = []
+            for a in soup.select('.result__a')[:max_results]:
+                title = a.get_text()
+                href = a.get('href')
+                results.append(f"{title}: {href}")
+            return "\n".join(results) if results else "No results found."
+        else:
+            return f"DuckDuckGo error: {resp.status_code}"
+    except Exception as e:
+        return f"DuckDuckGo search failed: {e}"
     
     # Make API call to RAG endpoint
     if endpoint:

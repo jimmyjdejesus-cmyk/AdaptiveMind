@@ -32,7 +32,8 @@ def run_tool(step, expert_model=None, draft_model=None, user=None):
         files = step['args'].get("files", [])
         chat_history = step['args'].get("chat_history", [])
         endpoint = step['args'].get("rag_endpoint")
-        return rag_handler.rag_answer(prompt, files, expert_model, chat_history, user, endpoint)
+        mode = step['args'].get("mode", "file")
+        return rag_handler.rag_answer(prompt, files, expert_model, chat_history, user, endpoint, mode)
     elif step['tool'] == "git_command":
         command = step['args'].get("command", "")
         repository_path = step['args'].get("repository_path")
