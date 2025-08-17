@@ -2,7 +2,12 @@ import streamlit as st
 from database import save_message, load_session_history
 
 def render_chat_interface():
-    selected_project = st.session_state.get("selected_project", "default")
+    from database import get_user_preferences, get_user_settings, load_session_history
+    user = st.session_state.get("username", "default")
+    # Restore preferences/settings from DB
+    prefs = get_user_preferences(user)
+    settings = get_user_settings(user)
+    selected_project = prefs.get("selected_project", "default")
     st.title(f"Janus AI | Project: {selected_project}")
 
     session_id = st.session_state.get('session_id')
@@ -25,18 +30,19 @@ def render_chat_interface():
         user_message = {"role": "user", "content": prompt}
         st.session_state.chat_history.append(user_message)
         if not st.session_state.get("ghost_mode", False):
+            from database import save_message
             save_message(session_id, "user", prompt)
         with st.chat_message("user"):
             st.markdown(prompt)
 
         # Get active JarVS persona prompt (custom or default)
-        jarvs_prompt = st.session_state.get("active_jarvs_prompt", "")
+        jarvs_prompt = prefs.get("active_jarvs_prompt", "")
         # AI response
         from ollama_client import stream_generation
         from rag_handler import get_augmented_prompt
-        enable_rag = st.session_state.get("enable_rag", True)
-        selected_expert_model = st.session_state.get("selected_expert_model")
-        selected_draft_model = st.session_state.get("selected_draft_model")
+        enable_rag = prefs.get("enable_rag", True)
+        selected_expert_model = prefs.get("selected_expert_model")
+        selected_draft_model = prefs.get("selected_draft_model")
 
         # RAG augmentation if enabled
         interim_prompt, sources = (prompt, [])
@@ -54,7 +60,7 @@ def render_chat_interface():
                 for part in stream_generation(selected_expert_model, final_prompt_with_persona, selected_draft_model):
                     if "response" in part:
                         full_response += part["response"]
-                        response_placeholder.markdown(full_response + "▌")
+                        response_placeholder.markdown(full_response + "\u258c")
                     elif "error" in part:
                         full_response = f"Error from Ollama: {part['error']}"
                         break
@@ -65,5 +71,6 @@ def render_chat_interface():
         assistant_message = {"role": "assistant", "content": full_response, "sources": sources if enable_rag else []}
         st.session_state.chat_history.append(assistant_message)
         if not st.session_state.get("ghost_mode", False):
+            from database import save_message
             save_message(session_id, "assistant", full_response, sources)
         st.experimental_rerun()
