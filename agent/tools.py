@@ -69,22 +69,47 @@ def run_tool(step, expert_model=None, draft_model=None, user=None):
         return None
 
 def llm_api_call(prompt, expert_model, draft_model, chat_history, user, endpoint):
-    # Real API call
-    payload = {
-        "prompt": prompt,
-        "expert_model": expert_model,
-        "draft_model": draft_model,
-        "chat_history": chat_history,
-        "user": user
-    }
-    try:
-        res = requests.post(endpoint, json=payload, timeout=20)
-        if res.ok:
-            return res.json().get("response", "LLM response not found.")
-        else:
-            return f"LLM API error: {res.status_code} {res.text}"
-    except Exception as e:
-        return f"LLM API request failed: {e}"
+    # If endpoint is Ollama, use /api/generate and correct payload
+    if "11434" in endpoint:
+        # Use expert_model as the model name
+        model = expert_model or "llama2"
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False
+        }
+        try:
+            res = requests.post(f"http://localhost:11434/api/generate", json=payload, timeout=60)
+            if res.ok:
+                data = res.json()
+                # Ollama returns 'response' for some models, 'output' for others
+                response = data.get("response")
+                if response is None:
+                    response = data.get("output")
+                if response is None:
+                    # Show the full JSON if no recognized field
+                    response = str(data)
+                return response
+            else:
+                return f"LLM API error: {res.status_code} {res.text}"
+        except Exception as e:
+            return f"LLM API request failed: {e}"
+    else:
+        payload = {
+            "prompt": prompt,
+            "expert_model": expert_model,
+            "draft_model": draft_model,
+            "chat_history": chat_history,
+            "user": user
+        }
+        try:
+            res = requests.post(endpoint, json=payload, timeout=20)
+            if res.ok:
+                return res.json().get("response", "LLM response not found.")
+            else:
+                return f"LLM API error: {res.status_code} {res.text}"
+        except Exception as e:
+            return f"LLM API request failed: {e}"
 
 def llm_summarize_source(source_text, endpoint):
     payload = {

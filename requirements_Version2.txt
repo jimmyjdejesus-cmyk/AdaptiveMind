@@ -1,3 +1,13 @@
+# Recommended Ollama base models to pull:
+# ollama pull qwen3:4b
+# ollama pull qwen3:6b
+# ollama pull gemma:1b
+streamlit
+cryptography
+bcrypt
+pytesseract
+playwright
+requests
 streamlit>=1.30.0
 requests>=2.31.0
 duckduckgo-search>=4.0.0

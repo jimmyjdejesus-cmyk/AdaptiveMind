@@ -1,3 +1,5 @@
+ # ...existing code...
+
 import streamlit as st
 import os
 import json
@@ -7,6 +9,16 @@ from ui.sidebar import sidebar
 import agent.tools as tools
 import agent.human_in_loop as human_in_loop
 import database
+
+# Initialize session state after imports
+if "user" not in st.session_state:
+    st.session_state["user"] = None
+if "user_data" not in st.session_state:
+    st.session_state["user_data"] = {}
+if "is_admin" not in st.session_state:
+    st.session_state["is_admin"] = False
+if "user_role" not in st.session_state:
+    st.session_state["user_role"] = "user"
 
 # Initialize database
 database.init_db()
@@ -482,8 +494,8 @@ if IS_ADMIN:
 
 # --- Endpoint Configuration ---
 st.sidebar.markdown("## Endpoints")
-llm_endpoint = st.sidebar.text_input("LLM API Endpoint", value=st.session_state.get("llm_endpoint", "http://localhost:8000/llm"))
-rag_endpoint = st.sidebar.text_input("RAG API Endpoint", value=st.session_state.get("rag_endpoint", "http://localhost:8000/rag"))
+llm_endpoint = st.sidebar.text_input("LLM API Endpoint", value=st.session_state.get("llm_endpoint", "http://localhost:11434"))
+rag_endpoint = st.sidebar.text_input("RAG API Endpoint", value=st.session_state.get("rag_endpoint", "http://localhost:11434"))
 st.session_state.llm_endpoint = llm_endpoint
 st.session_state.rag_endpoint = rag_endpoint
 save_user_prefs()

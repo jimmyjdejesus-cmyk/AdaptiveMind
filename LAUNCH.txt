@@ -1,0 +1,17 @@
+# Launch instructions for Jarvis_AI
+
+1. Start Ollama server (in the same environment as the app):
+   ollama serve &
+
+2. Pull recommended base models:
+   ollama pull qwen3:4b
+   ollama pull qwen3:6b
+   ollama pull gemma:1b
+
+3. Launch the Streamlit app:
+   streamlit run app.py
+
+4. Access the app in your browser:
+   http://localhost:8502
+
+If you see 'Error fetching models', make sure Ollama is running and accessible at localhost:11434.

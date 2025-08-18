@@ -27,6 +27,13 @@ def sidebar(user, save_user_prefs):
         st.session_state.current_session = prefs.get("current_session", "Default")
         st.session_state.chat_sessions = prefs.get("chat_sessions", {"Default": []})
         st.session_state.chat_contexts = prefs.get("chat_contexts", {"Default": "New Chat"})
+        # --- Model Loading Status ---
+        model_list = get_available_models()
+        if not model_list:
+            st.warning("🟡 Model loading... Please wait or check Ollama server.")
+        else:
+            st.success("🟢 Model ready!")
+        # ...existing code...
         folder_names = list(st.session_state.folders.keys())
         selected_folder = st.selectbox("📂 Select Folder", folder_names, index=folder_names.index(st.session_state.current_folder), help="Choose or organize folders/projects")
         if selected_folder != st.session_state.current_folder:
