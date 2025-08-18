@@ -1,6 +1,16 @@
-# Jarvis AI: Enhanced Modular Agentic AI Assistant
+# Jarvis AI - Privacy-First Modular AI Development Assistant
 
-Jarvis AI is a privacy-first, modular AI assistant that integrates with your development workflow. It provides advanced capabilities for code analysis, repository management, note-taking, and IDE integration while maintaining complete local control.
+A comprehensive, locally-hosted AI assistant designed for developers. Features advanced code analysis, Git integration, IDE connectivity, and extensible plugin architecture. Supports local LLMs via Ollama with RAG capabilities, GitHub API integration, and automated workflows - all while maintaining complete privacy and control.
+
+**Key Features:**
+🔧 **Development Workflow**: Git operations, JetBrains IDE integration, automated code review  
+🤖 **Local AI**: Ollama support (Llama 3, Mixtral, CodeLlama) with streaming responses  
+🔍 **Code Intelligence**: Semantic search, quality analysis, security scanning  
+🔗 **Integrations**: GitHub API, Notion/OneNote, web automation  
+🧩 **Extensible**: Plugin architecture with workflow chaining  
+🛡️ **Privacy-First**: Completely local operation, no external data sharing  
+
+Perfect for developers who want AI assistance without compromising privacy or control.
 
 ---
 
