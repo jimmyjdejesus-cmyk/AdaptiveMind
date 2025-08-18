@@ -319,7 +319,6 @@ def show_admin_panel():
         with col1:
             if st.button("🔄 Refresh Model List"):
                 # Clear cache to force refresh
-                import ollama_client
                 ollama_client._model_cache = None
                 st.rerun()
         
