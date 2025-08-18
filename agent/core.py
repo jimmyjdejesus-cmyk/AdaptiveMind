@@ -12,8 +12,46 @@ class JarvisAgent:
         self.user = user
         self.llm_endpoint = llm_endpoint
         self.rag_endpoint = rag_endpoint
+        
+        # Initialize plugin system
+        try:
+            from agent.tools import initialize_plugin_system
+            self.plugin_system_enabled = initialize_plugin_system()
+        except Exception as e:
+            print(f"Could not initialize plugin system: {e}")
+            self.plugin_system_enabled = False
 
     def parse_natural_language(self, user_msg, available_files, chat_history=None):
+        """Parse natural language into executable plans, supporting workflows."""
+        
+        # First, try to parse as a workflow if plugin system is enabled
+        if self.plugin_system_enabled:
+            try:
+                from agent.tools import parse_workflow_command
+                
+                context = {
+                    "files": available_files,
+                    "chat_history": chat_history,
+                    "user": self.user
+                }
+                
+                workflow = parse_workflow_command(user_msg, context)
+                if workflow:
+                    # Convert workflow to plan format for compatibility
+                    plan = []
+                    for step in workflow.steps:
+                        plan.append({
+                            "tool": step.action.name,
+                            "args": step.action.args,
+                            "description": step.action.description,
+                            "requires_approval": step.action.requires_approval,
+                            "workflow_step": True
+                        })
+                    return plan
+            except Exception as e:
+                print(f"Workflow parsing error: {e}")
+        
+        # Fallback to legacy parsing
         plan = []
         msg_lower = user_msg.lower()
         
