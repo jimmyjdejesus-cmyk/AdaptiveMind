@@ -3,12 +3,14 @@
 import streamlit as st
 import os
 import json
+import pandas as pd
 from agent.security import load_user_key, encrypt_json, decrypt_json, hash_password, verify_password, is_rate_limited, log_security_event, validate_password_strength
 from agent.core import JarvisAgent
 from ui.sidebar import sidebar
 import agent.tools as tools
 import agent.human_in_loop as human_in_loop
 import database
+from ui.analytics import render_analytics_dashboard
 
 # Initialize session state after imports
 if "user" not in st.session_state:
@@ -174,7 +176,7 @@ def show_admin_panel():
     """Admin panel for user management"""
     st.markdown("## 🔧 Admin Panel")
     
-    tabs = st.tabs(["👥 User Management", "⏳ Pending Users", "📊 Security Logs", "🤖 Model Management", "⚙️ System Settings"])
+    tabs = st.tabs(["👥 User Management", "⏳ Pending Users", "📊 Security Logs", "🤖 Model Management", "⚙️ System Settings", "📈 Analytics"])
     
     with tabs[0]:  # User Management
         st.markdown("### Active Users")
@@ -494,6 +496,10 @@ def show_admin_panel():
         
         if st.button("Update Rate Limiting"):
             st.success("Rate limiting settings updated")
+    
+    with tabs[5]:  # Analytics
+        st.markdown("### 📈 Analytics & Performance Monitor")
+        render_analytics_dashboard()
     
     if st.button("← Back to Main App"):
         st.session_state.show_admin_panel = False
