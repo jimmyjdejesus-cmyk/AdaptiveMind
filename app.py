@@ -422,7 +422,6 @@ def show_admin_panel():
                     ollama_client._model_cache = None
                     
                     # Auto-refresh after a short delay
-                    import time
                     time.sleep(2)
                     st.rerun()
                     
