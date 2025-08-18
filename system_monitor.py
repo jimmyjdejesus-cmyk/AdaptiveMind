@@ -18,17 +18,17 @@ def check_system_resources():
         
         # CPU usage
         cpu_color = "🔴" if cpu_percent > 80 else "🟡" if cpu_percent > 60 else "🟢"
-        st.metric("CPU Usage", f"{cpu_percent}%", delta=None)
+        st.metric(f"{cpu_color} CPU Usage", f"{cpu_percent}%", delta=None)
         
         # Memory usage
         mem_percent = memory.percent
         mem_color = "🔴" if mem_percent > 80 else "🟡" if mem_percent > 60 else "🟢"
-        st.metric("Memory Usage", f"{mem_percent}%", delta=None)
+        st.metric(f"{mem_color} Memory Usage", f"{mem_percent}%", delta=None)
         
         # Disk usage
         disk_percent = (disk.used / disk.total) * 100
         disk_color = "🔴" if disk_percent > 90 else "🟡" if disk_percent > 75 else "🟢"
-        st.metric("Disk Usage", f"{disk_percent:.1f}%", delta=None)
+        st.metric(f"{disk_color} Disk Usage", f"{disk_percent:.1f}%", delta=None)
         
         # Warning if resources are high
         if cpu_percent > 80 or mem_percent > 80:

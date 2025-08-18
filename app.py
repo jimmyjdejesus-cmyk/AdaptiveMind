@@ -12,6 +12,15 @@ import agent.human_in_loop as human_in_loop
 import database
 from ui.analytics import render_analytics_dashboard
 
+# Import system monitoring (with fallback if psutil not available)
+try:
+    from system_monitor import check_system_resources
+    SYSTEM_MONITOR_AVAILABLE = True
+except ImportError:
+    SYSTEM_MONITOR_AVAILABLE = False
+    def check_system_resources():
+        pass  # Fallback function that does nothing
+
 # Initialize session state after imports
 if "user" not in st.session_state:
     st.session_state["user"] = None
@@ -854,6 +863,10 @@ for key, value in prefs.items():
     st.session_state[key] = value
 
 sidebar(USER, save_user_prefs)
+
+# Add system resource monitoring to sidebar
+if SYSTEM_MONITOR_AVAILABLE:
+    check_system_resources()
 
 st.title(f"🤖 Jarvis AI Assistant")
 
