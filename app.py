@@ -320,7 +320,7 @@ def show_admin_panel():
             if st.button("🔄 Refresh Model List"):
                 # Clear cache to force refresh
                 import ollama_client
-                ollama_client._model_cache = None
+                ollama_client.clear_model_cache()
                 st.rerun()
         
         with col2:
@@ -373,7 +373,7 @@ def show_admin_panel():
                                         st.success(f"Removed {model}")
                                         # Clear cache and refresh
                                         import ollama_client
-                                        ollama_client._model_cache = None
+                                        ollama_client.clear_model_cache()
                                         st.rerun()
                                     else:
                                         st.error(f"Failed to remove: {result.stderr}")
@@ -421,7 +421,7 @@ def show_admin_panel():
                     
                     # Clear cache to show new model
                     import ollama_client
-                    ollama_client._model_cache = None
+                    ollama_client.clear_model_cache()
                     
                     # Auto-refresh after a short delay
                     import time

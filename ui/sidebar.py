@@ -36,7 +36,7 @@ def sidebar(user, save_user_prefs):
             if st.button("🔄 Retry Connection"):
                 # Clear cache to force refresh
                 import ollama_client
-                ollama_client._model_cache = None
+                ollama_client.clear_model_cache()
                 st.rerun()
         else:
             st.success(f"🟢 {len(model_list)} models available!")
@@ -44,7 +44,7 @@ def sidebar(user, save_user_prefs):
             # Model status indicator
             if st.button("🔄 Refresh Models"):
                 import ollama_client
-                ollama_client._model_cache = None
+                ollama_client.clear_model_cache()
                 st.rerun()
         # ...existing code...
         folder_names = list(st.session_state.folders.keys())

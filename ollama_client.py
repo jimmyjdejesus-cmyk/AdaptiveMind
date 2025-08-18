@@ -7,9 +7,18 @@ import sys
 OLLAMA_ENDPOINT = "http://localhost:11434"
 
 # Simple in-memory cache for available models
+
 _model_cache = None
 _model_cache_time = 0
 _MODEL_CACHE_TTL = 60  # seconds
+
+def clear_model_cache():
+    """
+    Clears the internal model cache and resets cache time.
+    """
+    global _model_cache, _model_cache_time
+    _model_cache = None
+    _model_cache_time = 0
 
 
 def get_available_models():
