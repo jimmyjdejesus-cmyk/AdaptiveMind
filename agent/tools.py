@@ -10,10 +10,116 @@ import agent.note_integration as note_integration
 import agent.repo_context as repo_context
 import requests
 
+# New plugin system imports
+try:
+    from agent.plugin_registry import plugin_manager
+    from agent.workflow_system import workflow_parser, workflow_executor
+    from agent.plugin_adapters import (
+        GitPlugin, IDEPlugin, CodeReviewPlugin, CodeSearchPlugin, BrowserAutomationPlugin
+    )
+    PLUGIN_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    print(f"Plugin system not available: {e}")
+    PLUGIN_SYSTEM_AVAILABLE = False
+
 def preview_tool_action(step):
+    """Preview what a tool action will do."""
+    # Try new plugin system first
+    if PLUGIN_SYSTEM_AVAILABLE:
+        try:
+            from agent.plugin_base import PluginAction
+            action = PluginAction(
+                name=step['tool'],
+                description=f"Execute {step['tool']}",
+                args=step['args']
+            )
+            preview = plugin_manager.preview_action(action)
+            if preview != f"Action: {action.name} with args: {action.args}":
+                return preview
+        except Exception:
+            pass
+    
+    # Fallback to legacy preview
     return f"Will run {step['tool']} with args {step['args']}"
 
+
+def initialize_plugin_system():
+    """Initialize the plugin system with existing tools."""
+    if not PLUGIN_SYSTEM_AVAILABLE:
+        return False
+    
+    try:
+        # Register plugin adapters for existing tools
+        plugin_manager.registry.register_plugin(GitPlugin())
+        plugin_manager.registry.register_plugin(IDEPlugin()) 
+        plugin_manager.registry.register_plugin(CodeReviewPlugin())
+        plugin_manager.registry.register_plugin(CodeSearchPlugin())
+        plugin_manager.registry.register_plugin(BrowserAutomationPlugin())
+        
+        print(f"Registered {len(plugin_manager.registry.list_plugins())} plugins")
+        
+        # Discover additional plugins (this would find any custom plugins)
+        discovered = plugin_manager.initialize()
+        print(f"Discovered {discovered} additional plugins")
+        
+        return True
+    except Exception as e:
+        print(f"Failed to initialize plugin system: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def parse_workflow_command(command: str, context: dict = None):
+    """Parse a command that might be a workflow."""
+    if not PLUGIN_SYSTEM_AVAILABLE:
+        return None
+    
+    try:
+        workflow = workflow_parser.parse_workflow(command, context)
+        return workflow
+    except Exception as e:
+        print(f"Workflow parsing failed: {e}")
+        return None
+
+
+def execute_workflow(workflow, approval_callback=None):
+    """Execute a workflow with optional approval."""
+    if not PLUGIN_SYSTEM_AVAILABLE:
+        return None
+    
+    try:
+        if approval_callback:
+            workflow_executor.approval_callback = approval_callback
+        
+        result = workflow_executor.execute_workflow(workflow)
+        return result
+    except Exception as e:
+        print(f"Workflow execution failed: {e}")
+        return None
+
 def run_tool(step, expert_model=None, draft_model=None, user=None):
+    """Run a tool action, trying plugin system first, then falling back to legacy."""
+    
+    # Try new plugin system first
+    if PLUGIN_SYSTEM_AVAILABLE:
+        try:
+            from agent.plugin_base import PluginAction
+            action = PluginAction(
+                name=step['tool'],
+                description=f"Execute {step['tool']}",
+                args=step['args']
+            )
+            
+            result = plugin_manager.execute_action(action)
+            if result.success:
+                return result.output
+            elif result.error != "No plugin found to execute action":
+                return f"Plugin error: {result.error}"
+        except Exception as e:
+            print(f"Plugin execution failed: {e}")
+    
+    # Fallback to legacy tool execution
     if step['tool'] == "file_ingest":
         return [file_ingest.ingest_file(f) for f in step['args'].get("files", [])]
     elif step['tool'] == "file_list":
