@@ -8,6 +8,10 @@ import agent.github_integration as github_integration
 import agent.jetbrains_integration as jetbrains_integration
 import agent.note_integration as note_integration
 import agent.repo_context as repo_context
+import agent.test_generator as test_generator
+import agent.doc_generator as doc_generator
+import agent.dependency_manager as dependency_manager
+import agent.persona_manager as persona_manager
 import requests
 
 def preview_tool_action(step):
@@ -65,6 +69,18 @@ def run_tool(step, expert_model=None, draft_model=None, user=None):
     elif step['tool'] == "repo_context":
         repository_path = step['args'].get("repository_path")
         return repo_context.get_repository_context(repository_path)
+    elif step['tool'] == "test_generator":
+        action = step['args'].get("action", "generate")
+        return test_generator.test_generator_handler(action, **step['args'])
+    elif step['tool'] == "doc_generator":
+        action = step['args'].get("action", "generate")
+        return doc_generator.documentation_handler(action, **step['args'])
+    elif step['tool'] == "dependency_manager":
+        action = step['args'].get("action", "analyze")
+        return dependency_manager.dependency_handler(action, **step['args'])
+    elif step['tool'] == "persona_manager":
+        action = step['args'].get("action", "list")
+        return persona_manager.persona_handler(action, **step['args'])
     else:
         return None
 
