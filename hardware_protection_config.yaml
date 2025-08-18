@@ -1,0 +1,40 @@
+# Hardware Protection Configuration
+# Add these settings to your config.yaml
+
+hardware_protection:
+  # Memory limits
+  max_memory_usage: 80  # Percentage
+  max_cpu_usage: 85     # Percentage
+  
+  # Model constraints
+  max_model_size: "8GB"  # Maximum model size to download
+  concurrent_requests: 1  # Limit concurrent LLM requests
+  
+  # File processing limits
+  max_file_size: "100MB"  # Maximum upload file size
+  max_files_batch: 10     # Maximum files processed at once
+  
+  # Timeout settings
+  llm_timeout: 120        # Seconds for LLM responses
+  download_timeout: 300   # Seconds for model downloads
+  
+  # Emergency stops
+  enable_resource_monitoring: true
+  auto_stop_on_high_usage: true
+  
+# Recommended models by hardware tier
+hardware_tiers:
+  low_end:
+    - "gemma:2b"
+    - "phi3:mini"
+    max_context: 2048
+    
+  mid_range:
+    - "llama3.2:3b"
+    - "mistral:7b"
+    max_context: 4096
+    
+  high_end:
+    - "llama3.1:8b"
+    - "mixtral:8x7b"
+    max_context: 8192
