@@ -174,7 +174,7 @@ def show_admin_panel():
     """Admin panel for user management"""
     st.markdown("## 🔧 Admin Panel")
     
-    tabs = st.tabs(["👥 User Management", "⏳ Pending Users", "📊 Security Logs", "⚙️ System Settings"])
+    tabs = st.tabs(["👥 User Management", "⏳ Pending Users", "📊 Security Logs", "🤖 Model Management", "⚙️ System Settings"])
     
     with tabs[0]:  # User Management
         st.markdown("### Active Users")
@@ -282,7 +282,151 @@ def show_admin_panel():
         else:
             st.info("No security logs found")
     
-    with tabs[3]:  # System Settings
+    with tabs[3]:  # Model Management
+        st.markdown("### 🤖 Model Management")
+        
+        # Import ollama client functions
+        from ollama_client import get_model_details, pull_model_subprocess, delete_model, update_endpoint
+        from agent.security import log_security_event
+        
+        # Endpoint Configuration (Admin Only)
+        st.markdown("#### Endpoint Configuration")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            current_llm_endpoint = st.session_state.get("llm_endpoint", "http://localhost:11434")
+            new_llm_endpoint = st.text_input(
+                "LLM API Endpoint", 
+                value=current_llm_endpoint,
+                help="Ollama API endpoint for LLM operations"
+            )
+            
+        with col2:
+            current_rag_endpoint = st.session_state.get("rag_endpoint", "http://localhost:11434")
+            new_rag_endpoint = st.text_input(
+                "RAG API Endpoint", 
+                value=current_rag_endpoint,
+                help="Ollama API endpoint for RAG operations"
+            )
+        
+        if st.button("Update Endpoints"):
+            st.session_state.llm_endpoint = new_llm_endpoint
+            st.session_state.rag_endpoint = new_rag_endpoint
+            # Update the global endpoint in ollama_client
+            update_endpoint(new_llm_endpoint)
+            log_security_event("ENDPOINT_UPDATED", username=USER, details=f"LLM: {new_llm_endpoint}, RAG: {new_rag_endpoint}")
+            st.success("Endpoints updated successfully!")
+            st.rerun()
+        
+        st.divider()
+        
+        # Available Models
+        st.markdown("#### Available Models")
+        
+        # Refresh models button
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            if st.button("🔄 Refresh Models"):
+                st.rerun()
+        
+        # Get model details
+        models = get_model_details()
+        
+        if models:
+            for model in models:
+                model_name = model.get('name', 'Unknown')
+                model_size = model.get('size', 0)
+                modified_at = model.get('modified_at', 'Unknown')
+                
+                # Format size in human readable format
+                if model_size > 0:
+                    size_gb = model_size / (1024**3)
+                    size_str = f"{size_gb:.1f} GB"
+                else:
+                    size_str = "Unknown size"
+                
+                col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+                
+                with col1:
+                    st.write(f"**{model_name}**")
+                    st.write(f"📊 {size_str}")
+                
+                with col2:
+                    st.write(f"📅 Modified")
+                    st.write(f"{modified_at[:10] if len(str(modified_at)) > 10 else modified_at}")
+                
+                with col3:
+                    # Update/Pull button
+                    if st.button("🔄 Update", key=f"update_{model_name}"):
+                        st.session_state[f"updating_{model_name}"] = True
+                        st.rerun()
+                
+                with col4:
+                    # Delete button
+                    if st.button("🗑️ Delete", key=f"delete_{model_name}"):
+                        if delete_model(model_name):
+                            log_security_event("MODEL_DELETED", username=USER, details=f"Deleted model: {model_name}")
+                            st.success(f"Deleted {model_name}")
+                            st.rerun()
+                        else:
+                            st.error(f"Failed to delete {model_name}")
+                
+                # Show update progress if updating
+                if st.session_state.get(f"updating_{model_name}", False):
+                    with st.expander(f"Updating {model_name}", expanded=True):
+                        progress_placeholder = st.empty()
+                        log_placeholder = st.empty()
+                        
+                        log_lines = []
+                        for line in pull_model_subprocess(model_name):
+                            log_lines.append(line)
+                            log_placeholder.text("\\n".join(log_lines[-10:]))  # Show last 10 lines
+                            
+                        st.session_state[f"updating_{model_name}"] = False
+                        log_security_event("MODEL_UPDATED", username=USER, details=f"Updated model: {model_name}")
+                        st.success(f"Successfully updated {model_name}")
+                        st.rerun()
+                
+                st.divider()
+        else:
+            st.info("No models found. Make sure Ollama is running and accessible.")
+        
+        st.divider()
+        
+        # Pull New Model
+        st.markdown("#### Pull New Model")
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            new_model_name = st.text_input(
+                "Model Name", 
+                placeholder="e.g., llama2:7b, qwen3:4b, gemma:1b",
+                help="Enter the name of the model to pull from Ollama registry"
+            )
+        
+        with col2:
+            if st.button("📥 Pull Model", disabled=not new_model_name):
+                st.session_state["pulling_model"] = new_model_name
+                st.rerun()
+        
+        # Show pull progress
+        if st.session_state.get("pulling_model"):
+            model_name = st.session_state["pulling_model"]
+            with st.expander(f"Pulling {model_name}", expanded=True):
+                progress_placeholder = st.empty()
+                log_placeholder = st.empty()
+                
+                log_lines = []
+                for line in pull_model_subprocess(model_name):
+                    log_lines.append(line)
+                    log_placeholder.text("\\n".join(log_lines[-10:]))  # Show last 10 lines
+                    
+                st.session_state["pulling_model"] = None
+                log_security_event("MODEL_PULLED", username=USER, details=f"Pulled new model: {model_name}")
+                st.success(f"Successfully pulled {model_name}")
+                st.rerun()
+    
+    with tabs[4]:  # System Settings
         st.markdown("### System Settings")
         st.info("System configuration options would be implemented here")
         
@@ -505,17 +649,25 @@ if IS_ADMIN:
     st.markdown("**You are logged in as Admin.**")
 
 
-# --- Endpoint Configuration ---
-st.sidebar.markdown("## Endpoints")
-llm_endpoint = st.sidebar.text_input(
-    "LLM API Endpoint",
-    value=st.session_state.get("llm_endpoint", "http://localhost:11434")
-)
-rag_endpoint = st.sidebar.text_input(
-    "RAG API Endpoint",
-    value=st.session_state.get("rag_endpoint", "http://localhost:11434")
-)
-st.session_state.llm_endpoint = llm_endpoint
+# --- Endpoint Configuration (Admin Only) ---
+if IS_ADMIN:
+    st.sidebar.markdown("## Endpoints")
+    llm_endpoint = st.sidebar.text_input(
+        "LLM API Endpoint",
+        value=st.session_state.get("llm_endpoint", "http://localhost:11434")
+    )
+    rag_endpoint = st.sidebar.text_input(
+        "RAG API Endpoint",
+        value=st.session_state.get("rag_endpoint", "http://localhost:11434")
+    )
+    st.session_state.llm_endpoint = llm_endpoint
+    st.session_state.rag_endpoint = rag_endpoint
+else:
+    # For non-admin users, use stored endpoints or defaults
+    if "llm_endpoint" not in st.session_state:
+        st.session_state.llm_endpoint = "http://localhost:11434"
+    if "rag_endpoint" not in st.session_state:
+        st.session_state.rag_endpoint = "http://localhost:11434"
 
 # --- RAG Enable Checkbox ---
 # User can now control RAG features via checkbox instead of always-on behavior
