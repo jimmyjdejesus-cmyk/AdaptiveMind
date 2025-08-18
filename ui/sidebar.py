@@ -43,7 +43,6 @@ def sidebar(user, save_user_prefs):
             
             # Model status indicator
             if st.button("🔄 Refresh Models"):
-                import ollama_client
                 ollama_client._model_cache = None
                 st.rerun()
         # ...existing code...
