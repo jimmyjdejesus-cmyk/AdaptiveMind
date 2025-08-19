@@ -14,6 +14,7 @@ from datetime import datetime
 try:
     # Try to import LangGraphUI components if available
     from langgraph.graph import Graph
+    from langgraph_ui import LangGraphUI  # Replace with actual UI component if different
     LANGGRAPH_UI_AVAILABLE = True
 except ImportError:
     LANGGRAPH_UI_AVAILABLE = False
