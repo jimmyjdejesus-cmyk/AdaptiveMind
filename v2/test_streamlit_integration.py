@@ -6,8 +6,9 @@ Test script to verify Lang family integration works in the Streamlit app.
 import os
 import sys
 
-# Add the project root to the path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the legacy directory to the path so internal imports work correctly
+legacy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'legacy')
+sys.path.insert(0, legacy_path)
 
 def test_streamlit_imports():
     """Test that all imports work in the Streamlit context."""
