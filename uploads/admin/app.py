@@ -19,7 +19,6 @@ import database.database as database
 from ui.analytics import render_analytics_dashboard
 from tools.code_intelligence.ui import render_code_intelligence_interface
 from scripts.ollama_client import get_available_models, pull_model_subprocess
-import time
 
 # Import system monitoring (with fallback if psutil not available)
 try:
@@ -480,6 +479,7 @@ def show_admin_panel():
                     for model in available_models:
                         try:
                             import requests
+                            import time
                             
                             # Simple test prompt
                             start_time = time.time()
@@ -1162,9 +1162,6 @@ if user_msg:
 
     # Use RAG mode 'auto' for web-augmented context if enabled
     rag_mode = "auto" if st.session_state.get("enable_rag", False) else "file"
-
-    # Get DuckDuckGo fallback preference from session/user_prefs
-    duckduckgo_fallback = st.session_state.get("duckduckgo_fallback", True)
     
     # CRITICAL: Ensure expert_model is always set for Ollama to prevent API 404 errors
     # This is the final safeguard against empty model names that cause "model '' not found" errors
@@ -1192,8 +1189,7 @@ if user_msg:
         draft_model=st.session_state.get("selected_draft_model") if st.session_state.get("enable_speculative_decoding", False) else None,
         user=st.session_state.user,
         llm_endpoint=llm_endpoint,
-        rag_endpoint=rag_endpoint,
-        duckduckgo_fallback=duckduckgo_fallback
+        rag_endpoint=rag_endpoint
     )
     
     # Show processing indicator

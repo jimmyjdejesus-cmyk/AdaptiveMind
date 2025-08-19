@@ -45,8 +45,14 @@ Why use Jarvis AI?
 - **Persistent Chat:** Modern UI with session-long history
 - **Model Selection:** Choose any locally available model (Llama 3, Mixtral, etc.)
 - **Real-time Web Search (RAG):** Toggle to augment answers with up-to-date web info
-- **Streaming Responses:** Watch the AI type answers live, token by token
-- **Source Citations:** See the sources used for web-augmented replies
+- **DuckDuckGo Fallback:** In the sidebar, enable "Use DuckDuckGo as fallback for web search" to allow the assistant to use DuckDuckGo when your main RAG endpoint returns no results or is unavailable. This ensures you always get a web answer if your local/external RAG can't help.
+
+### How RAG Fallback Works
+- If enabled, the assistant will first use your configured RAG endpoint (local vector DB, LangChain, or external API).
+- If no results are found, or the endpoint is unavailable, it will automatically query DuckDuckGo and use those results for context.
+- You can disable this fallback in the sidebar settings if you want only local/external results.
+
+**Tip:** For best results, keep DuckDuckGo fallback enabled unless you need strict local-only answers.
 
 ---
 
