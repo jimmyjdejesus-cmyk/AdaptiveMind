@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 
 def rag_answer(prompt: str, files: List[str], expert_model: str = None, 
                chat_history: List[Dict] = None, user: str = None, 
-               endpoint: str = None, mode: str = "file") -> str:
+               endpoint: str = None, mode: str = "file", duckduckgo_fallback: bool = True) -> str:
     """
     Generate an answer using RAG with provided files as context.
     
@@ -39,9 +39,13 @@ def rag_answer(prompt: str, files: List[str], expert_model: str = None,
                 context.append(f"Error reading {file_path}: {str(e)}")
         context_header = "Context from uploaded files:"
     elif mode == "search":
-        search_results = duckduckgo_search(prompt)
-        context.append(search_results)
-        context_header = "Context from DuckDuckGo search:"
+        if duckduckgo_fallback:
+            search_results = duckduckgo_search(prompt)
+            context.append(search_results)
+            context_header = "Context from DuckDuckGo search:"
+        else:
+            context.append("Web search fallback is disabled by user preference.")
+            context_header = "No web search context: fallback disabled."
     elif mode == "auto":
         # Try file context first
         if files:
@@ -54,7 +58,7 @@ def rag_answer(prompt: str, files: List[str], expert_model: str = None,
                 except Exception as e:
                     context.append(f"Error reading {file_path}: {str(e)}")
             context_header = "Context from uploaded files:"
-        else:
+        elif duckduckgo_fallback:
             # Try DuckDuckGo search
             search_results = duckduckgo_search(prompt)
             if search_results and "No results found." not in search_results:
@@ -72,6 +76,9 @@ def rag_answer(prompt: str, files: List[str], expert_model: str = None,
                 context.append(f"Browser Automation Result: {browser_result}")
                 context.append(f"Human Reasoning: {human_reasoning}")
                 context_header = "Context from browser automation and human-in-loop:"
+        else:
+            context.append("Web search fallback is disabled by user preference.")
+            context_header = "No web search context: fallback disabled."
     else:
         return "Unsupported RAG mode."
 

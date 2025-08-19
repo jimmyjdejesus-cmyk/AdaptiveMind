@@ -134,6 +134,17 @@ def sidebar(user, save_user_prefs):
             user_prefs["rag_endpoint"] = selected_rag
             save_user_preference(user, "rag_endpoint", selected_rag)
 
+        # DuckDuckGo fallback toggle
+        fallback_default = user_prefs.get("duckduckgo_fallback", True)
+        duckduckgo_fallback = st.checkbox(
+            "Use DuckDuckGo as fallback for web search",
+            value=fallback_default,
+            help="If enabled, will use DuckDuckGo when main RAG returns no results."
+        )
+        if user_prefs.get("duckduckgo_fallback") != duckduckgo_fallback:
+            user_prefs["duckduckgo_fallback"] = duckduckgo_fallback
+            save_user_preference(user, "duckduckgo_fallback", duckduckgo_fallback)
+
         # Reasoning display preference
         reasoning_display_options = ["Expandable", "Inline", "Hidden"]
         
@@ -157,6 +168,18 @@ def sidebar(user, save_user_prefs):
             user_prefs["reasoning_display"] = selected_reasoning_display
             save_user_preference(user, "reasoning_display", selected_reasoning_display)
             
+        # LangChain API Key input
+        langchain_api_key = user_prefs.get("langchain_api_key", "")
+        new_langchain_api_key = st.text_input(
+            "LangChain API Key",
+            value=langchain_api_key,
+            type="password",
+            help="Paste your LangChain API key here."
+        )
+        if new_langchain_api_key != langchain_api_key:
+            user_prefs["langchain_api_key"] = new_langchain_api_key
+            save_user_preference(user, "langchain_api_key", new_langchain_api_key)
+
         # Personal data backup/restore for all users
         st.markdown("---")
         st.markdown("## 💾 Data Management")

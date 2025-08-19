@@ -3,7 +3,7 @@ import agent.tools as tools
 ACTION_TOOLS = {"file_update", "browser_automation", "automation_task", "git_command", "github_api", "ide_command"}
 
 class JarvisAgent:
-    def __init__(self, persona_prompt, tool_registry, approval_callback, expert_model=None, draft_model=None, user=None, llm_endpoint=None, rag_endpoint=None):
+    def __init__(self, persona_prompt, tool_registry, approval_callback, expert_model=None, draft_model=None, user=None, llm_endpoint=None, rag_endpoint=None, duckduckgo_fallback=True):
         self.persona_prompt = persona_prompt
         self.tools = tool_registry
         self.approval_callback = approval_callback
@@ -12,6 +12,7 @@ class JarvisAgent:
         self.user = user
         self.llm_endpoint = llm_endpoint
         self.rag_endpoint = rag_endpoint
+        self.duckduckgo_fallback = duckduckgo_fallback
         
         # Initialize plugin system
         try:
@@ -272,7 +273,8 @@ class JarvisAgent:
                     "chat_history": chat_history or [],
                     "user": self.user,
                     "rag_endpoint": self.rag_endpoint,
-                    "mode": mode
+                    "mode": mode,
+                    "duckduckgo_fallback": self.duckduckgo_fallback
                 }
             })
         elif any(w in msg_lower for w in ["show files", "list files", "what files", "display files"]):
