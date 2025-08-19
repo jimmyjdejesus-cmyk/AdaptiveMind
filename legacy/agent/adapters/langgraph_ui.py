@@ -48,6 +48,10 @@ class WorkflowVisualizer:
         if workflow_result:
             self.add_execution(workflow_result)
         
+        # === NEW: User Experience Enhancements - Interactive Explanation Visualization ===
+        self._render_personalized_workflow_view(workflow_result)
+        # === END: User Experience Enhancements ===
+        
         if not self.execution_history:
             st.info("No workflow executions to display")
             return
@@ -247,6 +251,183 @@ class WorkflowVisualizer:
                 st.warning(f"Success rate: {success_rate:.1%}")
             else:
                 st.error(f"Success rate: {success_rate:.1%}")
+
+
+    # === NEW: User Experience Enhancements - Personalized Workflow Visualization ===
+    def _render_personalized_workflow_view(self, workflow_result: Dict[str, Any] = None):
+        """Render personalized workflow view with explanations and user context."""
+        
+        # Get user preferences for personalized display
+        from database import get_user_preferences
+        user_id = st.session_state.get('user', 'anonymous')
+        user_prefs = get_user_preferences(user_id)
+        
+        # Personalized workflow display based on user preferences
+        st.markdown("### 🎯 Personalized Workflow View")
+        
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            # Main workflow visualization
+            if workflow_result:
+                # Show explanations if enabled
+                if user_prefs.get("show_code_explanations", True):
+                    self._render_workflow_explanations(workflow_result, user_prefs)
+                
+                # Show workflow steps with rationale if enabled
+                if user_prefs.get("show_completion_rationale", True):
+                    self._render_workflow_rationale(workflow_result, user_prefs)
+        
+        with col2:
+            # User context panel
+            self._render_user_context_panel(user_prefs, workflow_result)
+    
+    def _render_workflow_explanations(self, workflow_result: Dict[str, Any], user_prefs: Dict[str, Any]):
+        """Render workflow step explanations based on user preferences."""
+        
+        explanations = workflow_result.get("explanation_requests", [])
+        if not explanations:
+            return
+        
+        with st.expander("💡 Workflow Explanations", expanded=True):
+            style = user_prefs.get("communication_style", "Professional")
+            
+            st.markdown(f"**Explanation Style:** {style}")
+            
+            for i, explanation in enumerate(explanations):
+                step = explanation.get("step", f"Step {i+1}")
+                content = explanation.get("explanation", "No explanation available")
+                timestamp = explanation.get("timestamp", "")
+                
+                with st.container():
+                    st.markdown(f"**{step.replace('_', ' ').title()}**")
+                    st.markdown(content)
+                    if timestamp:
+                        st.caption(f"Generated at: {timestamp}")
+                    st.markdown("---")
+    
+    def _render_workflow_rationale(self, workflow_result: Dict[str, Any], user_prefs: Dict[str, Any]):
+        """Render workflow decision rationale."""
+        
+        with st.expander("🧠 Decision Rationale", expanded=False):
+            
+            # Show personalization context if available
+            personalization_context = workflow_result.get("personalization_context", {})
+            if personalization_context:
+                st.markdown("**Personalization Applied:**")
+                
+                recent_prefs = personalization_context.get("recent_preferences", [])
+                if recent_prefs:
+                    st.markdown(f"- Based on {len(recent_prefs)} recent interactions")
+                
+                patterns = personalization_context.get("user_patterns", {})
+                if patterns:
+                    st.markdown(f"- User patterns analyzed: {len(patterns)} categories")
+                
+                adaptations = personalization_context.get("adaptations", {})
+                if adaptations:
+                    st.markdown(f"- Learning adaptations applied: {len(adaptations)} areas")
+            
+            # Show workflow decision points
+            current_step = workflow_result.get("current_step", "unknown")
+            iteration_count = workflow_result.get("iteration_count", 1)
+            
+            st.markdown("**Workflow Decisions:**")
+            st.markdown(f"- Current step: {current_step.replace('_', ' ').title()}")
+            st.markdown(f"- Iteration: {iteration_count}")
+            
+            # Show learning feedback if available
+            learning_feedback = workflow_result.get("learning_feedback")
+            if learning_feedback:
+                st.markdown("**Learning Feedback:**")
+                st.json(learning_feedback)
+    
+    def _render_user_context_panel(self, user_prefs: Dict[str, Any], workflow_result: Dict[str, Any] = None):
+        """Render user context and personalization panel."""
+        
+        st.markdown("#### 👤 Your Profile")
+        
+        # Show user preferences
+        learning_rate = user_prefs.get("learning_rate", "Moderate")
+        domain = user_prefs.get("domain_specialization", "General")
+        style = user_prefs.get("communication_style", "Professional")
+        
+        st.markdown(f"**Learning Rate:** {learning_rate}")
+        st.markdown(f"**Domain Focus:** {domain}")
+        st.markdown(f"**Communication Style:** {style}")
+        
+        # Show knowledge sources if enabled
+        if user_prefs.get("show_knowledge_sources", True):
+            st.markdown("#### 📚 Active Knowledge Sources")
+            st.markdown("- Your interaction history")
+            st.markdown(f"- {domain} domain knowledge")
+            st.markdown("- LangGraph workflow patterns")
+            
+            if workflow_result:
+                sources = workflow_result.get("sources", [])
+                for source in sources:
+                    st.markdown(f"- {source}")
+        
+        # Show learning status
+        if workflow_result:
+            interaction_history = workflow_result.get("interaction_history", [])
+            if interaction_history:
+                st.markdown("#### 📈 Learning Status")
+                st.markdown(f"Recent interactions: {len(interaction_history)}")
+                
+                # Show learning trend
+                positive_interactions = sum(1 for interaction in interaction_history[-10:] 
+                                         if interaction.get('feedback', False))
+                total_recent = min(len(interaction_history), 10)
+                
+                if total_recent > 0:
+                    satisfaction_rate = (positive_interactions / total_recent) * 100
+                    st.progress(satisfaction_rate / 100)
+                    st.caption(f"Satisfaction rate: {satisfaction_rate:.1f}%")
+        
+        # Interactive feedback section
+        st.markdown("#### 💬 Quick Feedback")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("👍 Helpful", key="feedback_positive"):
+                self._record_quick_feedback(True, workflow_result)
+                st.success("Thanks for the feedback!")
+        
+        with col2:
+            if st.button("👎 Not Helpful", key="feedback_negative"):
+                self._record_quick_feedback(False, workflow_result)
+                st.info("Feedback recorded. I'll improve!")
+    
+    def _record_quick_feedback(self, positive: bool, workflow_result: Dict[str, Any] = None):
+        """Record quick user feedback for learning."""
+        try:
+            from agent.adapters.personalization_memory import get_user_personalization_memory
+            from database import get_user_preferences
+            
+            user_id = st.session_state.get('user', 'anonymous')
+            user_prefs = get_user_preferences(user_id)
+            user_memory = get_user_personalization_memory(user_id)
+            
+            context = {
+                "workflow_step": workflow_result.get("current_step", "workflow_display") if workflow_result else "ui_interaction",
+                "domain": user_prefs.get("domain_specialization", "General"),
+                "pattern": "quick_feedback",
+                "description": "User provided quick feedback on workflow visualization"
+            }
+            
+            user_memory.record_interaction(
+                interaction_type="ui_feedback",
+                context=context,
+                feedback=positive,
+                learning_rate=user_prefs.get("learning_rate", "Moderate")
+            )
+            
+        except Exception as e:
+            # Don't fail UI if feedback recording fails
+            pass
+    
+    # === END: User Experience Enhancements ===
 
 
 # Global visualizer instance
