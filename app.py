@@ -956,7 +956,8 @@ if len(st.session_state.chat_sessions.get(st.session_state.current_session, []))
 if LANG_UI_AVAILABLE:
     info_col1, info_col2, info_col3, info_col4, info_col5, info_col6, info_col7 = st.columns([3, 1, 1, 1, 1, 1, 1])
 else:
-    info_col1, info_col2, info_col3, info_col4, info_col5, info_col6 = st.columns([3, 1, 1, 1, 1, 1])
+# Always create 7 columns for consistent layout
+info_col1, info_col2, info_col3, info_col4, info_col5, info_col6, info_col7 = st.columns([3, 1, 1, 1, 1, 1, 1])
 
 with info_col1:
     st.markdown(f"**👋 {USER_DATA.get('name', st.session_state.user)}** • *{USER_ROLE}*")
