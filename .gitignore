@@ -1,0 +1,32 @@
+# Database files
+*.db
+janus_database.db
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Temporary files
+*.py.new
+fixed_section.py
+*.bak
+*.tmp
+
+# Environment settings
+.env
+.venv
+env/
+venv/
+ENV/
+.env.*
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+logs/
