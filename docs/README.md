@@ -1,16 +1,24 @@
 # Jarvis AI - Privacy-First Modular AI Development Assistant
 
-A comprehensive, locally-hosted AI assistant designed for developers. Features advanced code analysis, Git integration, IDE connectivity, and extensible plugin architecture. Supports local LLMs via Ollama with RAG capabilities, GitHub API integration, and automated workflows - all while maintaining complete privacy and control.
+About
+-----
 
-**Key Features:**
-🔧 **Development Workflow**: Git operations, JetBrains IDE integration, automated code review  
-🤖 **Local AI**: Ollama support (Llama 3, Mixtral, CodeLlama) with streaming responses  
-🔍 **Code Intelligence**: Semantic search, quality analysis, security scanning  
-🔗 **Integrations**: GitHub API, Notion/OneNote, web automation  
-🧩 **Extensible**: Plugin architecture with workflow chaining  
-🛡️ **Privacy-First**: Completely local operation, no external data sharing  
+Jarvis AI is a local-first, modular development assistant that helps engineers automate repetitive tasks, analyze code, manage repositories, and integrate with IDEs and external services — while keeping all source code and data under your control.
 
-Perfect for developers who want AI assistance without compromising privacy or control.
+Core goals:
+- Local-first model hosting (Ollama) to avoid sending code upstream
+- A pluginable architecture so teams can extend capabilities safely
+- Git and IDE integration to speed up common developer workflows
+
+Quick snapshot
+--------------
+
+Key capabilities: Git operations, semantic code search, automated code review, IDE open-in commands, RAG-enabled responses using local models, and integrations with GitHub, Notion, and OneNote.
+
+Why use Jarvis AI?
+- Keeps sensitive source code on-premise or on your machine
+- Makes common developer tasks faster (search, refactor suggestions, PR prep)
+- Extensible adapters let you add proprietary integrations securely
 
 ---
 
@@ -45,7 +53,7 @@ Perfect for developers who want AI assistance without compromising privacy or co
 ## 🛠 Requirements
 
 - **Python 3.10+**
-- **Ollama** (must be installed and running locally)
+- **Ollama** (must be installed and running locally for model hosting)
 - **Git** (for repository operations)
 - **JetBrains IDEs** (optional, for IDE integration)
 
@@ -69,15 +77,15 @@ Perfect for developers who want AI assistance without compromising privacy or co
 
 3. **Install and start Ollama**
 
-   - [Ollama installation guide](https://ollama.com/download)
-   - Start Ollama:
-     ```bash
-     ollama serve
-     ```
-   - Pull at least one model (e.g., Llama 3):
-     ```bash
-     ollama pull llama3
-     ```
+- [Ollama installation guide](https://ollama.com/download)
+- Start Ollama locally:
+   ```powershell
+   ollama serve
+   ```
+- Pull at least one model (e.g., Llama 3):
+   ```powershell
+   ollama pull llama3
+   ```
 
 4. **Set up integrations (optional)**
 
