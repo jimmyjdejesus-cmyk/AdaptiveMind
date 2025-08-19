@@ -92,7 +92,17 @@ app = FastAPI(
 # CORS middleware for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+# Read allowed origins from environment variable, fallback to ["*"] with warning
+allowed_origins_env = os.getenv("CORS_ALLOW_ORIGINS")
+if allowed_origins_env:
+    allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+else:
+    allowed_origins = ["*"]
+    print("WARNING: CORS_ALLOW_ORIGINS environment variable not set. Using wildcard '*' for CORS allow_origins. This is insecure for production!")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
