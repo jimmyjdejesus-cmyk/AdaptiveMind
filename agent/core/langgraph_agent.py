@@ -403,7 +403,7 @@ class JarvisLangGraphAgent:
             "current_step": "starting",
             "errors": [],
             "tools_available": bool(self.tools),
-            "ollama_available": True,  # Would check actual Ollama status
+            "ollama_available": check_ollama_status(),
         }
         
         try:
