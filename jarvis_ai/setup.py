@@ -22,7 +22,6 @@ def main():
         print("Running basic setup...")
         basic_setup()
     except Exception as e:
-        print(f"❌ Setup failed: {e}")
     setup_enhanced_path = legacy_dir / "setup_enhanced.py"
     if setup_enhanced_path.exists():
         try:
