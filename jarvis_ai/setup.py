@@ -23,7 +23,23 @@ def main():
         basic_setup()
     except Exception as e:
         print(f"❌ Setup failed: {e}")
-        sys.exit(1)
+    setup_enhanced_path = legacy_dir / "setup_enhanced.py"
+    if setup_enhanced_path.exists():
+        try:
+            # Import and run the existing enhanced setup
+            from setup_enhanced import main as enhanced_main
+            enhanced_main()
+        except ImportError as e:
+            print(f"❌ Could not import enhanced setup: {e}")
+            print("Running basic setup...")
+            basic_setup()
+        except Exception as e:
+            print(f"❌ Setup failed: {e}")
+            sys.exit(1)
+    else:
+        print(f"❌ setup_enhanced.py not found in {legacy_dir}")
+        print("Running basic setup...")
+        basic_setup()
 
 def basic_setup():
     """Basic setup fallback if enhanced setup isn't available."""
