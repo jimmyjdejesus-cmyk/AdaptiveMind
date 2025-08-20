@@ -62,7 +62,6 @@ def render_settings_manager():
         render_lang_ecosystem_settings(config)
     
     with tab5:
-        render_advanced_settings(config)
     # Configuration-driven tab creation
     tab_configs = [
         {"name": "🔧 General", "render_func": render_general_settings},
