@@ -166,41 +166,98 @@ class DataProcessor:
                     if completions and not any('error' in comp for comp in completions):
                         st.success(f"Generated {len(completions)} completion(s)")
                         
-                        # Display completions
+                        # Display completions with enhanced explainability features
                         for i, completion in enumerate(completions, 1):
                             with st.expander(f"Completion {i} (Confidence: {completion.get('confidence', 0):.2f})"):
                                 st.code(completion['suggestion'], language=Path(file_path).suffix[1:])
+                                
+                                # === NEW: User Experience Enhancements - Explainability Features ===
+                                # Get user preferences for explainability
+                                from database import get_user_preferences
+                                user_prefs = get_user_preferences(st.session_state.get('user', 'anonymous'))
+                                
+                                # Show completion rationale if enabled
+                                if user_prefs.get("show_completion_rationale", True):
+                                    with st.expander("🧠 Completion Rationale", expanded=False):
+                                        rationale = completion.get('rationale', 'This completion was generated based on code context and patterns.')
+                                        st.markdown(f"**Reasoning:** {rationale}")
+                                        
+                                        # Add context analysis
+                                        context_info = completion.get('context_analysis', {})
+                                        if context_info:
+                                            st.markdown("**Context Analysis:**")
+                                            for key, value in context_info.items():
+                                                st.markdown(f"- **{key.replace('_', ' ').title()}:** {value}")
+
+                                # Show code explanations if enabled
+                                if user_prefs.get("show_code_explanations", True):
+                                    with st.expander("💡 Code Explanation", expanded=False):
+                                        explanation = completion.get('explanation', 'This code suggests a completion based on the current context.')
+                                        st.markdown(explanation)
+                                        
+                                        # Show pattern recognition
+                                        patterns = completion.get('patterns_detected', [])
+                                        if patterns:
+                                            st.markdown("**Patterns Detected:**")
+                                            for pattern in patterns:
+                                                st.markdown(f"- {pattern}")
+
+                                # Show knowledge sources if enabled
+                                if user_prefs.get("show_knowledge_sources", True):
+                                    with st.expander("📚 Knowledge Sources", expanded=False):
+                                        sources = completion.get('sources', ['Local code analysis', 'Language model knowledge'])
+                                        st.markdown("**Information Sources:**")
+                                        for source in sources:
+                                            st.markdown(f"- {source}")
+                                        
+                                        # Show confidence factors
+                                        confidence_factors = completion.get('confidence_factors', {})
+                                        if confidence_factors:
+                                            st.markdown("**Confidence Factors:**")
+                                            for factor, score in confidence_factors.items():
+                                                st.markdown(f"- **{factor.replace('_', ' ').title()}:** {score}")
+                                # === END: Explainability Features ===
                                 
                                 col1, col2, col3 = st.columns(3)
                                 
                                 with col1:
                                     if st.button(f"✅ Accept", key=f"accept_{i}"):
-                                        # Record positive feedback
+                                        # Record positive feedback with personalization
                                         success = code_intelligence.record_completion_feedback(
                                             file_path, cursor_line, cursor_column,
                                             completion['suggestion'], True,
                                             st.session_state.get('user', 'anonymous')
                                         )
                                         if success:
-                                            st.success("Feedback recorded!")
+                                            st.success("Feedback recorded! AI will learn from this preference.")
                                         else:
                                             st.error("Failed to record feedback")
                                 
                                 with col2:
                                     if st.button(f"❌ Reject", key=f"reject_{i}"):
-                                        # Record negative feedback
+                                        # Record negative feedback with personalization
                                         success = code_intelligence.record_completion_feedback(
                                             file_path, cursor_line, cursor_column,
                                             completion['suggestion'], False,
                                             st.session_state.get('user', 'anonymous')
                                         )
                                         if success:
-                                            st.info("Feedback recorded!")
+                                            st.info("Feedback recorded! AI will adapt to avoid similar suggestions.")
                                         else:
                                             st.error("Failed to record feedback")
                                 
                                 with col3:
-                                    st.write(f"Type: {completion.get('type', 'unknown')}")
+                                    completion_type = completion.get('type', 'unknown')
+                                    st.write(f"**Type:** {completion_type}")
+                                    
+                                    # Show domain relevance based on user specialization
+                                    domain = user_prefs.get("domain_specialization", "General")
+                                    relevance = completion.get('domain_relevance', {}).get(domain.lower(), 'Medium')
+                                    st.write(f"**Domain Relevance ({domain}):** {relevance}")
+                                    
+                                    # Show learning adaptation indicator
+                                    learning_rate = user_prefs.get("learning_rate", "Moderate")
+                                    st.write(f"**Learning Rate:** {learning_rate}")
                     
                     elif completions and any('error' in comp for comp in completions):
                         st.error(f"Error generating completions: {completions[0].get('error', 'Unknown error')}")

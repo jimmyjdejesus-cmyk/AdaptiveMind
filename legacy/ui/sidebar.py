@@ -191,6 +191,111 @@ def sidebar(user, save_user_prefs):
         if user_prefs.get("reasoning_display") != selected_reasoning_display:
             user_prefs["reasoning_display"] = selected_reasoning_display
             save_user_preference(user, "reasoning_display", selected_reasoning_display)
+
+        # === NEW: User Experience Enhancements (Issue #30) ===
+        st.markdown("---")
+        st.markdown("#### 🎯 Personalization Controls")
+        
+        # Learning rate adjustment for AI adaptation speed
+        learning_rate_options = ["Conservative", "Moderate", "Adaptive", "Aggressive"]
+        current_learning_rate = user_prefs.get("learning_rate", "Moderate")
+        
+        if current_learning_rate in learning_rate_options:
+            learning_rate_index = learning_rate_options.index(current_learning_rate)
+        else:
+            learning_rate_index = 1  # Default to Moderate
+            
+        selected_learning_rate = st.selectbox(
+            "AI Learning Rate",
+            learning_rate_options,
+            index=learning_rate_index,
+            key="learning_rate",
+            help="How quickly AI adapts to your preferences: Conservative (slow, stable), Moderate (balanced), Adaptive (medium-fast), Aggressive (fast, experimental)"
+        )
+        
+        if user_prefs.get("learning_rate") != selected_learning_rate:
+            user_prefs["learning_rate"] = selected_learning_rate
+            save_user_preference(user, "learning_rate", selected_learning_rate)
+
+        # Domain specialization settings
+        domain_options = ["General", "Web Development", "Data Science", "DevOps", "Mobile Development", "Systems Programming", "AI/ML", "Security"]
+        current_domain = user_prefs.get("domain_specialization", "General")
+        
+        if current_domain in domain_options:
+            domain_index = domain_options.index(current_domain)
+        else:
+            domain_index = 0  # Default to General
+            
+        selected_domain = st.selectbox(
+            "Domain Specialization",
+            domain_options,
+            index=domain_index,
+            key="domain_specialization",
+            help="Focus area for AI responses and code suggestions"
+        )
+        
+        if user_prefs.get("domain_specialization") != selected_domain:
+            user_prefs["domain_specialization"] = selected_domain
+            save_user_preference(user, "domain_specialization", selected_domain)
+
+        # Style preference configuration
+        style_options = ["Concise", "Detailed", "Tutorial", "Professional", "Casual"]
+        current_style = user_prefs.get("communication_style", "Professional")
+        
+        if current_style in style_options:
+            style_index = style_options.index(current_style)
+        else:
+            style_index = 3  # Default to Professional
+            
+        selected_style = st.selectbox(
+            "Communication Style",
+            style_options,
+            index=style_index,
+            key="communication_style",
+            help="Preferred style for AI responses and explanations"
+        )
+        
+        if user_prefs.get("communication_style") != selected_style:
+            user_prefs["communication_style"] = selected_style
+            save_user_preference(user, "communication_style", selected_style)
+
+        # Explainability preferences
+        st.markdown("#### 🔍 Explainability Features")
+        
+        # Enable/disable code explanations
+        show_explanations = user_prefs.get("show_code_explanations", True)
+        new_show_explanations = st.checkbox(
+            "Show Code Explanations",
+            value=show_explanations,
+            help="Display explanations for code suggestions and completions"
+        )
+        if user_prefs.get("show_code_explanations") != new_show_explanations:
+            user_prefs["show_code_explanations"] = new_show_explanations
+            save_user_preference(user, "show_code_explanations", new_show_explanations)
+
+        # Enable/disable completion rationale
+        show_rationale = user_prefs.get("show_completion_rationale", True)
+        new_show_rationale = st.checkbox(
+            "Show Completion Rationale",
+            value=show_rationale,
+            help="Display reasoning behind code completion suggestions"
+        )
+        if user_prefs.get("show_completion_rationale") != new_show_rationale:
+            user_prefs["show_completion_rationale"] = new_show_rationale
+            save_user_preference(user, "show_completion_rationale", new_show_rationale)
+
+        # Enable/disable knowledge source attribution
+        show_sources = user_prefs.get("show_knowledge_sources", True)
+        new_show_sources = st.checkbox(
+            "Show Knowledge Sources",
+            value=show_sources,
+            help="Display sources and references for AI responses"
+        )
+        if user_prefs.get("show_knowledge_sources") != new_show_sources:
+            user_prefs["show_knowledge_sources"] = new_show_sources
+            save_user_preference(user, "show_knowledge_sources", new_show_sources)
+
+        # === END: User Experience Enhancements ===
             
         # LangChain API Key input
         langchain_api_key = user_prefs.get("langchain_api_key", "")

@@ -84,6 +84,14 @@ class WorkflowState(TypedDict):
     error_context: Optional[str]
     user_input: str
     available_files: List[str]
+    # === NEW: User Experience Enhancements (Issue #30) ===
+    user_id: Optional[str]
+    user_preferences: Optional[Dict[str, Any]]
+    personalization_context: Optional[Dict[str, Any]]
+    interaction_history: List[Dict[str, Any]]
+    explanation_requests: List[str]
+    learning_feedback: Optional[Dict[str, Any]]
+    # === END: User Experience Enhancements ===
 
 
 class JarvisWorkflowGraph:
@@ -116,8 +124,15 @@ class JarvisWorkflowGraph:
         workflow.add_node("critic", self._critic_node)
         workflow.add_node("error_handler", self._error_handler_node)
         
-        # Add edges
-        workflow.set_entry_point("planner")
+        # === NEW: User Experience Enhancement Nodes (Issue #30) ===
+        workflow.add_node("personalization_init", self._personalization_init_node)
+        workflow.add_node("explanation_generator", self._explanation_generator_node)
+        workflow.add_node("learning_feedback", self._learning_feedback_node)
+        # === END: User Experience Enhancement Nodes ===
+        
+        # Add edges - Start with personalization initialization
+        workflow.set_entry_point("personalization_init")
+        workflow.add_edge("personalization_init", "planner")
         
         # Conditional edges for workflow routing
         workflow.add_conditional_edges(
@@ -174,6 +189,18 @@ class JarvisWorkflowGraph:
         )
         
         workflow.add_edge("error_handler", END)
+        
+        # === NEW: Add explanation generation edges ===
+        # Add explanation generation after key workflow steps
+        workflow.add_edge("planner", "explanation_generator")
+        workflow.add_edge("code_writer", "explanation_generator") 
+        workflow.add_edge("debugger", "explanation_generator")
+        workflow.add_edge("critic", "explanation_generator")
+        
+        # Add learning feedback processing at the end
+        workflow.add_edge("explanation_generator", "learning_feedback")
+        workflow.add_edge("learning_feedback", END)
+        # === END: Explanation generation edges ===
         
         return workflow.compile()
     
@@ -361,6 +388,140 @@ class JarvisWorkflowGraph:
             state["reflection"] = f"Critical error in error handler: {str(e)}"
             state["current_step"] = "critical_error"
             return state
+    
+    # === NEW: User Experience Enhancement Nodes (Issue #30) ===
+    
+    def _personalization_init_node(self, state: WorkflowState) -> WorkflowState:
+        """Initialize personalization context for the workflow."""
+        try:
+            # Import personalization memory
+            from agent.adapters.personalization_memory import get_user_personalization_memory
+            
+            user_id = state.get("user_id", "anonymous")
+            user_prefs = state.get("user_preferences", {})
+            
+            # Get user's personalization memory
+            user_memory = get_user_personalization_memory(user_id)
+            personalization_context = user_memory.get_personalized_context("workflow")
+            
+            # Update state with personalization data
+            state["personalization_context"] = personalization_context
+            state["interaction_history"] = personalization_context.get("recent_preferences", [])
+            
+            # Add personalized system message
+            learning_rate = user_prefs.get("learning_rate", "Moderate")
+            domain = user_prefs.get("domain_specialization", "General")
+            style = user_prefs.get("communication_style", "Professional")
+            
+            personalized_msg = (
+                f"User Profile - Learning Rate: {learning_rate}, "
+                f"Domain: {domain}, Style: {style}. "
+                f"Adapt responses accordingly."
+            )
+            
+            state["messages"].append(SystemMessage(content=personalized_msg))
+            
+            return state
+            
+        except Exception as e:
+            # Don't fail the workflow if personalization fails
+            state["personalization_context"] = {}
+            state["interaction_history"] = []
+            return state
+    
+    def _explanation_generator_node(self, state: WorkflowState) -> WorkflowState:
+        """Generate explanations for workflow steps based on user preferences."""
+        try:
+            user_prefs = state.get("user_preferences", {})
+            
+            # Check if explanations are enabled
+            if not user_prefs.get("show_code_explanations", True):
+                return state
+            
+            # Generate explanations for each workflow step
+            explanations = []
+            current_step = state.get("current_step", "unknown")
+            
+            explanation_templates = {
+                "planning": "I'm analyzing your request and creating a step-by-step plan.",
+                "coding": "I'm implementing the solution based on the plan.",
+                "testing": "I'm running tests to verify the implementation works correctly.",
+                "reflection": "I'm reviewing the results and learning from the outcome.",
+                "tool_execution": "I'm using specialized tools to accomplish specific tasks.",
+                "error": "I encountered an issue and I'm working on a solution."
+            }
+            
+            explanation = explanation_templates.get(current_step, "I'm processing your request.")
+            
+            # Personalize explanation based on communication style
+            style = user_prefs.get("communication_style", "Professional")
+            domain = user_prefs.get("domain_specialization", "General")
+            
+            if style == "Casual":
+                explanation = f"Hey! {explanation.lower()}"
+            elif style == "Tutorial":
+                explanation = f"Step {state.get('iteration_count', 1)}: {explanation}"
+            elif style == "Detailed":
+                explanation = f"{explanation} This involves {domain.lower()} concepts and practices."
+            
+            explanations.append({
+                "step": current_step,
+                "explanation": explanation,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Store explanations in state
+            if "explanation_requests" not in state:
+                state["explanation_requests"] = []
+            state["explanation_requests"].extend(explanations)
+            
+            return state
+            
+        except Exception as e:
+            # Don't fail workflow if explanation generation fails
+            return state
+    
+    def _learning_feedback_node(self, state: WorkflowState) -> WorkflowState:
+        """Process learning feedback and update personalization."""
+        try:
+            from agent.adapters.personalization_memory import get_user_personalization_memory
+            
+            user_id = state.get("user_id", "anonymous")
+            user_prefs = state.get("user_preferences", {})
+            
+            # Check if there's feedback to process
+            feedback = state.get("learning_feedback")
+            if not feedback:
+                return state
+            
+            # Get user's personalization memory
+            user_memory = get_user_personalization_memory(user_id)
+            
+            # Record the interaction for learning
+            context = {
+                "workflow_step": state.get("current_step", "unknown"),
+                "domain": user_prefs.get("domain_specialization", "General"),
+                "pattern": feedback.get("pattern", "workflow_completion"),
+                "description": f"Workflow execution with {state.get('iteration_count', 1)} iterations"
+            }
+            
+            user_memory.record_interaction(
+                interaction_type="workflow",
+                context=context,
+                feedback=feedback.get("positive", True),
+                learning_rate=user_prefs.get("learning_rate", "Moderate")
+            )
+            
+            # Clear processed feedback
+            state["learning_feedback"] = None
+            
+            return state
+            
+        except Exception as e:
+            # Don't fail workflow if learning feedback fails
+            return state
+    
+    # === END: User Experience Enhancement Nodes ===
     
     def _route_after_planning(self, state: WorkflowState) -> str:
         """Route workflow after planning step."""
