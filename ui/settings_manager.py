@@ -63,6 +63,18 @@ def render_settings_manager():
     
     with tab5:
         render_advanced_settings(config)
+    # Configuration-driven tab creation
+    tab_configs = [
+        {"name": "🔧 General", "render_func": render_general_settings},
+        {"name": "🔒 Security", "render_func": render_security_settings},
+        {"name": "🚀 Deployment", "render_func": render_deployment_settings},
+        {"name": "🤖 Lang Ecosystem", "render_func": render_lang_ecosystem_settings},
+        {"name": "📁 Advanced", "render_func": render_advanced_settings},
+    ]
+    tabs = st.tabs([tab["name"] for tab in tab_configs])
+    for tab, tab_config in zip(tabs, tab_configs):
+        with tab:
+            tab_config["render_func"](config)
     
     # Save configuration button
     col1, col2, col3 = st.columns([1, 1, 1])
