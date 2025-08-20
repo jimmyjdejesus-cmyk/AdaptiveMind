@@ -159,7 +159,7 @@ main() {
     if [ -d ".git" ]; then
         git pull origin main
     else
-        git clone https://github.com/jimmyjdejesus-cmyk/Jarvis_AI.git .
+        git clone "$GITHUB_REPO_URL" .
     fi
     print_success "Download completed"
     
