@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Jimmy De Jesus", email = "jimmy@example.com"}
+    {name = "Jimmy De Jesus", email = "jimmy@jarvis-ai.dev"}
 ]
 keywords = ["ai", "assistant", "langchain", "langgraph", "development"]
 classifiers = [
