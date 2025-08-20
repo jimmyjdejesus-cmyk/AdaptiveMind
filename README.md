@@ -19,6 +19,9 @@ The root directory now serves as the starting point for the next phase of develo
 
 ## Getting Started
 
+## Quick Demo Script
+.\venv\Scripts\python.exe -m streamlit run ui_demo.py
+
 To work with this repository:
 
 1. **Legacy Code**: Explore the `legacy/` folder for the previous implementation
