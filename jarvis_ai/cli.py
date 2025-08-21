@@ -6,6 +6,7 @@ Provides command-line interface for running and managing Jarvis AI
 import sys
 import argparse
 import os
+import importlib.util
 from pathlib import Path
 
 # Add legacy directory to path for imports
@@ -37,6 +38,10 @@ def main():
     
     # Version command
     version_parser = subparsers.add_parser("version", help="Show version information")
+
+    # Index command to rebuild repository search index
+    index_parser = subparsers.add_parser("index", help="Rebuild repository search index")
+    index_parser.add_argument("--force", action="store_true", help="Force rebuild even if index exists")
     
     args = parser.parse_args()
     
@@ -46,6 +51,8 @@ def main():
         manage_config(args)
     elif args.command == "version":
         show_version()
+    elif args.command == "index":
+        run_indexer(args)
     else:
         parser.print_help()
 
@@ -160,6 +167,17 @@ def manage_config(args):
             
     except Exception as e:
         print(f"❌ Error managing configuration: {e}")
+        sys.exit(1)
+
+def run_indexer(args):
+    """Rebuild repository index."""
+    try:
+        from jarvis.tools.repository_indexer import RepositoryIndexer
+        indexer = RepositoryIndexer()
+        indexer.build_index(force_rebuild=args.force)
+        print("✅ Repository index built")
+    except Exception as e:  # pragma: no cover - runtime feedback
+        print(f"❌ Error building index: {e}")
         sys.exit(1)
 
 def show_version():
