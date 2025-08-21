@@ -8,6 +8,8 @@ from typing import Dict, List, Any, Optional
 import aiohttp
 import requests
 
+from jarvis.security.decorators import rate_limit, timeout
+
 logger = logging.getLogger(__name__)
 
 class MCPClient:
@@ -75,6 +77,8 @@ class MCPClient:
         
         return False
     
+    @rate_limit(calls=10, period=60)
+    @timeout(10)
     async def list_models(self, server_name: str) -> List[str]:
         """
         Get available models from server
@@ -104,6 +108,8 @@ class MCPClient:
             
         return []
     
+    @rate_limit(calls=5, period=60)
+    @timeout(30)
     async def generate_response(self, server: str, model: str, prompt: str) -> str:
         """
         Generate response using specific model via MCP
