@@ -1,7 +1,7 @@
 # Jarvis AI
 [![CI](https://github.com/jimmyjdejesus-cmyk/Jarvis_AI/actions/workflows/ci.yml/badge.svg)](https://github.com/jimmyjdejesus-cmyk/Jarvis_AI/actions/workflows/ci.yml)
 
-A privacy-first modular AI development assistant with comprehensive deployment and distribution capabilities.
+A privacy-first, modular AI development assistant with a unified, configurable architecture.
 
 ## 🚀 Quick Start
 
@@ -18,50 +18,45 @@ jarvis run
 docker compose up -d
 ```
 
-### One-Click Installer
+## 🏛️ Architecture
 
-```bash
-curl -sSL https://raw.githubusercontent.com/jimmyjdejesus-cmyk/Jarvis_AI/main/scripts/installers/install-unix.sh | bash
-```
-
-### Configuration
-
-```bash
-jarvis config --init
-jarvis config --validate
-jarvis config --show
-```
-
-## 🗂️ Logging
-
-Jarvis uses [structlog](https://www.structlog.org/) for structured logging.
+The Jarvis AI project has been refactored to use a single, unified `JarvisAgent`. This agent consolidates all the capabilities of the previous agents into a single, configurable class. You can get an instance of the agent with different capabilities using the following convenience functions:
 
 ```python
-from jarvis.logging import configure, get_logger
+import jarvis
 
-configure()  # writes to logs/jarvis.log
-logger = get_logger()
-logger.info("startup complete")
+# Get a simple agent with basic chat functionality
+simple_agent = jarvis.get_simple_jarvis()
+
+# Get a "smart" agent with multi-model routing (MCP)
+smart_agent = jarvis.get_smart_jarvis()
+
+# Get a "super" agent with multi-agent orchestration
+super_agent = jarvis.get_super_jarvis()
+
+# Get the "ultimate" agent with all features, including workflows
+ultimate_agent = jarvis.get_ultimate_jarvis()
 ```
 
-Pass a ``remote_url`` to ``configure`` to forward log events to an HTTP service.
+You can also create a custom agent configuration by calling `get_jarvis_agent` directly:
 
-### Viewing Logs
+```python
+import jarvis
 
-A Grafana Loki stack is provided for local development:
-
-```bash
-docker compose -f docker-compose.logging.yml up -d
+my_agent = jarvis.get_jarvis_agent(
+    enable_mcp=True,
+    enable_multi_agent=False,
+    enable_workflows=True
+)
 ```
-
-Then open [http://localhost:3000](http://localhost:3000) and add Loki at `http://loki:3100` as a data source to explore logs.
 
 ## 📋 Features
 
-- Modular agent framework
-- Lang ecosystem integration (LangChain, LangGraph, LangSmith)
-- YAML configuration with environment overrides
-- Docker support and one-click installers
+- **Unified Agent:** A single, configurable agent that can be adapted to different use cases.
+- **Dynamic Orchestration:** Uses a `DynamicOrchestrator` powered by `langgraph` to coordinate specialist agents.
+- **Multi-Model Routing (MCP):** Can route requests to the best model for the job.
+- **Specialist Agents:** A suite of specialist agents for tasks like code review, security analysis, and more.
+- **Workflow Automation:** Can execute complex, multi-step workflows.
 
 ## 🔧 Development
 
@@ -69,10 +64,12 @@ Then open [http://localhost:3000](http://localhost:3000) and add Loki at `http:/
 git clone https://github.com/jimmyjdejesus-cmyk/Jarvis_AI.git
 cd Jarvis_AI
 pip install -e .[dev]
-pytest
+python -m pytest
 ```
+
+Note: The test suite is currently under development. To run the tests for the new unified agent, use:
+`python -m pytest tests/test_unified_agent.py`
 
 ## 📄 License
 
 MIT
-

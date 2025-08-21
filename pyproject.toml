@@ -65,7 +65,6 @@ dev = [
     "black>=23.0.0",
     "flake8>=6.0.0",
     "mypy>=1.4.0",
-    "langgraphstudio>=0.0.1",
 ]
 enhanced = [
     "gitpython>=3.1.0",
