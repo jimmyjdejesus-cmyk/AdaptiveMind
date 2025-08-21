@@ -33,7 +33,7 @@ class HashEmbeddingFunction(embedding_functions.EmbeddingFunction if embedding_f
     """
 
     def __call__(self, texts: List[str]) -> List[List[float]]:  # type: ignore[override]
-        return [[float(abs(hash(t)) % 1024)] for t in texts]
+        return [[float(abs(hash(t)) % HASH_EMBEDDING_DIM)] for t in texts]
 
 
 @dataclass
