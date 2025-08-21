@@ -59,7 +59,32 @@ def configure(
             return event_dict
 
         processors.append(_remote)
+        # Set up a background queue and worker thread for async remote logging
+        remote_log_queue = queue.Queue()
 
+        def _remote_worker():
+            while True:
+                item = remote_log_queue.get()
+                if item is None:
+                    break  # Sentinel for shutdown
+                try:
+                    requests.post(remote_url, json=item, timeout=0.5)
+                except Exception:
+                    pass
+                finally:
+                    remote_log_queue.task_done()
+
+        remote_thread = threading.Thread(target=_remote_worker, daemon=True)
+        remote_thread.start()
+
+        def _remote(_, __, event_dict):
+            try:
+                remote_log_queue.put_nowait(event_dict.copy())
+            except Exception:
+                pass
+            return event_dict
+
+        processors.append(_remote)
     processors.append(structlog.processors.JSONRenderer())
 
     structlog.configure(
