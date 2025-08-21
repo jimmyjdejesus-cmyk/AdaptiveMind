@@ -14,7 +14,7 @@ spec.loader.exec_module(module)
 configure = module.configure
 get_logger = module.get_logger
 
-
+from jarvis.logging.logger import configure, get_logger
 def test_configure_creates_json_log(tmp_path):
     log_file = tmp_path / "jarvis.log"
     configure(log_file=str(log_file))
