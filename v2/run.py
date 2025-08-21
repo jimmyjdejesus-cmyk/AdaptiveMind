@@ -1,31 +1,53 @@
-#!/usr/bin/env python3
-"""
-Main entry point for Jarvis AI V2
+"""FastAPI application exposing Jarvis V2 functionality.
+
+This small server is intentionally lightweight – it simply exposes a standard
+HTTP endpoint for normal requests and a streaming endpoint using Server Sent
+Events (SSE).  The streaming endpoint allows desktop and web frontends to
+receive tokens as they are produced by the agent.
 """
 
-import os
-import sys
+from __future__ import annotations
 
-# Add the project root to the Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import json
+from typing import AsyncGenerator
+
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 
 from agent.core.agent import JarvisAgentV2
 from config.config import DEFAULT_CONFIG
 
-def main():
-    """Initialize and run the Jarvis AI V2 system."""
-    print("🚀 Starting Jarvis AI V2")
-    
-    # Initialize the agent
-    agent = JarvisAgentV2(config=DEFAULT_CONFIG)
-    
-    # Set up the workflow
-    agent.setup_workflow()
-    
-    # Example query
-    result = agent.run_workflow("Help me understand LangGraph architecture")
-    
-    print(f"✅ Result: {result}")
-    
+
+app = FastAPI(title="Jarvis V2 API")
+
+# Instantiate the agent once at startup
+agent = JarvisAgentV2(config=DEFAULT_CONFIG)
+agent.setup_workflow()
+
+
+@app.get("/")
+async def root(query: str) -> dict:
+    """Run the workflow and return the final response."""
+
+    return agent.run_workflow(query)
+
+
+async def _event_stream(query: str) -> AsyncGenerator[str, None]:
+    """Internal helper that converts agent events to SSE formatted strings."""
+
+    async for event in agent.stream_workflow(query):
+        yield f"data: {json.dumps(event)}\n\n"
+
+
+@app.get("/stream")
+async def stream(query: str) -> StreamingResponse:
+    """Stream workflow execution using Server‑Sent Events."""
+
+    return StreamingResponse(_event_stream(query), media_type="text/event-stream")
+
+
 if __name__ == "__main__":
-    main()
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
