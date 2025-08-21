@@ -158,7 +158,8 @@ class SecurityManager:
         """Check if user can execute a command."""
         with self._lock:
             allowed = self._command_permissions.get(username, [])
-        return any(command.startswith(cmd) for cmd in allowed)
+        base_command = command.strip().split()[0] if command.strip() else ""
+        return base_command in allowed
     
     def authenticate_user(self, username: str, password: str, 
                          ip_address: str = None) -> Optional[Dict]:
