@@ -42,7 +42,7 @@ class ProjectMemory(MemoryManager):
 
     persist_directory: str = "data/project_memory"
     _client: Any = None
-    _collections: Dict[str, Any] = None
+    _collections: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if chromadb is None:  # pragma: no cover - import guard
