@@ -53,6 +53,7 @@ def configure(
         def _remote(_, __, event_dict):
             try:
         # Validate remote_url: must be HTTPS and optionally match a whitelist
+        from urllib.parse import urlparse
         parsed_url = urlparse(remote_url)
         allowed_schemes = {"https"}
         if parsed_url.scheme not in allowed_schemes or not parsed_url.netloc:
