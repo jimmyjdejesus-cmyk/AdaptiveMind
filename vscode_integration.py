@@ -155,7 +155,7 @@ def analyze_workspace(workspace_path: str) -> Dict[str, Any]:
         }
 
 
-async def _ws_handler(websocket):
+async def _ws_handler(websocket: websockets.WebSocketServerProtocol):
     """Handle incoming websocket messages"""
     async for message in websocket:
         try:
