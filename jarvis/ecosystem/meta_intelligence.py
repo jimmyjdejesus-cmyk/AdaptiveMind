@@ -192,7 +192,7 @@ class AIAgent(ABC):
 class MetaAgent(AIAgent):
     """Meta-agent that manages other AI agents"""
 
-    def __init__(self, agent_id: str, memory_manager: Optional[MemoryManager] = None):
+    def __init__(self, agent_id: str, memory_manager: Optional[MemoryManager] = None, mission_planner: Optional['MissionPlanner'] = None):
         super().__init__(agent_id, [
             AgentCapability.REASONING,
             AgentCapability.PLANNING,
@@ -210,6 +210,24 @@ class MetaAgent(AIAgent):
         except Exception as exc:  # pragma: no cover - optional dependency
             logger.warning("Repository indexer unavailable: %s", exc)
             self.repo_indexer = None
+
+        # Mission planner and session manager logic
+        self.mission_planner = mission_planner if mission_planner is not None else MissionPlanner()
+        self.session_manager = SessionManager()
+
+    def plan_mission(self, goal: str, session_id: Optional[str] = None) -> Dict[str, Any]:
+        """Create a LangGraph definition from a high-level goal."""
+        if session_id:
+            cached = self.session_manager.load_mission_plan(session_id)
+            if cached and cached.get("goal") == goal:
+                return cached["graph"]
+
+        tasks = self.mission_planner.plan(goal)
+        graph = self.mission_planner.to_graph(tasks)
+        if session_id:
+            plan = {"goal": goal, "tasks": tasks, "graph": graph}
+            self.session_manager.save_mission_plan(session_id, plan)
+        return graph
     
     async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute meta-level coordination tasks"""
