@@ -21,7 +21,7 @@ def _call_llm(prompt: str) -> str:
         response.raise_for_status()
         data = response.json()
         return data.get("response", "").strip()
-    except Exception as exc:  # pragma: no cover - network failure handling
+    except (requests.RequestException, ValueError) as exc:  # pragma: no cover - network failure handling
         return f"(LLM error: {exc})"
 
 
