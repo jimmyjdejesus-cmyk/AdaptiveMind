@@ -62,7 +62,7 @@ def configure(
         def _remote(_, __, event_dict):
             try:
                 headers = {}
-                if remote_auth_token:
+                if remote_auth_token is not None:
                     headers["Authorization"] = f"Bearer {remote_auth_token}"
                 requests.post(remote_url, json=event_dict, headers=headers, timeout=0.5)
             except Exception:
