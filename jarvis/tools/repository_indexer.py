@@ -112,7 +112,17 @@ class RepositoryIndexer:
             return []
 
         results = []
-        for idx, score in zip(indices, scores):
+            top_scores = scores[indices]
+        else:
+            return []
+
+        results = []
+        # Use top_scores for NumPy fallback, scores for FAISS
+        if faiss and self.index is not None:
+            score_iter = scores
+        else:
+            score_iter = top_scores
+        for idx, score in zip(indices, score_iter):
             if idx < 0 or idx >= len(self.files):
                 continue
             path = self.repo_path / self.files[int(idx)]
