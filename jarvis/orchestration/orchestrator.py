@@ -126,7 +126,15 @@ class DynamicOrchestrator:
 # For backward compatibility some parts of the codebase still import
 # ``MultiAgentOrchestrator``.  Exporting the new class under this name keeps the
 # surface area stable while the internals have been simplified.
-MultiAgentOrchestrator = DynamicOrchestrator
+class MultiAgentOrchestrator(DynamicOrchestrator):
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "MultiAgentOrchestrator is deprecated and will be removed in a future release. "
+            "Please use DynamicOrchestrator instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
 __all__ = ["AgentSpec", "DynamicOrchestrator", "MultiAgentOrchestrator", "END"]
 
