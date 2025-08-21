@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from abc import ABC, abstractmethod
 import logging
-from jarvis.memory import MemoryManager, ProjectMemory
+from jarvis.memory import MemoryManager
 
 logger = logging.getLogger(__name__)
 
