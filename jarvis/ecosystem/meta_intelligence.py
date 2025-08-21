@@ -14,6 +14,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from abc import ABC, abstractmethod
 import logging
+from pathlib import Path
+
+from jarvis.tools.repository_indexer import RepositoryIndexer
+from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -125,83 +129,12 @@ class MetaAgent(AIAgent):
         self.evolution_plans: List[SystemEvolutionPlan] = []
         # Each mission can register its own orchestrator built from agent specs
         # allowing the meta agent to delegate execution dynamically.
-        self.mission_orchestrators: Dict[str, "MultiAgentOrchestrator"] = {}
-
-    # ------------------------------------------------------------------
-    def create_execution_graph(self, mission_id: str, agent_specs: List[Dict[str, Any]]):
-        """Generate and store an execution graph for a mission.
-
-        Parameters
-        ----------
-        mission_id:
-            Identifier for the mission.
-        agent_specs:
-            List of specifications passed directly to the generic orchestrator.
-        """
-
-        from ..orchestration import AgentSpec, MultiAgentOrchestrator
-
-            List of agent specifications, each either an AgentSpec instance or a dict of keyword arguments for AgentSpec.
-        Raises
-        ------
-        TypeError
-            If any element in agent_specs is not an AgentSpec or dict.
-        """
-
-        from ..orchestration import AgentSpec, MultiAgentOrchestrator
-
-        specs = []
-        for spec in agent_specs:
-            if isinstance(spec, AgentSpec):
-                specs.append(spec)
-            elif isinstance(spec, dict):
-                specs.append(AgentSpec(**spec))
-            else:
-                raise TypeError(f"Each agent_spec must be an AgentSpec or dict, got {type(spec).__name__}: {spec!r}")
-        orchestrator = MultiAgentOrchestrator(specs)
-        self.mission_orchestrators[mission_id] = orchestrator
-        return orchestrator.workflow
-
-    async def delegate(self, mission_id: str, state: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a mission via its orchestrator."""
-
-        orchestrator = self.mission_orchestrators.get(mission_id)
-        if not orchestrator:
-            raise ValueError(f"Unknown mission '{mission_id}'")
-        return await orchestrator.run(state)
-
-    # Backwards compatibility helpers ---------------------------------
-    async def coordinate_specialists(self, prompt: str, specialists: List[str], coordination_strategy: str = "single") -> str:
-        """Placeholder for legacy interface.
-
-        The old ``MultiAgentOrchestrator`` exposed a ``coordinate_specialists``
-        coroutine which returned a string result.  For the purposes of unit
-        tests we provide a very small stand‑in that simply returns the prompt
-        annotated with the requested specialists.  Real implementations would
-        build a mission graph and delegate to specialist agents.
-        """
-
-        return f"{prompt.strip()} :: handled by {', '.join(specialists)}"
-
-    async def analyze_request_complexity(self, request: str, code: str = None) -> Dict[str, Any]:
-        """Very small stub used by existing entry points."""
-
-        return {
-            "complexity": "low",
-            "specialists_needed": [],
-            "coordination_type": "single",
-            "collaboration_depth": "none",
-        }
-
-    async def health_check_specialists(self) -> Dict[str, Any]:
-        """Stub health check returning an always healthy status."""
-
-        return {"specialists": {}, "status": "healthy"}
-
-    def get_specialist_status(self) -> Dict[str, Any]:
-        """Return empty specialist status for compatibility."""
-
-        return {}
+        self.mission_orchestrators: Dict[str, MultiAgentOrchestrator] = {}
+        try:
+            self.repo_indexer = RepositoryIndexer(Path.cwd())
+        except Exception as exc:  # pragma: no cover - optional dependency
+            logger.warning("Repository indexer unavailable: %s", exc)
+            self.repo_indexer = None
     
     async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute meta-level coordination tasks"""
@@ -215,6 +148,10 @@ class MetaAgent(AIAgent):
             return await self._evolve_system_capabilities()
         elif task_type == "create_agent":
             return await self._create_new_agent(task)
+        elif task_type == "search_repository":
+            query = task.get("query", "")
+            k = task.get("k", 5)
+            return {"success": True, "results": self.search_repository(query, k)}
         else:
             return {"success": False, "error": f"Unknown meta-task: {task_type}"}
     
@@ -343,15 +280,25 @@ class MetaAgent(AIAgent):
             capabilities = [AgentCapability(cap) for cap in required_capabilities if cap in [c.value for c in AgentCapability]]
             new_agent = SpecialistAIAgent(agent_id, capabilities)
             self.managed_agents[agent_id] = new_agent
-            
+
             return {
                 "success": True,
                 "agent_id": agent_id,
                 "capabilities": [cap.value for cap in capabilities]
             }
-        
+
         return {"success": False, "error": "No valid capabilities specified"}
-    
+
+    def search_repository(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
+        """Expose repository search to agents."""
+        if not self.repo_indexer:
+            return []
+        try:
+            return self.repo_indexer.search(query, k)
+        except Exception as exc:  # pragma: no cover - best effort
+            logger.warning("Repository search failed: %s", exc)
+            return []
+
     def _adjust_evolution_plan(self, plan: SystemEvolutionPlan, feedback: Dict[str, Any]):
         """Adjust evolution plan based on feedback"""
         success_rate = feedback.get("success_rate", 0.5)
