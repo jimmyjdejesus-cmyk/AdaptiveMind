@@ -25,7 +25,7 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         const text: string | undefined = res?.suggestion || res?.explanation;
         if (text) {
-          const range = new vscode.Range(line.range.start, position);
+          const range = new vscode.Range(position, position);
           const item = new vscode.InlineCompletionItem(text);
           item.range = range;
           return [item];
