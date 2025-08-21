@@ -125,7 +125,11 @@ def _pip_install(package: str):
     try:
         subprocess.run(["pip", "install"] + package.split(), check=True)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to install {package}: {exc}")
+def _pip_install(package_args: List[str]):
+    try:
+        subprocess.run(["pip", "install"] + package_args, check=True)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to install {' '.join(package_args)}: {exc}")
 
 
 def _pip_uninstall(package: str):
