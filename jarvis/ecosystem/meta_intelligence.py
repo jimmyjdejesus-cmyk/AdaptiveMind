@@ -15,9 +15,9 @@ from enum import Enum
 from abc import ABC, abstractmethod
 import logging
 from pathlib import Path
-
 from jarvis.tools.repository_indexer import RepositoryIndexer
 from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
+from jarvis.memory import MemoryManager, ProjectMemory
 
 logger = logging.getLogger(__name__)
 
@@ -117,14 +117,15 @@ class AIAgent(ABC):
 
 class MetaAgent(AIAgent):
     """Meta-agent that manages other AI agents"""
-    
-    def __init__(self, agent_id: str):
+
+    def __init__(self, agent_id: str, memory_manager: Optional[MemoryManager] = None):
         super().__init__(agent_id, [
             AgentCapability.REASONING,
             AgentCapability.PLANNING,
             AgentCapability.MONITORING,
             AgentCapability.LEARNING
         ])
+        self.memory: MemoryManager = memory_manager or ProjectMemory()
         self.managed_agents: Dict[str, AIAgent] = {}
         self.evolution_plans: List[SystemEvolutionPlan] = []
         # Each mission can register its own orchestrator built from agent specs
@@ -139,7 +140,6 @@ class MetaAgent(AIAgent):
     async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute meta-level coordination tasks"""
         task_type = task.get("type", "unknown")
-        
         if task_type == "analyze_system":
             return await self._analyze_system_performance()
         elif task_type == "optimize_agents":
@@ -154,21 +154,19 @@ class MetaAgent(AIAgent):
             return {"success": True, "results": self.search_repository(query, k)}
         else:
             return {"success": False, "error": f"Unknown meta-task: {task_type}"}
-    
+
     async def learn_from_feedback(self, feedback: Dict[str, Any]) -> bool:
         """Learn from system-wide feedback"""
         # Meta-learning: analyze patterns across all agents
         successful_patterns = feedback.get("successful_patterns", [])
         failed_patterns = feedback.get("failed_patterns", [])
-        
         # Update evolution plans based on feedback
         for plan in self.evolution_plans:
             if plan.status == "executing":
                 # Adjust plan based on feedback
                 self._adjust_evolution_plan(plan, feedback)
-        
         return True
-    
+
     async def _analyze_system_performance(self) -> Dict[str, Any]:
         """Analyze overall system performance"""
         analysis = {
@@ -179,11 +177,9 @@ class MetaAgent(AIAgent):
             "bottlenecks": [],
             "improvement_opportunities": []
         }
-        
         if self.managed_agents:
             performances = [agent.metrics.overall_performance() for agent in self.managed_agents.values()]
             analysis["average_performance"] = sum(performances) / len(performances)
-            
             # Analyze capability coverage
             for capability in AgentCapability:
                 agents_with_capability = [
@@ -191,14 +187,12 @@ class MetaAgent(AIAgent):
                     if capability in agent.capabilities
                 ]
                 analysis["capability_coverage"][capability.value] = len(agents_with_capability)
-            
             # Identify bottlenecks
             slow_agents = [
                 agent for agent in self.managed_agents.values()
                 if agent.metrics.average_response_time > 5.0
             ]
             analysis["bottlenecks"] = [agent.agent_id for agent in slow_agents]
-            
             # Identify improvement opportunities
             low_performing_agents = [
                 agent for agent in self.managed_agents.values()
