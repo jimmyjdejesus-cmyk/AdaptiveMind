@@ -149,7 +149,10 @@ class SecurityManager:
         resolved = str(Path(path).resolve())
         with self._lock:
             allowed = self._path_permissions.get(username, [])
-        return any(resolved.startswith(p) for p in allowed)
+        resolved_path = Path(path).resolve()
+        with self._lock:
+            allowed = self._path_permissions.get(username, [])
+        return any(resolved_path.is_relative_to(Path(p)) for p in allowed)
 
     def has_command_access(self, username: str, command: str) -> bool:
         """Check if user can execute a command."""
