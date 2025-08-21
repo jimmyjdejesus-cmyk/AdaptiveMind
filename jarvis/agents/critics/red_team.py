@@ -36,7 +36,7 @@ class RedTeamCritic:
         prompt = f"{self.review_prompt}\n\nSpecialist: {specialist}\nOutput:\n{content}"
         try:
             response = await self.mcp_client.generate_response(
-                server="ollama", model="llama3.2", prompt=prompt
+                server="ollama", model=self.model, prompt=prompt
             )
             try:
                 data = json.loads(response.strip())
