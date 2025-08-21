@@ -3,6 +3,9 @@
 
 A privacy-first modular AI development assistant with comprehensive deployment and distribution capabilities.
 
+> **Deprecated:** The legacy Streamlit application in `legacy/` has reached feature parity with V2 and is no longer maintained.
+> See `docs/migration_checklist.md` for mapping of legacy components.
+
 ## 🚀 Quick Start
 
 ### Install from PyPI
@@ -42,6 +45,7 @@ jarvis config --validate
 jarvis config --show
 ```
 
+desktop build and configuration wizard:
 Configuration profiles live under `config/profiles`. Select a profile by
 setting the `CONFIG_PROFILE` environment variable (defaults to
 `development`). Any setting can be overridden by environment variables
@@ -68,6 +72,21 @@ Packaged binaries will be placed in the `dist/` directory.
   or create a `.env` file with required keys.
 - **PyInstaller build is large** – use the `--exclude-module` flag to
   omit optional dependencies when packaging.
+
+## 📈 Graphviz
+
+Some features use the [`graphviz`](https://pypi.org/project/graphviz/) package to render diagrams.
+Install the Graphviz system binaries to enable visualization:
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install graphviz
+
+# macOS
+brew install graphviz
+```
+
+If Graphviz is not installed, these features will be skipped or fall back to text-based output.
 
 ## 🗂️ Logging
 

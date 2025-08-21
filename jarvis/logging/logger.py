@@ -14,11 +14,14 @@ from typing import Optional
 
 import requests
 import structlog
+import queue
+import threading
 
 
 def configure(
     log_file: str = "logs/jarvis.log",
     remote_url: Optional[str] = None,
+    remote_auth_token: Optional[str] = None,
 ) -> None:
     """Configure global logging behaviour.
 
@@ -37,12 +40,9 @@ def configure(
     handlers = [logging.FileHandler(log_file), logging.StreamHandler()]
     logging.basicConfig(
         level=logging.INFO,
-        format="%(message)s",
-        handlers=handlers,
-<<<<<<< HEAD
-=======
-        force=True,
->>>>>>> codex/add-github-actions-ci-workflow-v9sfjg
+    format="%(message)s",
+    handlers=handlers,
+    force=True,
     )
 
     processors = [
@@ -53,10 +53,6 @@ def configure(
     ]
 
     if remote_url:
-
-        def _remote(_, __, event_dict):
-            try:
-<<<<<<< HEAD
         # Validate remote_url: must be HTTPS and optionally match a whitelist
         from urllib.parse import urlparse
         parsed_url = urlparse(remote_url)
@@ -64,23 +60,6 @@ def configure(
         if parsed_url.scheme not in allowed_schemes or not parsed_url.netloc:
             raise ValueError("remote_url must be a valid HTTPS URL")
 
-        def _remote(_, __, event_dict):
-            try:
-                headers = {}
-                if remote_auth_token is not None:
-                    headers["Authorization"] = f"Bearer {remote_auth_token}"
-                requests.post(remote_url, json=event_dict, headers=headers, timeout=0.5)
-=======
-                requests.post(remote_url, json=event_dict, timeout=0.5)
->>>>>>> codex/add-github-actions-ci-workflow-v9sfjg
-            except Exception:
-                pass
-            return event_dict
-
-        processors.append(_remote)
-<<<<<<< HEAD
-
-=======
         # Set up a background queue and worker thread for async remote logging
         remote_log_queue = queue.Queue()
 
@@ -101,13 +80,15 @@ def configure(
 
         def _remote(_, __, event_dict):
             try:
+                headers = {}
+                if remote_auth_token is not None:
+                    headers["Authorization"] = f"Bearer {remote_auth_token}"
                 remote_log_queue.put_nowait(event_dict.copy())
             except Exception:
                 pass
             return event_dict
 
         processors.append(_remote)
->>>>>>> codex/add-github-actions-ci-workflow-v9sfjg
     processors.append(structlog.processors.JSONRenderer())
 
     structlog.configure(
@@ -117,17 +98,11 @@ def configure(
     )
 
 
-def get_logger(name: str = __name__):
-    """Return a configured structlog logger."""
-<<<<<<< HEAD
-
-=======
 def get_logger(name: str = None):
     """Return a configured structlog logger."""
     if name is None:
-        # Get the caller's module name
+        import inspect
         frame = inspect.currentframe()
         caller_frame = frame.f_back if frame else None
         name = caller_frame.f_globals["__name__"] if caller_frame and "__name__" in caller_frame.f_globals else __name__
->>>>>>> codex/add-github-actions-ci-workflow-v9sfjg
     return structlog.get_logger(name)
