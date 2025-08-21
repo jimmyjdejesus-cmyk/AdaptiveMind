@@ -39,6 +39,10 @@ def configure(
         level=logging.INFO,
         format="%(message)s",
         handlers=handlers,
+<<<<<<< HEAD
+=======
+        force=True,
+>>>>>>> codex/add-github-actions-ci-workflow-v9sfjg
     )
 
     processors = [
@@ -52,6 +56,7 @@ def configure(
 
         def _remote(_, __, event_dict):
             try:
+<<<<<<< HEAD
         # Validate remote_url: must be HTTPS and optionally match a whitelist
         from urllib.parse import urlparse
         parsed_url = urlparse(remote_url)
@@ -65,12 +70,44 @@ def configure(
                 if remote_auth_token is not None:
                     headers["Authorization"] = f"Bearer {remote_auth_token}"
                 requests.post(remote_url, json=event_dict, headers=headers, timeout=0.5)
+=======
+                requests.post(remote_url, json=event_dict, timeout=0.5)
+>>>>>>> codex/add-github-actions-ci-workflow-v9sfjg
             except Exception:
                 pass
             return event_dict
 
         processors.append(_remote)
+<<<<<<< HEAD
 
+=======
+        # Set up a background queue and worker thread for async remote logging
+        remote_log_queue = queue.Queue()
+
+        def _remote_worker():
+            while True:
+                item = remote_log_queue.get()
+                if item is None:
+                    break  # Sentinel for shutdown
+                try:
+                    requests.post(remote_url, json=item, timeout=0.5)
+                except Exception:
+                    pass
+                finally:
+                    remote_log_queue.task_done()
+
+        remote_thread = threading.Thread(target=_remote_worker, daemon=True)
+        remote_thread.start()
+
+        def _remote(_, __, event_dict):
+            try:
+                remote_log_queue.put_nowait(event_dict.copy())
+            except Exception:
+                pass
+            return event_dict
+
+        processors.append(_remote)
+>>>>>>> codex/add-github-actions-ci-workflow-v9sfjg
     processors.append(structlog.processors.JSONRenderer())
 
     structlog.configure(
@@ -82,5 +119,15 @@ def configure(
 
 def get_logger(name: str = __name__):
     """Return a configured structlog logger."""
+<<<<<<< HEAD
 
+=======
+def get_logger(name: str = None):
+    """Return a configured structlog logger."""
+    if name is None:
+        # Get the caller's module name
+        frame = inspect.currentframe()
+        caller_frame = frame.f_back if frame else None
+        name = caller_frame.f_globals["__name__"] if caller_frame and "__name__" in caller_frame.f_globals else __name__
+>>>>>>> codex/add-github-actions-ci-workflow-v9sfjg
     return structlog.get_logger(name)
