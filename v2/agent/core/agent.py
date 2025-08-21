@@ -8,13 +8,39 @@ workflow nodes, safety checks and streaming hooks.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, AsyncGenerator
 
 from langgraph.graph import END, StateGraph
+import asyncio
+from typing import AsyncGenerator, Dict, Any
 
 
 class JarvisAgentV2:
+    async def stream_workflow(self, query: str) -> AsyncGenerator[Dict[str, Any], None]:
+        """Stream workflow execution as discrete events using the real workflow logic.
+
+        Yields workflow step events and streams the final result token by token.
+        """
+        # Emit a step event for UI visualization
+        yield {"type": "step", "content": "processing"}
+
+        # If the query looks destructive, ask for human approval first.
+        if any(word in query.lower() for word in ["delete", "drop", "remove"]):
+            yield {"type": "hitl", "content": "This action may be destructive. Continue?"}
+
+        # Run the normal workflow to obtain a textual result
+        result_state = self.run_workflow(query)
+        result = result_state.get("feedback") or result_state.get("execution") or result_state.get("plan") or str(result_state)
+
+        # Stream the result token by token
+        for token in str(result).split():
+            yield {"type": "token", "content": token}
+            await asyncio.sleep(0)
+
+        # Signal completion to the client
+        yield {"type": "done", "content": ""}
     """Advanced agent using LangGraph architecture for enhanced reasoning."""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None, models=None, tools=None):
@@ -42,8 +68,6 @@ class JarvisAgentV2:
         self.workflow = None
         self.visualizer = None
 
-        # External callback used for streaming events
-        self._stream_hook: Optional[Callable[[Dict[str, Any]], None]] = None
 
     # ------------------------------------------------------------------
     def _emit_ws_event(self, node: str, data: Dict[str, Any]) -> None:

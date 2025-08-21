@@ -101,7 +101,7 @@ def configure(
 def get_logger(name: str = None):
     """Return a configured structlog logger."""
     if name is None:
-        # Get the caller's module name
+        import inspect
         frame = inspect.currentframe()
         caller_frame = frame.f_back if frame else None
         name = caller_frame.f_globals["__name__"] if caller_frame and "__name__" in caller_frame.f_globals else __name__
