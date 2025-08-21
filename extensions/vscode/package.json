@@ -42,7 +42,7 @@
     "package": "npx vsce package"
   },
   "dependencies": {
-    "ws": "^8.13.0"
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@types/node": "^16.0.0",
