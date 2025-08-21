@@ -27,7 +27,10 @@ class MemoryManager:
         raise NotImplementedError
 
 
-class HashEmbeddingFunction(embedding_functions.EmbeddingFunction if embedding_functions else object):
+if embedding_functions is None:
+    raise ImportError("chromadb.utils.embedding_functions is required for HashEmbeddingFunction")
+
+class HashEmbeddingFunction(embedding_functions.EmbeddingFunction):
     """Simple deterministic embedding function.
 
     This avoids heavy model downloads by hashing text into a single float value.
