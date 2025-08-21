@@ -26,7 +26,7 @@
             <td>{{ p.description }}</td>
             <td>{{ p.author }}</td>
             <td>{{ ', '.join(p.dependencies) }}</td>
-            <td><button onclick="uninstall('{{ p.name }}')">Uninstall</button></td>
+            <td><button class="uninstall-btn" data-name="{{ p.name }}">Uninstall</button></td>
         </tr>
         {% endfor %}
     </table>
