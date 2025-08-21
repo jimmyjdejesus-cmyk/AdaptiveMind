@@ -48,7 +48,8 @@ class ProjectMemory(MemoryManager):
         if chromadb is None:  # pragma: no cover - import guard
             raise ImportError("chromadb is required for ProjectMemory")
         self._client = chromadb.PersistentClient(path=self.persist_directory)
-        self._collections = {}
+        if self._collections is None:
+            self._collections = {}
         self._embedding_fn = HashEmbeddingFunction()
 
     def _key(self, project: str, session: str) -> str:
