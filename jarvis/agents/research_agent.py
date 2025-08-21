@@ -45,6 +45,7 @@ class ResearchAgent:
             try:
                 content = self.reader_tool.read(result["url"])
             except Exception:
+                logging.exception(f"Error reading URL: {result.get('url', '')}")
                 continue
             summary = self.summarizer(content)
             summaries.append(
