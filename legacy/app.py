@@ -329,9 +329,6 @@ def show_admin_panel():
     with tabs[3]:  # Model Management
         st.markdown("### ðŸ¤– Ollama Model Management")
         
-        # Import required functions
-        # Using import from top of file
-        
         # Current endpoint configuration
         col1, col2 = st.columns(2)
         with col1:
@@ -362,9 +359,6 @@ def show_admin_panel():
         col1, col2 = st.columns([3, 1])
         with col1:
             if st.button("ðŸ”„ Refresh Model List"):
-                # Clear cache to force refresh
-                from scripts import ollama_client
-                ollama_client.clear_model_cache()
                 st.rerun()
         
         with col2:
@@ -415,9 +409,6 @@ def show_admin_panel():
                                                           capture_output=True, text=True, timeout=30)
                                     if result.returncode == 0:
                                         st.success(f"Removed {model}")
-                                        # Clear cache and refresh
-                                        from scripts import ollama_client
-                                        ollama_client.clear_model_cache()
                                         st.rerun()
                                     else:
                                         st.error(f"Failed to remove: {result.stderr}")
@@ -462,10 +453,6 @@ def show_admin_panel():
                         progress_placeholder.text(line)
                     
                     progress_placeholder.success(f"âœ… Successfully pulled {model_to_pull}")
-                    
-                    # Clear cache to show new model
-                    from scripts import ollama_client
-                    ollama_client.clear_model_cache()
                     
                     # Auto-refresh after a short delay
                     time.sleep(2)
@@ -1220,7 +1207,7 @@ if user_msg:
         # Try to get available models and use the first one as fallback
         try:
             # Using import from top of file
-            available_models = get_available_models()
+            available_models = model_client.get_available_models()
             if available_models:
                 expert_model = available_models[0]
             else:
