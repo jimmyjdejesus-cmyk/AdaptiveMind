@@ -16,7 +16,7 @@ def _call_llm(prompt: str) -> str:
     payload = {"model": OLLAMA_MODEL, "prompt": prompt, "stream": False}
     try:
         response = requests.post(
-            f"{OLLAMA_URL}/api/generate", json=payload, timeout=60
+            f"{OLLAMA_URL}/api/generate", json=payload, timeout=OLLAMA_TIMEOUT
         )
         response.raise_for_status()
         data = response.json()
