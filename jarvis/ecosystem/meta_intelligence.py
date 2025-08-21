@@ -546,7 +546,21 @@ class MetaIntelligenceCore:
     ) -> Dict[str, Any]:
         """Merge critic feedback and optionally retry a task."""
 
-        feedback_objs = [CriticFeedback(**item) for item in feedback_items]
+        feedback_objs = []
+        for idx, item in enumerate(feedback_items):
+            try:
+                feedback_obj = CriticFeedback(**item)
+                feedback_objs.append(feedback_obj)
+            except TypeError as e:
+                logger.error(
+                    "Failed to construct CriticFeedback from feedback_items[%d]: %s. Item: %s",
+                    idx, e, item
+                )
+                # Optionally, you could raise a more descriptive exception here
+                # raise ValueError(f"Invalid feedback item at index {idx}: {item}") from e
+                # Or skip invalid items (as done here)
+        if not feedback_objs:
+            logger.warning("No valid CriticFeedback objects could be constructed from feedback_items.")
         weighted = self.critic_merger.weight_feedback(feedback_objs)
         synthesis = self.critic_merger.synthesize_arguments(weighted)
         logger.info("Critic synthesis: %s", synthesis["combined_argument"])
