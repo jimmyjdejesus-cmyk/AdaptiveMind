@@ -57,7 +57,20 @@ class BlueTeamCritic:
             risk_score = 1.0
             external_impacts.append("Potential system instability detected")
         else:
-            # Very naive heuristic: larger error messages imply higher risk.
+            # Heuristic rationale:
+            #   This approach uses a simple check for the presence of the word "error" in the payload message
+            #   to estimate risk. It was chosen for its simplicity and because structured error information
+            #   may not always be available in payloads.
+            #
+            # Limitations:
+            #   - May miss risks that are not explicitly labeled as errors.
+            #   - Does not account for severity, context, or type of error.
+            #   - Payloads with non-standard formats or subtle issues may not be detected.
+            #
+            # Future improvements:
+            #   - Use structured error fields if available.
+            #   - Apply NLP techniques to analyze message content for risk indicators.
+            #   - Integrate with system logging or monitoring for richer context.
             message = str(payload)
             if "error" in message.lower():
                 risk_score = 0.7
