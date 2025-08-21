@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 try:
     import chromadb
     from chromadb.utils import embedding_functions
-except Exception as e:  # pragma: no cover - runtime import guard
+except ImportError as e:  # pragma: no cover - runtime import guard
     chromadb = None
     embedding_functions = None  # type: ignore
 
