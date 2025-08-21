@@ -33,3 +33,7 @@ logs/
 
 # Repository search indices
 data/repo_index/
+# Node artifacts
+node_modules/
+extensions/**/node_modules/
+extensions/**/out/
