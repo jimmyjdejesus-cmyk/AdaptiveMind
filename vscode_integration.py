@@ -193,7 +193,10 @@ def run_websocket_server(host: str = "localhost", port: int = 8765) -> None:
     start_server = websockets.serve(_ws_handler, host, port)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(start_server)
-    loop.run_forever()
+    async def _start():
+        async with websockets.serve(_ws_handler, host, port):
+            await asyncio.Future()  # run forever
+    asyncio.run(_start())
 
 def get_language_from_file(file_path: str) -> str:
     """Determine language from file extension"""
