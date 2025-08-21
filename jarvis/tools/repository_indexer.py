@@ -15,7 +15,6 @@ class RepositoryIndexer:
     """Simple repository indexer using hashed embeddings and FAISS."""
 
     def __init__(self, repo_path: Path | str = Path.cwd(), index_dir: Path | str = Path("data/repo_index"), dim: int = 300):
-        self.repo_path = Path(repo_path)
     def __init__(self, repo_path: Path | str = Path.cwd(), index_dir: Optional[Path | str] = None, dim: int = 300):
         self.repo_path = Path(repo_path)
         # Determine index_dir: environment variable > argument > default relative to repo_path
