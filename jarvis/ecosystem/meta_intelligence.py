@@ -17,6 +17,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from ..orchestration import MultiAgentOrchestrator, SubOrchestrator
+
 class AgentCapability(Enum):
     """Types of AI agent capabilities"""
     REASONING = "reasoning"
@@ -112,17 +114,49 @@ class AIAgent(ABC):
         self.metrics.last_updated = datetime.now()
 
 class MetaAgent(AIAgent):
-    """Meta-agent that manages other AI agents"""
-    
-    def __init__(self, agent_id: str):
-        super().__init__(agent_id, [
-            AgentCapability.REASONING,
-            AgentCapability.PLANNING,
-            AgentCapability.MONITORING,
-            AgentCapability.LEARNING
-        ])
+    """Meta-agent that manages other AI agents.
+
+    The meta-agent can spawn scoped sub-orchestrators when a mission step
+    requires specialized teams. This enables nested orchestration where each
+    sub-mission operates with its own set of tools and agents.
+    """
+
+    def __init__(
+        self,
+        agent_id: str,
+        mcp_client=None,
+        orchestrator_cls: Type[MultiAgentOrchestrator] = SubOrchestrator,
+    ):
+        super().__init__(
+            agent_id,
+            [
+                AgentCapability.REASONING,
+                AgentCapability.PLANNING,
+                AgentCapability.MONITORING,
+                AgentCapability.LEARNING,
+            ],
+        )
         self.managed_agents: Dict[str, AIAgent] = {}
         self.evolution_plans: List[SystemEvolutionPlan] = []
+        self.mcp_client = mcp_client
+        self.orchestrator_cls = orchestrator_cls
+        self.sub_orchestrators: Dict[str, MultiAgentOrchestrator] = {}
+
+    # ------------------------------------------------------------------
+    # Sub-orchestrator management
+    # ------------------------------------------------------------------
+
+    def create_sub_orchestrator(
+        self, name: str, spec: Dict[str, Any]
+    ) -> MultiAgentOrchestrator:
+        """Create and register a sub-orchestrator for a mission step."""
+        orchestrator = self.orchestrator_cls(self.mcp_client, **spec)
+        self.sub_orchestrators[name] = orchestrator
+        return orchestrator
+
+    def remove_sub_orchestrator(self, name: str) -> bool:
+        """Remove a sub-orchestrator if it exists."""
+        return self.sub_orchestrators.pop(name, None) is not None
     
     async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute meta-level coordination tasks"""
@@ -136,6 +170,8 @@ class MetaAgent(AIAgent):
             return await self._evolve_system_capabilities()
         elif task_type == "create_agent":
             return await self._create_new_agent(task)
+        elif task_type == "mission_step":
+            return await self._handle_mission_step(task)
         else:
             return {"success": False, "error": f"Unknown meta-task: {task_type}"}
     
@@ -272,6 +308,24 @@ class MetaAgent(AIAgent):
             }
         
         return {"success": False, "error": "No valid capabilities specified"}
+
+    async def _handle_mission_step(self, step: Dict[str, Any]) -> Dict[str, Any]:
+        """Spawn or reuse a sub-orchestrator for a mission step."""
+        step_id = step.get("step_id", uuid.uuid4().hex[:8])
+        specialists = step.get("specialists", [])
+        request = step.get("request", "")
+
+        orchestrator = self.sub_orchestrators.get(step_id)
+        if not orchestrator:
+            spec = {"allowed_specialists": specialists, "mission_name": step_id}
+            orchestrator = self.create_sub_orchestrator(step_id, spec)
+
+        result = await orchestrator.coordinate_specialists(
+            request,
+            step.get("code"),
+            step.get("user_context"),
+        )
+        return {"success": True, "result": result, "step_id": step_id}
     
     def _adjust_evolution_plan(self, plan: SystemEvolutionPlan, feedback: Dict[str, Any]):
         """Adjust evolution plan based on feedback"""

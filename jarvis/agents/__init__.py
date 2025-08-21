@@ -3,7 +3,13 @@ Jarvis AI Agents - Specialized AI assistants and expert agents
 """
 
 # Legacy coding agent
-from .coding_agent import CodingAgent, get_coding_agent
+try:
+    from .coding_agent import CodingAgent, get_coding_agent
+except Exception:  # pragma: no cover
+    CodingAgent = None
+
+    def get_coding_agent(*args, **kwargs):  # type: ignore
+        raise ImportError("CodingAgent not available")
 
 # New specialist agents
 try:
@@ -28,10 +34,11 @@ try:
         'DevOpsAgent'
     ]
     
-except ImportError:
+except Exception:  # pragma: no cover
     # Fallback if specialist agents not available
     __all__ = ['CodingAgent', 'get_coding_agent']
 
 # Version info
 __version__ = "2.0.0"
 __author__ = "Jarvis AI Team"
+

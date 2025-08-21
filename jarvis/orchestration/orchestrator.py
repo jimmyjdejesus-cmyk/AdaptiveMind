@@ -1,7 +1,9 @@
-"""
-Multi-Agent Orchestrator
+"""Multi-Agent Orchestrator
 Coordinates multiple specialist agents for complex tasks
-"""
+
+This module also provides lifecycle management for nested orchestrators,
+allowing complex missions to be decomposed into sub-missions with their own
+scoped tools and agents."""
 import asyncio
 import logging
 from typing import Dict, List, Any, Optional, Set
@@ -9,65 +11,116 @@ from datetime import datetime
 import json
 
 from ..agents.specialists import (
-    CodeReviewAgent, 
-    SecurityAgent, 
-    ArchitectureAgent, 
-    TestingAgent, 
-    DevOpsAgent
+    CodeReviewAgent,
+    SecurityAgent,
+    ArchitectureAgent,
+    TestingAgent,
+    DevOpsAgent,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - for type hints only
+    from .sub_orchestrator import SubOrchestrator
 
 logger = logging.getLogger(__name__)
 
 class MultiAgentOrchestrator:
     """Coordinates multiple specialist agents for complex analysis"""
     
-    def __init__(self, mcp_client):
-        """
-        Initialize multi-agent orchestrator
-        
+    def __init__(
+        self,
+        mcp_client,
+        child_specs: Optional[Dict[str, Dict[str, Any]]] = None,
+    ):
+        """Initialize multi-agent orchestrator.
+
         Args:
             mcp_client: MCP client for agent communication
+            child_specs: Optional mapping of sub-orchestrator names to their
+                initialization specs. Each spec is forwarded to
+                :class:`SubOrchestrator`.
         """
         self.mcp_client = mcp_client
-        
+
         # Initialize specialist agents
         self.specialists = {
             "code_review": CodeReviewAgent(mcp_client),
             "security": SecurityAgent(mcp_client),
             "architecture": ArchitectureAgent(mcp_client),
             "testing": TestingAgent(mcp_client),
-            "devops": DevOpsAgent(mcp_client)
+            "devops": DevOpsAgent(mcp_client),
         }
-        
+
         self.task_history = []
         self.active_collaborations = {}
-        
+
+        # Lifecycle tracking for child orchestrators
+        from .sub_orchestrator import SubOrchestrator
+
+        self.child_orchestrators: Dict[str, 'SubOrchestrator'] = {}
+        if child_specs:
+            for name, spec in child_specs.items():
+                self.child_orchestrators[name] = SubOrchestrator(
+                    self.mcp_client, **spec
+                )
+
         # Agent collaboration rules
         self.collaboration_patterns = {
             "code_review": {
                 "always_collaborate": ["security"],
                 "often_collaborate": ["testing"],
-                "sometimes_collaborate": ["architecture", "devops"]
+                "sometimes_collaborate": ["architecture", "devops"],
             },
             "security": {
                 "always_collaborate": ["code_review"],
                 "often_collaborate": ["architecture"],
-                "sometimes_collaborate": ["testing", "devops"]
+                "sometimes_collaborate": ["testing", "devops"],
             },
             "architecture": {
                 "always_collaborate": ["security"],
                 "often_collaborate": ["devops"],
-                "sometimes_collaborate": ["code_review", "testing"]
+                "sometimes_collaborate": ["code_review", "testing"],
             },
             "testing": {
                 "often_collaborate": ["code_review"],
-                "sometimes_collaborate": ["security", "architecture", "devops"]
+                "sometimes_collaborate": ["security", "architecture", "devops"],
             },
             "devops": {
                 "often_collaborate": ["architecture", "security"],
-                "sometimes_collaborate": ["code_review", "testing"]
-            }
+                "sometimes_collaborate": ["code_review", "testing"],
+            },
         }
+
+    # ------------------------------------------------------------------
+    # Child orchestrator lifecycle management
+    # ------------------------------------------------------------------
+
+    def create_child_orchestrator(
+        self, name: str, spec: Dict[str, Any]
+    ) -> 'SubOrchestrator':
+        """Create and register a child :class:`SubOrchestrator`.
+
+        Args:
+            name: Identifier for the sub-orchestrator.
+            spec: Initialization specification forwarded to
+                :class:`SubOrchestrator`.
+
+        Returns:
+            The created :class:`SubOrchestrator` instance.
+        """
+        from .sub_orchestrator import SubOrchestrator
+
+        orchestrator = SubOrchestrator(self.mcp_client, **spec)
+        self.child_orchestrators[name] = orchestrator
+        return orchestrator
+
+    def remove_child_orchestrator(self, name: str) -> bool:
+        """Remove a previously registered child orchestrator."""
+        return self.child_orchestrators.pop(name, None) is not None
+
+    def list_child_orchestrators(self) -> List[str]:
+        """List identifiers of active child orchestrators."""
+        return list(self.child_orchestrators.keys())
     
     async def analyze_request_complexity(self, request: str, code: str = None) -> Dict[str, Any]:
         """
