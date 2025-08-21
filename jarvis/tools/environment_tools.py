@@ -104,7 +104,7 @@ def run_shell_command(command: str, username: str,
 
     try:
         result = subprocess.run(
-            command, shell=True, check=True, capture_output=True, text=True
+            shlex.split(command), shell=False, check=True, capture_output=True, text=True
         )
         logger.info("%s executed command '%s'", username, command)
         if sm.db_manager:
