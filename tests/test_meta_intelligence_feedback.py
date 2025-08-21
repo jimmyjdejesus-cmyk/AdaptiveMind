@@ -14,7 +14,9 @@ CriticFeedback = meta.CriticFeedback
 CriticInsightMerger = meta.CriticInsightMerger
 MetaIntelligenceCore = meta.MetaIntelligenceCore
 
+import pytest
 
+from jarvis.ecosystem.meta_intelligence import CriticFeedback, CriticInsightMerger, MetaIntelligenceCore
 def test_feedback_weighting_and_synthesis():
     merger = CriticInsightMerger()
     feedbacks = [
