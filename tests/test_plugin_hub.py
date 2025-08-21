@@ -9,7 +9,14 @@ jarvis_pkg.__path__ = [str(Path(__file__).resolve().parents[1] / "jarvis")]
 import sys
 sys.modules.setdefault("jarvis", jarvis_pkg)
 
-hub = importlib.import_module("jarvis.plugin_hub.hub")
+from unittest.mock import patch
+
+# Use patch.dict to inject "jarvis" into sys.modules only when needed
+jarvis_pkg = types.ModuleType("jarvis")
+jarvis_pkg.__path__ = [str(Path(__file__).resolve().parents[1] / "jarvis")]
+
+with patch.dict("sys.modules", {"jarvis": jarvis_pkg}):
+    hub = importlib.import_module("jarvis.plugin_hub.hub")
 
 app = hub.app
 _installed_plugins = hub._installed_plugins
