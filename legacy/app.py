@@ -18,7 +18,7 @@ from database.database import init_db, get_user, get_user_preferences, save_user
 import database.database as database
 from ui.analytics import render_analytics_dashboard
 from tools.code_intelligence.ui import render_code_intelligence_interface
-from scripts.ollama_client import get_available_models, pull_model_subprocess
+from jarvis.models.client import model_client
 
 # Import Lang family integrations
 try:
@@ -371,7 +371,7 @@ def show_admin_panel():
             show_details = st.checkbox("Show Details")
         
         try:
-            available_models = get_available_models()
+            available_models = model_client.get_available_models()
             if available_models:
                 st.success(f"Found {len(available_models)} models")
                 
@@ -458,7 +458,7 @@ def show_admin_panel():
                 
                 try:
                     # Stream the pull output
-                    for line in pull_model_subprocess(model_to_pull):
+                    for line in model_client.pull_model(model_to_pull):
                         progress_placeholder.text(line)
                     
                     progress_placeholder.success(f"âœ… Successfully pulled {model_to_pull}")
@@ -481,7 +481,7 @@ def show_admin_panel():
         
         if st.button("ðŸ¥ Health Check All Models"):
             try:
-                available_models = get_available_models()
+                available_models = model_client.get_available_models()
                 if available_models:
                     health_results = []
                     
@@ -875,7 +875,7 @@ if "user" not in st.session_state:
 if "selected_expert_model" not in st.session_state:
     try:
         # Using import from top of file
-        available_models = get_available_models()
+        available_models = model_client.get_available_models()
         if available_models:
             st.session_state["selected_expert_model"] = available_models[0]
         else:
