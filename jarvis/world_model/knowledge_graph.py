@@ -42,11 +42,10 @@ class KnowledgeGraph:
     # ------------------------------------------------------------------
     def query(self, query: str) -> Any:
         """Execute a very small subset of Cypher-like queries.
-
         The supported forms are:
-            - ``"nodes"`` – return all nodes with data
-            - ``"edges"`` – return all edges with data
-            - ``"node <id>"`` – return data for a specific node
+        - ``"nodes"`` – return all nodes with data
+        - ``"edges"`` – return all edges with data
+        - ``"node <id>"`` – return data for a specific node
         """
 
         if query == "nodes":
