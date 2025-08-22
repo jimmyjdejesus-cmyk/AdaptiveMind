@@ -1,7 +1,8 @@
 """Pruning manager with safety and reliability features.
 
 Provides two-phase pruning (dry-run and commit), snapshot/rollback,
-HITL prompts, and policy guardrails.
+HITL prompts, and policy guardrails. It also includes the PruningEvaluator
+service for scoring and emitting prune recommendations.
 """
 from __future__ import annotations
 
@@ -10,6 +11,8 @@ from datetime import datetime
 import json
 import os
 from typing import Any, Dict, List, Optional
+
+from .message_bus import MessageBus # Assuming MessageBus is in a .message_bus module
 
 
 @dataclass
@@ -23,6 +26,111 @@ class PruneRecord:
 
 
 @dataclass
+class Scores:
+    """Container for pruning score signals."""
+
+    novelty: float
+    growth: float
+    cost: float
+
+
+class PruningEvaluator:
+    """Score teams and emit prune suggestions.
+
+    This is a lightweight in-process service that scores exploration teams
+    and emits pruning recommendations via the MessageBus.
+    """
+
+    def __init__(
+        self,
+        bus: MessageBus,
+        scope: str = "global",
+        config: Optional[Dict[str, float]] = None,
+    ) -> None:
+        self.bus = bus
+        self.scope = scope
+        self.config = {
+            "min_novelty": 0.25,
+            "min_growth": 0.0,
+            "max_cost_per_gain": 3.0,
+        }
+        if config:
+            self.config.update(config)
+
+        # Store simple per-team history for delta calculations
+        self._history: Dict[str, List[Dict[str, Any]]] = {}
+
+    async def score(self, team_id: str, output: Dict[str, Any]) -> Scores:
+        """Calculate pruning scores for a team's latest output."""
+        history = self._history.setdefault(team_id, [])
+
+        # Novelty: simple token overlap with last output
+        novelty = 1.0
+        if history:
+            prev_text = history[-1].get("text", "")
+            cur_text = output.get("text", "")
+            prev_tokens = set(prev_text.split())
+            cur_tokens = set(cur_text.split())
+            union = prev_tokens | cur_tokens
+            if union:
+                novelty = 1 - (len(prev_tokens & cur_tokens) / len(union))
+
+        # Growth: difference in quality metric
+        prev_quality = history[-1].get("quality", 0.0) if history else 0.0
+        quality = output.get("quality", 0.0)
+        growth = quality - prev_quality
+
+        # Cost per gain: avoid division by zero
+        cost = output.get("cost", 0.0)
+        cost_per_gain = cost / growth if growth > 0 else float("inf")
+
+        history.append(output)
+        return Scores(novelty=novelty, growth=growth, cost=cost_per_gain)
+
+    async def evaluate(self, team_id: str, output: Dict[str, Any]) -> Scores:
+        """Score and publish prune suggestions when thresholds are violated."""
+        scores = await self.score(team_id, output)
+        cfg = self.config
+        if (
+            scores.novelty < cfg["min_novelty"]
+            or scores.growth < cfg["min_growth"]
+            or scores.cost > cfg["max_cost_per_gain"]
+        ):
+            await self.bus.publish(
+                "orchestrator.prune_suggested",
+                {
+                    "team_id": team_id,
+                    "scores": scores.__dict__,
+                    "reason": "thresholds_not_met",
+                },
+                scope=self.scope,
+            )
+        return scores
+
+    async def merge_state(
+        self, from_team: str, into_team: str, artifacts: List[str]
+    ) -> None:
+        """Emit merge event consolidating team artifacts."""
+        await self.bus.publish(
+            "orchestrator.team_merged",
+            {
+                "from_team": from_team,
+                "into_team": into_team,
+                "merged_artifacts": artifacts,
+            },
+            scope=self.scope,
+        )
+
+    async def mark_dead_end(self, team_id: str, signature: str) -> None:
+        """Publish dead-end marker for a team path."""
+        await self.bus.publish(
+            "orchestrator.path_dead_end",
+            {"team_id": team_id, "path_signature": signature},
+            scope=self.scope,
+        )
+
+
+@dataclass
 class PruningManager:
     """Manage safe, reversible team pruning operations."""
 
@@ -31,6 +139,9 @@ class PruningManager:
     active_teams: List[str] = field(default_factory=list)
     lineage: List[PruneRecord] = field(default_factory=list)
     bq_approved: bool = False
+    
+    # PruningEvaluator instance for scoring
+    evaluator: Optional[PruningEvaluator] = None
 
     def __post_init__(self) -> None:
         os.makedirs(self.snapshots_dir, exist_ok=True)
@@ -45,7 +156,7 @@ class PruningManager:
         if len(self.active_teams) <= 2 and not self.bq_approved:
             raise ValueError("At least two teams must remain active until BQ approval.")
 
-    # ----------------- Two Phase Merge -----------------
+    # ----------------- Two Phase Prune -----------------
     def dry_run(self, team: str, reason: str, actor: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Validate prune without changing state."""
         self._check_guardrails(team, context)
