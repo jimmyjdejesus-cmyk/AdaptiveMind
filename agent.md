@@ -2,6 +2,13 @@
 # Agent Log
 
 ## 2025-08-22
+- Wired pruning triggers into orchestrator event loop.
+- Added visual graph indicators and documentation.
+- Created tests for pruning integration and graph visuals.
+=======
+# Agent Log
+
+## 2025-08-22
 - Added pruning module with `PruningEvaluator` and `path_signature` helper.
 - Introduced default pruning configuration flags.
 - Created tests for pruning utilities.

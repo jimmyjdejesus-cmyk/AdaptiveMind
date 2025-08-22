@@ -8,6 +8,8 @@ from typing import List, Dict, Any, Callable
 from jarvis.memory.memory_bus import MemoryBus
 # from jarvis.orchestration.graph import MultiTeamOrchestrator # Moved to fix circular import
 from jarvis.tools.web_tools import search_web
+from jarvis.orchestration.message_bus import MessageBus
+from jarvis.orchestration.pruning import PruningEvaluator
 
 class TeamMemberAgent:
     """Base class for all team member agents."""
@@ -68,6 +70,9 @@ class OrchestratorAgent:
         self.objective = objective
         self.memory_bus = MemoryBus(directory) # Local bus for this project
         self.shared_bus = shared_bus # Shared bus for inter-orchestrator communication
+        # Event bus for coordination and pruning suggestions
+        self.event_bus = MessageBus()
+        self.pruning_evaluator = PruningEvaluator(self.event_bus)
         
         # Initialize the five teams
         self.teams = {
@@ -79,7 +84,7 @@ class OrchestratorAgent:
         
         # Initialize the LangGraph orchestrator
         from jarvis.orchestration.graph import MultiTeamOrchestrator # Local import to break cycle
-        self.orchestrator = MultiTeamOrchestrator(self)
+        self.orchestrator = MultiTeamOrchestrator(self, evaluator=self.pruning_evaluator)
         
         self.log(f"Orchestrator initialized for objective: {objective}")
 

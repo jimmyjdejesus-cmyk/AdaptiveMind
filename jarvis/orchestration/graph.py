@@ -2,10 +2,12 @@
 Defines the LangGraph-based orchestration logic for the multi-agent teams.
 """
 
+import asyncio
 from typing import List, Dict, Any, TypedDict, Annotated
 from langgraph.graph import StateGraph, END
 # from langgraph.checkpoints import SqliteSaver # Temporarily removed to resolve import error
 from jarvis.orchestration.agents import OrchestratorAgent, TeamMemberAgent
+from jarvis.orchestration.pruning import PruningEvaluator
 
 # Define the state for our graph
 class TeamWorkflowState(TypedDict):
@@ -15,11 +17,15 @@ class TeamWorkflowState(TypedDict):
     next_team: str
 
 class MultiTeamOrchestrator:
-    """
-    Uses LangGraph to orchestrate the five specialized teams.
-    """
-    def __init__(self, orchestrator_agent: OrchestratorAgent):
+    """Uses LangGraph to orchestrate the five specialized teams."""
+
+    def __init__(
+        self,
+        orchestrator_agent: OrchestratorAgent,
+        evaluator: PruningEvaluator | None = None,
+    ) -> None:
         self.orchestrator = orchestrator_agent
+        self.evaluator = evaluator
         self.graph = self._build_graph()
 
     def _build_graph(self):
@@ -49,14 +55,23 @@ class MultiTeamOrchestrator:
 
     def _run_team(self, team: TeamMemberAgent, state: TeamWorkflowState) -> Dict[str, Any]:
         """Helper function to run a single team member."""
-        # This now calls the agent's actual run method.
-        # If the method is not implemented, it will use a default simulation.
         try:
-            result = team.run(state['objective'], state['context'])
+            result = team.run(state["objective"], state["context"])
         except NotImplementedError:
             team.log(f"Starting simulated task for objective: {state['objective']}")
-            result = {f"{team.team.lower()}_output": f"Completed simulated task for {team.team} team."}
-            team.log(f"Simulated task finished.", data=result)
+            result = {
+                f"{team.team.lower()}_output": f"Completed simulated task for {team.team} team."
+            }
+            team.log("Simulated task finished.", data=result)
+
+        if self.evaluator:
+            output = {
+                "text": str(result),
+                "quality": result.get("quality", 0.0) if isinstance(result, dict) else 0.0,
+                "cost": result.get("cost", 0.0) if isinstance(result, dict) else 0.0,
+            }
+            asyncio.run(self.evaluator.evaluate(team.team, output))
+
         return result
 
     def _run_adversary_pair(self, state: TeamWorkflowState) -> TeamWorkflowState:
