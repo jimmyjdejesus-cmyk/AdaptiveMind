@@ -18,6 +18,7 @@ from pathlib import Path
 from jarvis.tools.repository_indexer import RepositoryIndexer
 from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
 from jarvis.memory import MemoryManager, ProjectMemory
+from jarvis.world_model.knowledge_graph import KnowledgeGraph
 
 from jarvis.agents.critics import BlueTeamCritic
 from jarvis.agents.mission_planner import MissionPlanner
@@ -237,6 +238,12 @@ class MetaAgent(AIAgent):
         except Exception as exc:  # pragma: no cover - optional dependency
             logger.warning("Repository indexer unavailable: %s", exc)
             self.repo_indexer = None
+        self.knowledge_graph = KnowledgeGraph()
+        if self.repo_indexer:
+            try:
+                self.knowledge_graph.populate_from_indexer(self.repo_indexer)
+            except Exception as exc:  # pragma: no cover - best effort
+                logger.warning("Knowledge graph population failed: %s", exc)
         self.mission_planner = mission_planner if mission_planner is not None else MissionPlanner()
         self.session_manager = SessionManager()
         self.enable_blue_team = enable_blue_team
@@ -245,6 +252,12 @@ class MetaAgent(AIAgent):
             if enable_blue_team
             else None
         )
+
+    def create_sub_orchestrator(self, name: str, spec: Dict[str, Any]) -> MultiAgentOrchestrator:
+        """Instantiate and cache a sub-orchestrator."""
+        orchestrator = self.orchestrator_cls(self.mcp_client, **spec)
+        self.sub_orchestrators[name] = orchestrator
+        return orchestrator
 
     def plan_mission(self, goal: str, session_id: Optional[str] = None) -> Dict[str, Any]:
         """Create a LangGraph definition from a high-level goal."""
@@ -418,7 +431,9 @@ class MetaAgent(AIAgent):
 
         orchestrator = self.sub_orchestrators.get(step_id)
         if not orchestrator:
-            spec = {"allowed_specialists": specialists, "mission_name": step_id}
+            spec: Dict[str, Any] = {"mission_name": step_id}
+            if specialists:
+                spec["allowed_specialists"] = specialists
             orchestrator = self.create_sub_orchestrator(step_id, spec)
 
         result = await orchestrator.coordinate_specialists(
