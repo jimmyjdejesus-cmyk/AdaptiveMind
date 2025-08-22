@@ -13,16 +13,17 @@ replaced by a small, generic template which can dynamically assemble graphs
 from ``AgentSpec`` definitions.
 """
 
-from .orchestrator import MultiAgentOrchestrator
+from .orchestrator import MultiAgentOrchestrator, AgentSpec, DynamicOrchestrator, END
 from .sub_orchestrator import SubOrchestrator
-from .orchestrator import AgentSpec, DynamicOrchestrator, END
+from .pruning import PruningManager
 
 __all__ = [
     "AgentSpec",
     "DynamicOrchestrator",
     "MultiAgentOrchestrator",
     "SubOrchestrator",
-    "END"
+    "PruningManager",
+    "END",
 ]
 
 # Version info
