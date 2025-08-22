@@ -91,3 +91,10 @@
 - Logged project path hashes to `agent_project.md` and enabled vector store cleanup.
 - Created tests covering hashing, negative lookup, and pruning.
 - Executed targeted memory service test suite.
+
+# Agent Log
+
+## WS4 MCP & Dynamic Model Routing
+- Implemented asynchronous API calls for OpenAI and Anthropic in MCPClient.
+- Consolidated duplicate `generate_response` with rate limiting and timeout.
+- Ran `pytest test_mcp_foundation.py` to validate MCP client.
