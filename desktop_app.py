@@ -46,14 +46,17 @@ class JarvisDesktopApp:
         self.agent = JarvisAgentV2()
         self.models = []
         
-        # Configure style
-        self.setup_styles()
-        
         # Create main interface
         self.create_widgets()
         
+        # Configure style
+        self.setup_styles()
+        
         # Initialize connections
         self.check_connections()
+
+        # Prompt for API key if missing
+        self.prompt_for_api_key()
     
     def setup_styles(self):
         """Setup modern dark theme styles."""
@@ -65,6 +68,13 @@ class JarvisDesktopApp:
         style.configure('TLabel', background='#2b2b2b', foreground='#ffffff')
         style.configure('TButton', background='#4a4a4a', foreground='#ffffff')
         style.map('TButton', background=[('active', '#5a5a5a')])
+
+        # Chat history text styles
+        self.chat_history.tag_configure("user", foreground="#a9d1ff", font=('Arial', 10, 'bold'))
+        self.chat_history.tag_configure("agent", foreground="#ffffff", font=('Arial', 10, 'bold'))
+        self.chat_history.tag_configure("agent_stream", foreground="#ffffff")
+        self.chat_history.tag_configure("warning", foreground="#ffaa00")
+        self.chat_history.tag_configure("error", foreground="#ff4444", font=('Arial', 10, 'italic'))
     
     def create_widgets(self):
         """Create the main UI components."""
@@ -101,59 +111,40 @@ class JarvisDesktopApp:
         self.status_label = ttk.Label(status_frame, text="Initializing...", foreground='#ffaa00')
         self.status_label.grid(row=0, column=1, sticky=tk.W, padx=(10, 0))
         
+        # Chat history
+        self.chat_history = scrolledtext.ScrolledText(main_frame,
+                                                      bg='#1e1e1e', fg='#ffffff',
+                                                      font=('Arial', 10),
+                                                      wrap=tk.WORD,
+                                                      state='disabled')
+        self.chat_history.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
         # Input frame
-        input_frame = ttk.Frame(main_frame)
-        input_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        input_frame = ttk.Frame(main_frame, padding=(0, 10))
+        input_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E))
         input_frame.columnconfigure(0, weight=1)
-        input_frame.rowconfigure(1, weight=1)
+
+        self.query_text = tk.Text(input_frame, height=2, bg='#3b3b3b', fg='#ffffff',
+                                  insertbackground='#ffffff', font=('Arial', 10))
+        self.query_text.grid(row=0, column=0, sticky=(tk.W, tk.E))
+        self.query_text.bind("<Return>", self.run_workflow_on_enter)
+
+        self.run_button = ttk.Button(input_frame, text="Send", command=self.run_workflow)
+        self.run_button.grid(row=0, column=1, padx=(10, 0))
+
+        # Bottom button bar
+        bottom_bar = ttk.Frame(main_frame)
+        bottom_bar.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(10, 0))
         
-        ttk.Label(input_frame, text="Enter your query:").grid(row=0, column=0, sticky=tk.W)
-        
-        # Query input
-        self.query_text = scrolledtext.ScrolledText(input_frame, height=4, 
-                                                   bg='#3b3b3b', fg='#ffffff',
-                                                   insertbackground='#ffffff')
-        self.query_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(5, 0))
-        
-        # Default query
-        default_query = "What are the key components for building production-ready AI applications?"
-        self.query_text.insert('1.0', default_query)
-        
-        # Button frame
-        button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=4, column=0, columnspan=2, pady=(0, 10))
-        
-        self.run_button = ttk.Button(button_frame, text="🚀 Run Agentic Workflow", 
-                                    command=self.run_workflow)
-        self.run_button.grid(row=0, column=0, padx=(0, 10))
-        
-        ttk.Button(button_frame, text="🔄 Clear Output", 
-                  command=self.clear_output).grid(row=0, column=1, padx=(0, 10))
-        
-        ttk.Button(button_frame, text="📊 Open LangSmith", 
-                  command=self.open_langsmith).grid(row=0, column=2)
-        
-        # Output frame
-        output_frame = ttk.Frame(main_frame)
-        output_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
-        output_frame.columnconfigure(0, weight=1)
-        output_frame.rowconfigure(1, weight=1)
-        
-        ttk.Label(output_frame, text="Workflow Output:").grid(row=0, column=0, sticky=tk.W)
-        
-        # Output text area
-        self.output_text = scrolledtext.ScrolledText(output_frame, height=15,
-                                                   bg='#1e1e1e', fg='#00ff00',
-                                                   insertbackground='#ffffff',
-                                                   font=('Consolas', 9))
-        self.output_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(5, 0))
-        
-        # Progress bar
-        self.progress = ttk.Progressbar(main_frame, mode='indeterminate')
-        self.progress.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(10, 0))
-        
+        ttk.Button(bottom_bar, text="🔄 New Chat",
+                  command=self.clear_output).pack(side=tk.LEFT)
+        ttk.Button(bottom_bar, text="📊 Open LangSmith", 
+                  command=self.open_langsmith).pack(side=tk.LEFT, padx=(10, 0))
+        ttk.Button(bottom_bar, text="⚙️ Settings",
+                  command=self.open_settings_window).pack(side=tk.LEFT, padx=(10, 0))
+
         # Configure additional row weights
-        main_frame.rowconfigure(5, weight=1)
+        main_frame.rowconfigure(3, weight=1)
     
     def check_connections(self):
         """Check LangSmith and Ollama connections."""
@@ -207,11 +198,71 @@ class JarvisDesktopApp:
             self.log_output(f"❌ Ollama: {str(e)}\n")
             return False
     
-    def log_output(self, text):
-        """Add text to output area."""
-        self.output_text.insert(tk.END, text)
-        self.output_text.see(tk.END)
+    def log_output(self, text, tag=None):
+        """Add text to the chat history with an optional tag for styling."""
+        self.chat_history.config(state='normal')
+        self.chat_history.insert(tk.END, text, tag)
+        self.chat_history.config(state='disabled')
+        self.chat_history.see(tk.END)
         self.root.update_idletasks()
+
+    def prompt_for_api_key(self):
+        """Check for LangSmith API key and prompt if missing."""
+        if not os.getenv('LANGSMITH_API_KEY'):
+            self.open_settings_window(prompt_message="LangSmith API Key is not set. Please enter it to enable tracing.")
+
+    def open_settings_window(self, prompt_message=None):
+        """Open a window to configure settings like API keys."""
+        settings_window = tk.Toplevel(self.root)
+        settings_window.title("Settings")
+        settings_window.geometry("400x200")
+        settings_window.configure(bg='#2b2b2b')
+        settings_window.transient(self.root)
+        settings_window.grab_set()
+
+        frame = ttk.Frame(settings_window, padding="10")
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        if prompt_message:
+            ttk.Label(frame, text=prompt_message, foreground="#ffaa00", wraplength=380).pack(pady=(0, 10))
+
+        ttk.Label(frame, text="LangSmith API Key:").pack(pady=(10, 5))
+        
+        api_key_entry = ttk.Entry(frame, width=50)
+        api_key_entry.pack()
+        current_key = os.getenv('LANGSMITH_API_KEY', '')
+        api_key_entry.insert(0, current_key)
+
+        def save_key():
+            new_key = api_key_entry.get().strip()
+            if new_key:
+                # Update .env file
+                env_file = Path('.env')
+                lines = []
+                key_found = False
+                if env_file.exists():
+                    with open(env_file, 'r') as f:
+                        lines = f.readlines()
+                
+                with open(env_file, 'w') as f:
+                    for line in lines:
+                        if line.strip().startswith('LANGSMITH_API_KEY='):
+                            f.write(f'LANGSMITH_API_KEY={new_key}\n')
+                            key_found = True
+                        else:
+                            f.write(line)
+                    if not key_found:
+                        f.write(f'LANGSMITH_API_KEY={new_key}\n')
+                
+                os.environ['LANGSMITH_API_KEY'] = new_key
+                self.log_output("✅ LangSmith API Key saved.\n")
+                settings_window.destroy()
+                self.check_connections() # Re-check connections
+            else:
+                messagebox.showwarning("Warning", "API Key cannot be empty.", parent=settings_window)
+
+        save_button = ttk.Button(frame, text="Save", command=save_key)
+        save_button.pack(pady=(10, 0))
 
     def update_model_selector(self):
         """Update the model selector combobox with available models."""
@@ -223,30 +274,38 @@ class JarvisDesktopApp:
             self.model_selector.set("No models found")
     
     def clear_output(self):
-        """Clear the output area."""
-        self.output_text.delete('1.0', tk.END)
+        """Clear the chat history."""
+        self.chat_history.config(state='normal')
+        self.chat_history.delete('1.0', tk.END)
+        self.chat_history.config(state='disabled')
     
     def open_langsmith(self):
         """Open LangSmith dashboard."""
         import webbrowser
         webbrowser.open('https://smith.langchain.com/')
     
-    def run_workflow(self):
+    def run_workflow_on_enter(self, event):
+        """Handle the Enter key press to run the workflow."""
+        self.run_workflow()
+        return "break"  # Prevents the default newline character
+
+    def run_workflow(self, event=None):
         """Run the agentic workflow."""
         query = self.query_text.get('1.0', tk.END).strip()
         model = self.model_selector.get()
 
         if not query:
-            messagebox.showwarning("Warning", "Please enter a query!")
             return
         
         if not model or model == "No models found":
             messagebox.showwarning("Warning", "Please select a model!")
             return
 
+        self.log_output(f"You: {query}\n\n", "user")
+        self.query_text.delete('1.0', tk.END)
+
         # Disable button and start progress
         self.run_button.config(state='disabled')
-        self.progress.start()
         
         def workflow_thread():
             loop = asyncio.new_event_loop()
@@ -262,45 +321,35 @@ class JarvisDesktopApp:
             # Pass the selected model to the agent
             self.agent.llm.model = model
 
-            self.clear_output()
-            self.log_output("🚀 Starting Agentic Workflow...\n")
-            self.log_output("=" * 50 + "\n")
-            self.log_output(f"🎯 Query: {query}\n\n")
-
             # Setup environment for LangSmith tracing
             if os.getenv('LANGSMITH_API_KEY'):
                 os.environ['LANGCHAIN_TRACING_V2'] = 'true'
                 os.environ['LANGCHAIN_PROJECT'] = 'jarvis-ai-desktop'
-                self.log_output("📡 LangSmith tracing enabled\n")
 
+            self.log_output("Jarvis: ", "agent")
             final_result = ""
             async for event in self.agent.stream_workflow(query):
                 event_type = event.get("type")
                 content = event.get("content")
 
                 if event_type == "step":
-                    self.log_output(f"🔄 [{content.upper()}]\n")
+                    self.status_label.config(text=f"Working: {content.capitalize()}...")
                 elif event_type == "token":
                     final_result += content + " "
-                    self.log_output(content + " ")
+                    self.log_output(content + " ", "agent_stream")
                 elif event_type == "hitl":
-                    # For now, we'll just log this. A real implementation would pause for user input.
-                    self.log_output(f"\n\n[USER CONFIRMATION REQUIRED]\n{content}\n\n")
+                    self.log_output(f"\n\n[USER CONFIRMATION REQUIRED]\n{content}\n\n", "warning")
                 elif event_type == "done":
-                    self.log_output("\n\n" + "=" * 50 + "\n")
-                    self.log_output("✅ Workflow completed successfully!\n")
-                    self.log_output("\n📊 Check LangSmith dashboard for traces:\n")
-                    self.log_output("   https://smith.langchain.com/\n")
-                    # self.show_result_window(final_result.strip()) # Optionally show final result in new window
+                    self.log_output("\n\n", "agent") # Add spacing after response
 
         except Exception as e:
-            self.log_output(f"\n❌ Workflow failed: {str(e)}\n")
+            self.log_output(f"\n\nAn error occurred: {str(e)}\n\n", "error")
         
         finally:
-            # Re-enable button and stop progress in the main thread
+            # Re-enable button and reset status in the main thread
             self.root.after(0, lambda: [
                 self.run_button.config(state='normal'),
-                self.progress.stop()
+                self.check_connections() # Reset status to connection health
             ])
     
     def show_result_window(self, result):
