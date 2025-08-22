@@ -1,52 +1,32 @@
+"""
+Provides web-related tools for Jarvis agents.
+"""
 import requests
-from typing import List, Dict
+from bs4 import BeautifulSoup
 
-from jarvis.security.decorators import rate_limit, timeout
+def search_web(query: str) -> str:
+    """
+    Performs a web search using DuckDuckGo and returns the top results.
+    """
+    try:
+        # Using DuckDuckGo's HTML endpoint for simplicity
+        res = requests.get(f"https://html.duckduckgo.com/html/?q={query}")
+        res.raise_for_status()
+        
+        soup = BeautifulSoup(res.text, "html.parser")
+        results = soup.find_all("a", class_="result__a")
+        
+        if not results:
+            return "No search results found."
+            
+        output = "Web Search Results:\n"
+        for i, result in enumerate(results[:5]): # Return top 5 results
+            output += f"{i+1}. {result.text} - {result['href']}\n"
+            
+        return output
+    except Exception as e:
+        return f"An error occurred during web search: {str(e)}"
 
-
-class WebSearchTool:
-    """Simple web search tool using DuckDuckGo API."""
-
-    api_url = "https://api.duckduckgo.com/"
-
-    @rate_limit(calls=5, period=60)
-    @timeout(10)
-    def search(self, query: str, max_results: int = 5) -> List[Dict[str, str]]:
-        params = {"q": query, "format": "json", "no_redirect": 1, "no_html": 1}
-        response = requests.get(self.api_url, params=params, timeout=10)
-        try:
-            response = requests.get(self.api_url, params=params, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-        except requests.RequestException as e:
-            # Provide meaningful error message and context
-            print(f"WebSearchTool.search: Failed to fetch results for query '{query}': {e}")
-            return []
-        results = []
-        for topic in data.get("RelatedTopics", [])[:max_results]:
-            if isinstance(topic, dict) and "FirstURL" in topic and "Text" in topic:
-                results.append({"title": topic.get("Text"), "url": topic.get("FirstURL")})
-        return results
-
-    # Compatibility with Tool interface
-    def execute(self, query: str, max_results: int = 5):
-        return self.search(query, max_results=max_results)
-
-
-class WebReaderTool:
-    """Fetch raw text content from a web page."""
-
-    @rate_limit(calls=5, period=60)
-    @timeout(10)
-    def read(self, url: str) -> str:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        try:
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()
-            return response.text
-        except requests.RequestException as e:
-            raise RuntimeError(f"Failed to read URL '{url}': {e}")
-
-    def execute(self, url: str) -> str:
-        return self.read(url)
+if __name__ == "__main__":
+    search_results = search_web("LangGraph multi-agent orchestration")
+    print(search_results)

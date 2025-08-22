@@ -1,0 +1,5 @@
+langgraph
+beautifulsoup4
+requests
+langsmith
+ollama

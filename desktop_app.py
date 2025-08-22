@@ -10,9 +10,11 @@ import threading
 import os
 from pathlib import Path
 import asyncio
+import uuid
+import time
 
 from config.config_loader import load_config
-from v2.agent.core.agent import JarvisAgentV2
+from jarvis.orchestration.agents import MetaAgent
 
 # Load environment variables
 def load_env():
@@ -38,12 +40,12 @@ class JarvisDesktopApp:
     def __init__(self, root):
         self.root = root
         app_name = CONFIG.get("app_name", "Jarvis AI")
-        self.root.title(f"{app_name} - Agentic Workflows")
-        self.root.geometry("800x600")
+        self.root.title(f"{app_name} - Multi-Agent Orchestrator")
+        self.root.geometry("1200x800")
         self.root.configure(bg='#2b2b2b')
         
-        # Initialize the agent
-        self.agent = JarvisAgentV2()
+        # Initialize the Meta-Agent
+        self.meta_agent = MetaAgent()
         self.models = []
         
         # Create main interface
@@ -90,61 +92,68 @@ class JarvisDesktopApp:
         main_frame.rowconfigure(2, weight=1)
         
         # Header
-        header_label = ttk.Label(main_frame, text="🤖 Jarvis AI - Agentic Workflows", 
+        header_label = ttk.Label(main_frame, text="🤖 Jarvis AI - Multi-Agent Orchestrator", 
                                 font=('Arial', 16, 'bold'))
-        header_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
-        
-        # Model selection
-        model_frame = ttk.Frame(main_frame)
-        model_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
-        ttk.Label(model_frame, text="Model:").grid(row=0, column=0, sticky=tk.W)
-        self.model_selector = ttk.Combobox(model_frame, state="readonly")
-        self.model_selector.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 0))
-        model_frame.columnconfigure(1, weight=1)
+        header_label.grid(row=0, column=0, columnspan=3, pady=(0, 10))
 
-        # Status frame
-        status_frame = ttk.Frame(main_frame)
-        status_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
-        status_frame.columnconfigure(1, weight=1)
-        
-        ttk.Label(status_frame, text="Status:").grid(row=0, column=0, sticky=tk.W)
-        self.status_label = ttk.Label(status_frame, text="Initializing...", foreground='#ffaa00')
-        self.status_label.grid(row=0, column=1, sticky=tk.W, padx=(10, 0))
-        
+        # Main layout panes
+        paned_window = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
+        paned_window.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.rowconfigure(1, weight=1)
+
+        # Left pane for controls and chat
+        left_pane = ttk.Frame(paned_window, padding=5)
+        paned_window.add(left_pane, weight=1)
+        left_pane.columnconfigure(0, weight=1)
+        left_pane.rowconfigure(2, weight=1)
+
+        # Right pane for workflow visualization
+        right_pane = ttk.Frame(paned_window, padding=5)
+        paned_window.add(right_pane, weight=2)
+        right_pane.columnconfigure(0, weight=1)
+        right_pane.rowconfigure(1, weight=1)
+
+        # --- Left Pane Widgets ---
+        controls_frame = ttk.Frame(left_pane)
+        controls_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        controls_frame.columnconfigure(1, weight=1)
+
+        ttk.Label(controls_frame, text="Mode:").grid(row=0, column=0, sticky=tk.W)
+        self.mode_selector = ttk.Combobox(controls_frame, values=["Chat", "Deep Research", "Agent Mode"], state="readonly")
+        self.mode_selector.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 0))
+        self.mode_selector.set("Agent Mode")
+
+        ttk.Label(controls_frame, text="Status:").grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
+        self.status_label = ttk.Label(controls_frame, text="Initializing...", foreground='#ffaa00')
+        self.status_label.grid(row=1, column=1, sticky=tk.W, padx=(10, 0))
+
         # Chat history
-        self.chat_history = scrolledtext.ScrolledText(main_frame,
-                                                      bg='#1e1e1e', fg='#ffffff',
-                                                      font=('Arial', 10),
-                                                      wrap=tk.WORD,
-                                                      state='disabled')
-        self.chat_history.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
+        self.chat_history = scrolledtext.ScrolledText(left_pane, bg='#1e1e1e', fg='#ffffff', font=('Arial', 10), wrap=tk.WORD, state='disabled')
+        self.chat_history.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
         # Input frame
-        input_frame = ttk.Frame(main_frame, padding=(0, 10))
-        input_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E))
+        input_frame = ttk.Frame(left_pane, padding=(0, 10))
+        input_frame.grid(row=3, column=0, sticky=(tk.W, tk.E))
         input_frame.columnconfigure(0, weight=1)
 
-        self.query_text = tk.Text(input_frame, height=2, bg='#3b3b3b', fg='#ffffff',
-                                  insertbackground='#ffffff', font=('Arial', 10))
+        self.query_text = tk.Text(input_frame, height=3, bg='#3b3b3b', fg='#ffffff', insertbackground='#ffffff', font=('Arial', 10))
         self.query_text.grid(row=0, column=0, sticky=(tk.W, tk.E))
         self.query_text.bind("<Return>", self.run_workflow_on_enter)
 
-        self.run_button = ttk.Button(input_frame, text="Send", command=self.run_workflow)
+        self.run_button = ttk.Button(input_frame, text="Execute", command=self.run_workflow)
         self.run_button.grid(row=0, column=1, padx=(10, 0))
 
-        # Bottom button bar
-        bottom_bar = ttk.Frame(main_frame)
-        bottom_bar.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(10, 0))
+        # --- Right Pane Widgets ---
+        ttk.Label(right_pane, text="Workflow Visualizer", font=('Arial', 12, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
         
-        ttk.Button(bottom_bar, text="🔄 New Chat",
-                  command=self.clear_output).pack(side=tk.LEFT)
-        ttk.Button(bottom_bar, text="📊 Open LangSmith", 
-                  command=self.open_langsmith).pack(side=tk.LEFT, padx=(10, 0))
-        ttk.Button(bottom_bar, text="⚙️ Settings",
-                  command=self.open_settings_window).pack(side=tk.LEFT, padx=(10, 0))
+        self.workflow_canvas = tk.Canvas(right_pane, bg="#1e1e1e", highlightthickness=0)
+        self.workflow_canvas.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # Configure additional row weights
-        main_frame.rowconfigure(3, weight=1)
+        ttk.Label(right_pane, text="Memory Bus Inspector", font=('Arial', 12, 'bold')).grid(row=2, column=0, sticky=tk.W, pady=(10, 5))
+        
+        self.memory_bus_viewer = scrolledtext.ScrolledText(right_pane, height=10, bg='#1e1e1e', fg='#a9d1ff', font=('Consolas', 9), wrap=tk.WORD, state='disabled')
+        self.memory_bus_viewer.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        right_pane.rowconfigure(3, weight=1)
     
     def check_connections(self):
         """Check LangSmith and Ollama connections."""
@@ -182,21 +191,8 @@ class JarvisDesktopApp:
     
     def test_ollama(self):
         """Test Ollama connection."""
-        try:
-            import requests
-            ollama_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-            response = requests.get(f"{ollama_url}/api/tags", timeout=5)
-            if response.status_code == 200:
-                self.models = [m['name'] for m in response.json().get('models', [])]
-                self.log_output(f"✅ Ollama: Connected ({len(self.models)} models)\n")
-                self.root.after(0, self.update_model_selector)
-                return True
-            else:
-                self.log_output("❌ Ollama: Not responding\n")
-                return False
-        except Exception as e:
-            self.log_output(f"❌ Ollama: {str(e)}\n")
-            return False
+        # This will be re-integrated when the agents use LLMs.
+        return True
     
     def log_output(self, text, tag=None):
         """Add text to the chat history with an optional tag for styling."""
@@ -235,8 +231,20 @@ class JarvisDesktopApp:
 
         def save_key():
             new_key = api_key_entry.get().strip()
-            if new_key:
-                # Update .env file
+            if not new_key:
+                messagebox.showwarning("Warning", "API Key cannot be empty.", parent=settings_window)
+                return
+
+            # Temporarily set the key to test it
+            original_key = os.getenv('LANGSMITH_API_KEY')
+            os.environ['LANGSMITH_API_KEY'] = new_key
+            
+            try:
+                from langsmith import Client
+                client = Client()
+                client.list_projects(limit=1) # Test call
+                
+                # If test is successful, save for real
                 env_file = Path('.env')
                 lines = []
                 key_found = False
@@ -254,24 +262,25 @@ class JarvisDesktopApp:
                     if not key_found:
                         f.write(f'LANGSMITH_API_KEY={new_key}\n')
                 
-                os.environ['LANGSMITH_API_KEY'] = new_key
-                self.log_output("✅ LangSmith API Key saved.\n")
+                self.log_output("✅ LangSmith API Key is valid and saved.\n")
                 settings_window.destroy()
                 self.check_connections() # Re-check connections
-            else:
-                messagebox.showwarning("Warning", "API Key cannot be empty.", parent=settings_window)
+
+            except Exception:
+                # If test fails, show error and revert env var
+                if original_key:
+                    os.environ['LANGSMITH_API_KEY'] = original_key
+                else:
+                    del os.environ['LANGSMITH_API_KEY']
+                messagebox.showerror("Error", "Invalid LangSmith API Key. Authentication failed. Please check the key and try again.", parent=settings_window)
 
         save_button = ttk.Button(frame, text="Save", command=save_key)
         save_button.pack(pady=(10, 0))
 
     def update_model_selector(self):
         """Update the model selector combobox with available models."""
-        if self.models:
-            self.model_selector['values'] = self.models
-            self.model_selector.set(self.models[0])
-        else:
-            self.model_selector['values'] = []
-            self.model_selector.set("No models found")
+        # Placeholder until LLM integration is re-added
+        self.mode_selector.set("Agent Mode")
     
     def clear_output(self):
         """Clear the chat history."""
@@ -290,83 +299,68 @@ class JarvisDesktopApp:
         return "break"  # Prevents the default newline character
 
     def run_workflow(self, event=None):
-        """Run the agentic workflow."""
-        query = self.query_text.get('1.0', tk.END).strip()
-        model = self.model_selector.get()
+        """Run the agentic workflow based on the selected mode."""
+        objective = self.query_text.get('1.0', tk.END).strip()
+        mode = self.mode_selector.get()
 
-        if not query:
-            return
-        
-        if not model or model == "No models found":
-            messagebox.showwarning("Warning", "Please select a model!")
+        if not objective:
             return
 
-        self.log_output(f"You: {query}\n\n", "user")
+        self.log_output(f"You: {objective}\n\n", "user")
         self.query_text.delete('1.0', tk.END)
-
-        # Disable button and start progress
         self.run_button.config(state='disabled')
-        
-        def workflow_thread():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(self.execute_agentic_workflow(query, model))
-            loop.close()
 
-        threading.Thread(target=workflow_thread, daemon=True).start()
+        if mode == "Agent Mode":
+            # For Agent Mode, we create a dedicated directory for the project
+            project_dir = f"project_{objective.replace(' ', '_').lower()[:20]}_{uuid.uuid4().hex[:6]}"
+            os.makedirs(project_dir, exist_ok=True)
+            
+            threading.Thread(target=self.run_agent_mode, args=(objective, project_dir), daemon=True).start()
+        else:
+            # Placeholder for other modes
+            self.log_output(f"Mode '{mode}' is not yet implemented.\n\n", "error")
+            self.run_button.config(state='normal')
     
-    async def execute_agentic_workflow(self, query: str, model: str):
-        """Execute the agentic workflow using JarvisAgentV2 and stream results to the UI."""
+    def run_agent_mode(self, objective: str, project_dir: str):
+        """Handles the execution of the full multi-agent orchestration."""
         try:
-            # Pass the selected model to the agent
-            self.agent.llm.model = model
+            self.log_output(f"Jarvis (Meta-Agent): Spawning orchestrator for objective...\n\n", "agent")
+            orchestrator = self.meta_agent.spawn_orchestrator(objective, project_dir)
+            
+            # Periodically update the memory bus viewer
+            stop_event = threading.Event()
+            monitor_thread = threading.Thread(target=self.monitor_memory_bus, args=(orchestrator.memory_bus, stop_event), daemon=True)
+            monitor_thread.start()
 
-            # Setup environment for LangSmith tracing
-            if os.getenv('LANGSMITH_API_KEY'):
-                os.environ['LANGCHAIN_TRACING_V2'] = 'true'
-                os.environ['LANGCHAIN_PROJECT'] = 'jarvis-ai-desktop'
+            # Run the orchestrator
+            final_result = orchestrator.run()
 
-            self.log_output("Jarvis: ", "agent")
-            final_result = ""
-            async for event in self.agent.stream_workflow(query):
-                event_type = event.get("type")
-                content = event.get("content")
-
-                if event_type == "step":
-                    self.status_label.config(text=f"Working: {content.capitalize()}...")
-                elif event_type == "token":
-                    final_result += content + " "
-                    self.log_output(content + " ", "agent_stream")
-                elif event_type == "hitl":
-                    self.log_output(f"\n\n[USER CONFIRMATION REQUIRED]\n{content}\n\n", "warning")
-                elif event_type == "done":
-                    self.log_output("\n\n", "agent") # Add spacing after response
+            # Stop the monitor and show final state
+            stop_event.set()
+            self.update_memory_bus_viewer(orchestrator.memory_bus.read_log()) # Final update
+            
+            self.log_output(f"Jarvis (Meta-Agent): Orchestration complete.\nFinal Result: {final_result}\n\n", "agent")
 
         except Exception as e:
-            self.log_output(f"\n\nAn error occurred: {str(e)}\n\n", "error")
+            self.log_output(f"\n\nAn error occurred during orchestration: {str(e)}\n\n", "error")
         
         finally:
-            # Re-enable button and reset status in the main thread
-            self.root.after(0, lambda: [
-                self.run_button.config(state='normal'),
-                self.check_connections() # Reset status to connection health
-            ])
-    
-    def show_result_window(self, result):
-        """Show the final result in a new window."""
-        result_window = tk.Toplevel(self.root)
-        result_window.title("Workflow Result")
-        result_window.geometry("600x400")
-        result_window.configure(bg='#2b2b2b')
-        
-        result_text = scrolledtext.ScrolledText(result_window, 
-                                              bg='#1e1e1e', fg='#ffffff',
-                                              font=('Consolas', 10),
-                                              wrap=tk.WORD)
-        result_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        result_text.insert('1.0', result)
-        result_text.config(state='disabled')
+            self.root.after(0, lambda: self.run_button.config(state='normal'))
+
+    def monitor_memory_bus(self, memory_bus, stop_event):
+        """Periodically reads the memory bus and updates the UI."""
+        while not stop_event.is_set():
+            log_content = memory_bus.read_log()
+            self.root.after(0, self.update_memory_bus_viewer, log_content)
+            time.sleep(0.5)
+
+    def update_memory_bus_viewer(self, content: str):
+        """Updates the content of the memory bus inspector."""
+        self.memory_bus_viewer.config(state='normal')
+        self.memory_bus_viewer.delete('1.0', tk.END)
+        self.memory_bus_viewer.insert('1.0', content)
+        self.memory_bus_viewer.config(state='disabled')
+        self.memory_bus_viewer.see(tk.END)
 
 def main():
     """Main function to start the desktop application."""
