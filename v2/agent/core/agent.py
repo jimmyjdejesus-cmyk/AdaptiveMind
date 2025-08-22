@@ -6,6 +6,9 @@ from typing import Any, AsyncGenerator, Dict, Union
 
 from v2.config.config import Config, load_config
 
+from v2.config.config import DEFAULT_CONFIG
+from jarvis.logging.logger import get_logger
+
 
 class JarvisAgentV2:
     """A tiny placeholder agent used in tests.
@@ -15,6 +18,7 @@ class JarvisAgentV2:
     stream so that the API server and tests can operate without the full
     dependency stack.
     """
+
 
     def __init__(self, config: Union[Config, Dict[str, Any], None] = None) -> None:
         if config is None:
@@ -40,6 +44,15 @@ class JarvisAgentV2:
         """Yield a single fake event for streaming tests."""
 
         yield {"step": "start", "query": query}
+
+    # ------------------------------------------------------------------
+    async def handle_request(
+        self, request: str, code: str | None = None, user_context: str | None = None
+    ) -> Dict[str, Any]:
+        """Primary entrypoint for handling agent requests."""
+
+        self.logger.info(f"Handling request: {request}")
+        return {"request": request, "status": "ok"}
 
 
 __all__ = ["JarvisAgentV2"]
