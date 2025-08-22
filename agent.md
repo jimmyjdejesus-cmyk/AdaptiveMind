@@ -91,3 +91,12 @@
 - Logged project path hashes to `agent_project.md` and enabled vector store cleanup.
 - Created tests covering hashing, negative lookup, and pruning.
 - Executed targeted memory service test suite.
+
+# Agent Log
+
+## WS2 Multi-Agent Orchestration
+- Added per-team memory isolation with local buses and shared docs channel.
+- Implemented runtime controls (pause, restart, merge) with lineage logging.
+- Enabled parallel team execution for adversary and competitive pairs.
+- Added CLI for operator intervention and recorded updates.
+- Executed orchestrator-related tests.
