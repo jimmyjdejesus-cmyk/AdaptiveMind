@@ -124,3 +124,10 @@
 - Implemented team indicator badges and dead-end shelf in workflow visualizer.
 - Integrated workflow graph, team badges, and dead-end shelf into modern Streamlit chat.
 - Added tests verifying team indicator icons and pruned path detection.
+# Agent Log
+
+## Scoped Logs, HITL Risk, and Policy Routing
+- Added transcript indexer with positive/negative citation retrieval.
+- Introduced RiskAnnotator with ActionRequestApproval exception.
+- Extended ModelRouter with policy-aware selection and justification storage.
+- Created docs and tests, executed targeted pytest suite.
