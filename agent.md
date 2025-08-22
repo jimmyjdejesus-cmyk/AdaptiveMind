@@ -125,6 +125,15 @@
 - Integrated workflow graph, team badges, and dead-end shelf into modern Streamlit chat.
 - Added tests verifying team indicator icons and pruned path detection.
 
+## 2025-08-23
+- Started implementing event bus normalized events with run_id, step_id, parent_id.
+- Adding SSE and polling endpoints and visualizer support.
+
+- Implemented event bus normalized events with run_id, step_id, parent_id and log.
+- Added FastAPI polling and SSE event endpoints.
+- Updated visualizer to read normalized events and added tests.
+- Ran message bus, visualizer, endpoint, and pruning tests.
+=======
 ## 2025-08-22
 - Integrated negative path recording for merges/dead-ends.
 - Added novelty boost check before executing similar paths.
@@ -167,4 +176,5 @@
 - Added configuration handling with default config import and logger setup.
 - Implemented async `handle_request` entrypoint.
 - Ran `pytest v2`.
+
 
