@@ -124,3 +124,10 @@
 - Implemented team indicator badges and dead-end shelf in workflow visualizer.
 - Integrated workflow graph, team badges, and dead-end shelf into modern Streamlit chat.
 - Added tests verifying team indicator icons and pruned path detection.
+
+# Agent Log
+
+- Initialized work on v2 agent configuration loading.
+- Added `v2_agent` section to development profile and Pydantic config models.
+- Updated `JarvisAgentV2` to expose `agent_config` for easy access.
+- Ran pytest to ensure configuration loads without errors.
