@@ -6,3 +6,11 @@ Launch the UI with:
 pip install "jarvis-ai[orchestrator]"
 jarvis graph
 ```
+
+### Visual Indicators
+
+The workflow graph uses simple color cues:
+
+- **Green nodes** represent active teams.
+- **Red nodes** mark pruned paths.
+- **Dashed arrows** show lineage when one path is merged into another.

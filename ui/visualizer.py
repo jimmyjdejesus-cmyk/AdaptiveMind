@@ -29,9 +29,15 @@ class WorkflowVisualizer:
             step = str(event.get("step"))
             if not step:
                 continue
-            graph.node(step, step)
+
+            status = event.get("status", "active")
+            color = "red" if status == "pruned" else "green"
+            graph.node(step, step, color=color, style="filled")
+
             for dep in event.get("depends", []):
                 graph.edge(str(dep), step)
+            for src in event.get("merged_from", []):
+                graph.edge(str(src), step, style="dashed")
         return graph
 
     # ------------------------------------------------------------------
