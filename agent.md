@@ -195,3 +195,4 @@
 - Implemented `Event` schema and `HierarchicalMessageBus` with prefix routing.
 - Added unit test verifying hierarchical event delivery.
 - Ran targeted pytest for message bus hierarchy.
+- Integrated MetaIntelligenceCore into JarvisAgentV2, routed requests through MetaAgent, added KnowledgeGraph world model, and updated tests.

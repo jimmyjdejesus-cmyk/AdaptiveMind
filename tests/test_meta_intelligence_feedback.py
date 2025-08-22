@@ -1,22 +1,10 @@
-import importlib.util
-from pathlib import Path
-
 import pytest
 
-spec = importlib.util.spec_from_file_location(
-    "meta_intelligence",
-    Path(__file__).resolve().parents[1] / "jarvis/ecosystem/meta_intelligence.py",
+from jarvis.ecosystem.meta_intelligence import (
+    CriticFeedback,
+    CriticInsightMerger,
+    MetaIntelligenceCore,
 )
-meta = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(meta)
-
-CriticFeedback = meta.CriticFeedback
-CriticInsightMerger = meta.CriticInsightMerger
-MetaIntelligenceCore = meta.MetaIntelligenceCore
-
-import pytest
-
-from jarvis.ecosystem.meta_intelligence import CriticFeedback, CriticInsightMerger, MetaIntelligenceCore
 def test_feedback_weighting_and_synthesis():
     merger = CriticInsightMerger()
     feedbacks = [

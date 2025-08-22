@@ -21,9 +21,7 @@ async def test_v2_integration():
     # Patch the MCP client with a dummy to avoid network calls
     dummy = DummyMCPClient()
     agent.mcp_client = dummy
-    agent.orchestrator.mcp_client = dummy
-    for specialist in agent.orchestrator.specialists.values():
-        specialist.mcp_client = dummy
+    agent.meta_core.meta_agent.mcp_client = dummy
 
     result = await agent.handle_request(
         "review this simple python code", code="print('hi')"
