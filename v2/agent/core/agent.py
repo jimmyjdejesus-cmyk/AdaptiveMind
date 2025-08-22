@@ -6,7 +6,7 @@ from typing import Any, AsyncGenerator, Dict, Union
 from v2.config.config import Config, load_config
 from jarvis.logging.logger import get_logger
 from jarvis.mcp import MCPClient
-from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
+from jarvis.ecosystem.meta_intelligence import MetaIntelligenceCore
 
 class JarvisAgentV2:
     """Minimal agent that delegates work to the orchestrator."""
@@ -21,9 +21,10 @@ class JarvisAgentV2:
         self.agent_config = self.config.v2_agent
         self.logger = get_logger(__name__)
 
-        # Initialize MCP client and orchestrator brain
+        # Initialize MCP client and meta-intelligence core
         self.mcp_client = MCPClient()
-        self.orchestrator = MultiAgentOrchestrator(mcp_client=self.mcp_client)
+        self.meta_core = MetaIntelligenceCore()
+        self.meta_core.meta_agent.mcp_client = self.mcp_client
 
     # ------------------------------------------------------------------
     def setup_workflow(self) -> None:  # pragma: no cover - placeholder
@@ -47,13 +48,15 @@ class JarvisAgentV2:
     async def handle_request(
         self, request: str, code: str | None = None, user_context: str | None = None
     ) -> Dict[str, Any]:
-        self.logger.info(f"Delegating request to MultiAgentOrchestrator: {request}")
-        result = await self.orchestrator.coordinate_specialists(
-            request=request,
-            code=code,
-            user_context=user_context,
-        )
-        return result
+        self.logger.info(f"Delegating request to MetaIntelligenceCore: {request}")
+        task = {
+            "type": "mission_step",
+            "request": request,
+            "code": code,
+            "user_context": user_context,
+        }
+        result = await self.meta_core.meta_agent.execute_task(task)
+        return result.get("result", result)
 
 
 __all__ = ["JarvisAgentV2"]
