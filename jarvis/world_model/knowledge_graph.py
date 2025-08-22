@@ -1,3 +1,6 @@
+"""Lightweight repository knowledge graph.
+
+Maps files to their defined functions for persistent world modeling."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -8,26 +11,40 @@ import ast
 
 @dataclass
 class KnowledgeGraph:
-    """Minimal knowledge graph mapping files to their functions."""
+    """Track basic structural relationships in a code repository."""
 
     files: Dict[str, Dict[str, List[str]]] = field(default_factory=dict)
 
-    def add_file(self, path: str, functions: List[str] | None = None) -> None:
-        """Register a file and its functions in the graph."""
-        self.files[path] = {"functions": functions or []}
+    def add_file(self, path: str) -> None:
+        """Ensure a file node exists."""
+        self.files.setdefault(path, {"functions": []})
 
-    def populate_from_indexer(self, indexer: "RepositoryIndexer") -> None:
-        """Populate graph using a RepositoryIndexer scan of the repo."""
-        repo_path = Path(indexer.repo_path)
-        for py_file in repo_path.rglob("*.py"):
+    def add_function(self, path: str, name: str) -> None:
+        """Record a function defined within a file."""
+        self.add_file(path)
+        functions = self.files[path]["functions"]
+        if name not in functions:
+            functions.append(name)
+
+    def get_files(self) -> List[str]:
+        """Return all tracked file paths."""
+        return list(self.files.keys())
+
+    def get_functions(self, path: str) -> List[str]:
+        """Return functions known for a given file."""
+        return self.files.get(path, {}).get("functions", [])
+
+    def index_repository(self, repo_path: Path, files: List[str]) -> None:
+        """Populate the graph with files and function names."""
+        for rel in files:
+            full_path = Path(repo_path) / rel
+            self.add_file(str(full_path))
+            if full_path.suffix != ".py":
+                continue
             try:
-                source = py_file.read_text(encoding="utf-8")
-                tree = ast.parse(source)
-                funcs = [node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
-                rel_path = str(py_file.relative_to(repo_path))
-                self.add_file(rel_path, funcs)
+                tree = ast.parse(full_path.read_text(encoding="utf-8"))
             except Exception:
                 continue
-
-
-__all__ = ["KnowledgeGraph"]
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef):
+                    self.add_function(str(full_path), node.name)

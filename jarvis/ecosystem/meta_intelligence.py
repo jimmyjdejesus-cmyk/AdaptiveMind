@@ -15,6 +15,7 @@ from enum import Enum
 from abc import ABC, abstractmethod
 import logging
 from pathlib import Path
+import ast
 from jarvis.tools.repository_indexer import RepositoryIndexer
 from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
 from jarvis.memory import MemoryManager, ProjectMemory
@@ -252,6 +253,19 @@ class MetaAgent(AIAgent):
             if enable_blue_team
             else None
         )
+        self.knowledge_graph = KnowledgeGraph()
+        self._initialize_knowledge_graph()
+
+    def _initialize_knowledge_graph(self) -> None:
+        if not self.repo_indexer:
+            return
+        try:
+            self.repo_indexer.build_index()
+            self.knowledge_graph.index_repository(
+                self.repo_indexer.repo_path, self.repo_indexer.files
+            )
+        except Exception as exc:  # pragma: no cover - best effort
+            logger.warning("Knowledge graph population failed: %s", exc)
 
     def create_sub_orchestrator(self, name: str, spec: Dict[str, Any]) -> MultiAgentOrchestrator:
         """Instantiate and cache a sub-orchestrator."""
@@ -423,6 +437,11 @@ class MetaAgent(AIAgent):
 
         return {"success": False, "error": "No valid capabilities specified"}
 
+    def create_sub_orchestrator(self, name: str, spec: Dict[str, Any]) -> MultiAgentOrchestrator:
+        orchestrator = self.orchestrator_cls(self.mcp_client, **spec)
+        self.sub_orchestrators[name] = orchestrator
+        return orchestrator
+
     async def _handle_mission_step(self, step: Dict[str, Any]) -> Dict[str, Any]:
         """Spawn or reuse a sub-orchestrator for a mission step."""
         step_id = step.get("step_id", uuid.uuid4().hex[:8])
@@ -431,9 +450,15 @@ class MetaAgent(AIAgent):
 
         orchestrator = self.sub_orchestrators.get(step_id)
         if not orchestrator:
-            spec: Dict[str, Any] = {"mission_name": step_id}
-            if specialists:
-                spec["allowed_specialists"] = specialists
+            spec = {"allowed_specialists": specialists or None, "mission_name": step_id}
+            orchestrator = self.create_sub_orchestrator(step_id, spec)
+
+        result = await orchestrator.coordinate_specialists(
+            request,
+            step.get("code"),
+            step.get("user_context"),
+        )
+        return {"success": True, "result": result, "step_id": step_id}
             orchestrator = self.create_sub_orchestrator(step_id, spec)
 
         result = await orchestrator.coordinate_specialists(

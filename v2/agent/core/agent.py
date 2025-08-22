@@ -49,7 +49,7 @@ class JarvisAgentV2:
     async def handle_request(
         self, request: str, code: str | None = None, user_context: str | None = None
     ) -> Dict[str, Any]:
-        self.logger.info(f"Delegating request to MetaAgent: {request}")
+        self.logger.info(f"Delegating request to MetaIntelligenceCore: {request}")
         task = {
             "type": "mission_step",
             "request": request,
