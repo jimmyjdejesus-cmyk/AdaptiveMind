@@ -1,11 +1,16 @@
-"""Shared memory FastAPI service with scoped access."""
+"""Shared memory FastAPI service with scoped access.
+
+This service combines basic key-value storage with more advanced
+functionality for recording and querying execution paths, all secured
+with principal verification and data masking.
+"""
 
 from __future__ import annotations
 
 import hashlib
 from typing import Dict, List, Optional, Tuple
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 from .vector_store import add_text
@@ -17,12 +22,47 @@ _memory: Dict[str, Dict[str, Dict[str, str]]] = {}
 # Collected WS7 events for test inspection
 EVENTS: List[Dict[str, str]] = []
 
+# List of sensitive values that must be masked in events
+SENSITIVE_VALUES: List[str] = []
+SECRET_MASK = "***"
+
 
 class MemoryItem(BaseModel):
     """Item stored in shared memory."""
 
     key: str
     value: str
+
+
+def _mask(value: str) -> str:
+    """Mask any sensitive substrings in ``value``."""
+    for secret in SENSITIVE_VALUES:
+        value = value.replace(secret, SECRET_MASK)
+    return value
+
+
+def _emit(event_type: str, principal: str, scope: str, key: Optional[str] = None) -> None:
+    """Record an event following the WS7 structure, masking secrets."""
+    event = {
+        "version": "WS7",
+        "type": _mask(event_type),
+        "principal": _mask(principal),
+        "scope": _mask(scope),
+    }
+    if key is not None:
+        event["key"] = _mask(key)
+    EVENTS.append(event)
+
+
+def _verify_principal(request: Request, principal: str) -> None:
+    """Ensure the caller principal matches the target principal."""
+    caller = request.headers.get("X-Principal")
+    if caller != principal:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+# ---------------------------------------------------------------------------
+# Path recording and retrieval
 
 
 class Metrics(BaseModel):
@@ -54,25 +94,6 @@ class PathSignature(BaseModel):
 
 # Principal -> collection -> List[PathSignature]
 _paths: Dict[str, Dict[str, List[PathSignature]]] = {}
-
-
-def _emit(event_type: str, principal: str, scope: str, key: Optional[str] = None) -> None:
-    """Record an event following the WS7 structure."""
-    event = {
-        "version": "WS7",
-        "type": event_type,
-        "principal": principal,
-        "scope": scope,
-    }
-    if key is not None:
-        event["key"] = key
-    EVENTS.append(event)
-
-
-
-
-# ---------------------------------------------------------------------------
-# Path recording and retrieval
 
 
 def _check_acl(actor: str, target: str, kind: str, op: str) -> None:
@@ -111,15 +132,7 @@ def record_path(req: PathRecord) -> Dict[str, str]:
         + req.signature.key_decisions
     )
     add_text(req.target, req.kind, req.signature.hash, text)
-    EVENTS.append(
-        {
-            "version": "WS7",
-            "type": "path_record",
-            "principal": req.actor,
-            "scope": f"{req.target}:{req.kind}",
-            "key": req.signature.hash,
-        }
-    )
+    _emit("path_record", req.actor, f"{req.target}:{req.kind}", req.signature.hash)
     return {"status": "ok"}
 
 
@@ -155,13 +168,15 @@ def query_paths(req: PathQuery) -> Dict[str, List[Dict[str, object]]]:
 
 
 # ---------------------------------------------------------------------------
-# Basic key/value scoped memory operations (kept after path endpoints to avoid
-# routing collisions).
+# Basic key/value scoped memory operations
+# Note: These endpoints are placed after the more specific /paths/ ones
+# to prevent routing conflicts.
 
 
 @app.post("/{principal}/{scope}")
-def write_item(principal: str, scope: str, item: MemoryItem) -> Dict[str, str]:
+def write_item(principal: str, scope: str, item: MemoryItem, request: Request) -> Dict[str, str]:
     """Write a key/value pair within a principal's scope."""
+    _verify_principal(request, principal)
     store = _memory.setdefault(principal, {}).setdefault(scope, {})
     store[item.key] = item.value
     add_text(principal, scope, item.key, item.value)
@@ -170,8 +185,9 @@ def write_item(principal: str, scope: str, item: MemoryItem) -> Dict[str, str]:
 
 
 @app.get("/{principal}/{scope}/hash")
-def scope_hash(principal: str, scope: str) -> Dict[str, str]:
+def scope_hash(principal: str, scope: str, request: Request) -> Dict[str, str]:
     """Return a SHA256 hash of all entries in a scope."""
+    _verify_principal(request, principal)
     scope_data = _memory.get(principal, {}).get(scope)
     if scope_data is None:
         raise HTTPException(status_code=404, detail="Not found")
@@ -185,8 +201,9 @@ def scope_hash(principal: str, scope: str) -> Dict[str, str]:
 
 
 @app.get("/{principal}/{scope}/{key}")
-def read_item(principal: str, scope: str, key: str) -> Dict[str, str]:
+def read_item(principal: str, scope: str, key: str, request: Request) -> Dict[str, str]:
     """Read a value from scoped memory."""
+    _verify_principal(request, principal)
     try:
         value = _memory[principal][scope][key]
     except KeyError as exc:  # pragma: no cover - defensive
