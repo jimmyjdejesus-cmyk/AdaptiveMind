@@ -5,7 +5,7 @@ from pathlib import Path
 # Ensure repository root on path for direct test execution
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from jarvis.ecosystem.meta_intelligence import MetaAgent
+from jarvis.ecosystem.meta_intelligence import ExecutiveAgent
 from jarvis.orchestration import END
 
 
@@ -13,7 +13,7 @@ from jarvis.orchestration import END
 async def test_branching_execution():
     """MetaAgent should route execution based on conditional edges."""
 
-    meta = MetaAgent("meta")
+    meta = ExecutiveAgent("meta")
 
     def start(state):
         state.setdefault("visited", []).append("start")
@@ -58,7 +58,7 @@ async def test_branching_execution():
 async def test_looping_execution():
     """The orchestrator should support loops via conditional edges."""
 
-    meta = MetaAgent("meta")
+    meta = ExecutiveAgent("meta")
 
     def increment(state):
         state["count"] = state.get("count", 0) + 1

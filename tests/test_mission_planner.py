@@ -41,6 +41,48 @@ persistence_pkg = types.ModuleType("jarvis.persistence")
 persistence_pkg.session = session_module
 sys.modules["jarvis.persistence"] = persistence_pkg
 
+# Stub tools and world model to satisfy ExecutiveAgent imports
+tools_pkg = types.ModuleType("jarvis.tools")
+sys.modules["jarvis.tools"] = tools_pkg
+repo_indexer_mod = types.ModuleType("jarvis.tools.repository_indexer")
+
+class _DummyIndexer:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def build_index(self):
+        pass
+
+    def index_repository(self, graph):
+        pass
+
+repo_indexer_mod.RepositoryIndexer = _DummyIndexer
+tools_pkg.repository_indexer = repo_indexer_mod
+sys.modules["jarvis.tools.repository_indexer"] = repo_indexer_mod
+
+world_pkg = types.ModuleType("jarvis.world_model")
+kg_mod = types.ModuleType("jarvis.world_model.knowledge_graph")
+
+class _DummyKG:
+    def populate_from_indexer(self, indexer):
+        pass
+
+world_pkg.knowledge_graph = kg_mod
+kg_mod.KnowledgeGraph = _DummyKG
+sys.modules["jarvis.world_model"] = world_pkg
+sys.modules["jarvis.world_model.knowledge_graph"] = kg_mod
+
+home_pkg = types.ModuleType("jarvis.homeostasis")
+monitor_mod = types.ModuleType("jarvis.homeostasis.monitor")
+
+class _DummyMonitor:
+    pass
+
+monitor_mod.SystemMonitor = _DummyMonitor
+home_pkg.monitor = monitor_mod
+sys.modules["jarvis.homeostasis"] = home_pkg
+sys.modules["jarvis.homeostasis.monitor"] = monitor_mod
+
 spec3 = importlib.util.spec_from_file_location(
     "jarvis.ecosystem.meta_intelligence", ROOT / "jarvis" / "ecosystem" / "meta_intelligence.py"
 )
@@ -52,7 +94,7 @@ sys.modules["jarvis.ecosystem"] = ecosystem_pkg
 sys.modules["jarvis.ecosystem.meta_intelligence"] = meta_module
 
 MissionPlanner = mission_planner.MissionPlanner
-MetaAgent = meta_module.MetaAgent
+ExecutiveAgent = meta_module.ExecutiveAgent
 
 
 class DummyClient:
@@ -74,7 +116,7 @@ def test_mission_planner_decomposes_goal():
     ]
 
 
-def test_meta_agent_plan_mission_builds_graph(tmp_path):
+def test_executive_agent_manage_directive_builds_graph(tmp_path):
     class StubPlanner(MissionPlanner):
         def __init__(self):
             pass
@@ -88,13 +130,15 @@ def test_meta_agent_plan_mission_builds_graph(tmp_path):
                 "edges": [("task_1", "task_2")],
             }
 
-    agent = MetaAgent("meta")
+    agent = ExecutiveAgent("meta")
     agent.mission_planner = StubPlanner()
     # use temporary session manager for isolation
     from jarvis.persistence.session import SessionManager
 
     agent.session_manager = SessionManager(base_dir=str(tmp_path))
-    graph = agent.plan_mission("Goal", session_id="sess1")
+    result = agent.manage_directive("Goal", session_id="sess1")
+    assert result["success"] is True
+    graph = result["graph"]
     assert graph["edges"] == [("task_1", "task_2")]
     saved = (tmp_path / "sess1" / "mission.json").read_text()
     data = json.loads(saved)

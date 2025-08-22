@@ -214,3 +214,10 @@
 - Enabled resource-aware coordination in MultiAgentOrchestrator.
 - Executed targeted pytest suite.
 
+# Agent Log
+
+## 2025-08-22
+- Refactored MetaAgent into ExecutiveAgent with directive management.
+- Added ConstitutionalCritic to veto unsafe plans.
+- Updated tests and exports to reflect the new executive agent.
+
