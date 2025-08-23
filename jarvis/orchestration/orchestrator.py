@@ -38,6 +38,7 @@ import warnings
 from datetime import datetime
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Dict, List, Optional
+from collections import defaultdict
 
 from .recovery import load_state, save_state
 from .path_memory import PathMemory
@@ -329,6 +330,19 @@ class MultiAgentOrchestrator:
             return "moderate"
         else:
             return "deep"
+
+    def _route_model_preferences(self, specialist, complexity: str) -> List[str]:
+        """Determine model order based on system resources and task complexity."""
+        models = list(specialist.preferred_models)
+        local = [m for m in models if specialist._get_server_for_model(m) == "ollama"]
+        cloud = [m for m in models if specialist._get_server_for_model(m) != "ollama"]
+
+        snapshot = self.monitor.snapshot() if self.monitor else None
+        if snapshot and snapshot.cpu > 80 and complexity != "high":
+            return local + cloud
+        if complexity == "high":
+            return cloud + local
+        return local + cloud
     
     async def coordinate_specialists(self, request: str, code: str = None, user_context: str = None, novelty_boost: float = 0.0) -> Dict[str, Any]:
         """
@@ -402,18 +416,20 @@ class MultiAgentOrchestrator:
             task, context=context, user_context=user_context
         )
     
-    async def _single_specialist_analysis(self, request: str, analysis: Dict, path_memory: PathMemory, code: str = None, user_context: str = None) -> Dict[str, Any]:
-        """Handle analysis with single specialist"""
+        # In async def _single_specialist_analysis(...):
         specialist_type = analysis["specialists_needed"][0]
+        specialist = self.specialists[specialist_type]  # Make sure this line exists before the changes
         # Create task with full context
         task = self._create_specialist_task(request, code, user_context)
 
+        models = self._route_model_preferences(specialist, analysis["complexity"])
+
         try:
-            result = await self.dispatch_specialist(
-                specialist_type, task, user_context=user_context
+            result = await specialist.process_task(
+                task, context=None, user_context=user_context, models=models
             )
             path_memory.add_decisions(result.get("suggestions", [])[:3])
-            
+
             return {
                 "type": "single_specialist",
                 "complexity": analysis["complexity"],
@@ -428,44 +444,96 @@ class MultiAgentOrchestrator:
             logger.error(f"Single specialist analysis failed: {e}")
             return self._create_error_response(str(e), request)
     
-    async def _parallel_specialist_analysis(self, request: str, analysis: Dict, path_memory: PathMemory, code: str = None, user_context: str = None) -> Dict[str, Any]:
+    async def _parallel_specialist_analysis(
+        self,
+        request: str,
+        analysis: Dict,
+        path_memory: PathMemory,
+        code: str = None,
+        user_context: str = None,
+    ) -> Dict[str, Any]:
         """Handle analysis with parallel specialist coordination"""
         specialists_needed = analysis["specialists_needed"]
-        
-        # Create tasks for all specialists
+
+        # Create tasks and group by model for batching
         task = self._create_specialist_task(request, code, user_context)
-        
-        # Run specialists in parallel
-        tasks = []
+
+        grouped: Dict[tuple, List[tuple]] = defaultdict(list)
         for specialist_type in specialists_needed:
+            specialist = self.specialists[specialist_type]
+            models = self._route_model_preferences(specialist, analysis["complexity"])
+            prompt = specialist.build_prompt(task, None, user_context)
+            primary_model = models[0]
+            server = specialist._get_server_for_model(primary_model)
+            grouped[(server, primary_model)].append(
+                (specialist_type, specialist, prompt, models)
+    )
+            )
+
             tasks.append(
                 self.dispatch_specialist(
                     specialist_type, task, user_context=user_context
                 )
             )
         
+
         try:
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            # Process results
+            batch_tasks = []
+            group_info = []
+            for (server, model), items in grouped.items():
+                prompts = [it[2] for it in items]
+                batch_tasks.append(
+                    self.mcp_client.generate_response_batch(server, model, prompts)
+                )
+                group_info.append((server, model, items))
+
+            batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
+
             specialist_results = {}
             successful_results = []
-            
-            for i, result in enumerate(results):
-                specialist_type = specialists_needed[i]
-                
-                if isinstance(result, Exception):
-                    logger.error(f"Specialist {specialist_type} failed: {result}")
-                    specialist_results[specialist_type] = self._create_specialist_error(specialist_type, str(result))
-                else:
+
+            for (server, model, items), responses in zip(group_info, batch_results):
+                if isinstance(responses, Exception):
+                    logger.error(f"Batch {server}/{model} failed: {responses}")
+                    for specialist_type, specialist, _, models in items:
+                        try:
+                            result = await specialist.process_task(
+                                task,
+                                context=None,
+                                user_context=user_context,
+                                models=models,
+                            )
+                        except Exception as e:
+                            result = self._create_specialist_error(
+                                specialist_type, str(e)
+                            )
+                        specialist_results[specialist_type] = result
+                        if result.get("type") != "error":
+                            successful_results.append(result)
+                            path_memory.add_decisions(
+                                result.get("suggestions", [])[:3]
+                            )
+                    continue
+
+                for (specialist_type, specialist, _, _), response in zip(
+                    items, responses
+                ):
+                    result = specialist.process_model_response(
+                        response, model, task
+                    )
                     specialist_results[specialist_type] = result
                     successful_results.append(result)
-                    path_memory.add_decisions(result.get("suggestions", [])[:3])
-            
-            # Synthesize results
-            synthesized_response = await self._synthesize_parallel_results(request, successful_results)
-            overall_confidence = self._calculate_overall_confidence(successful_results)
-            
+                    path_memory.add_decisions(
+                        result.get("suggestions", [])[:3]
+                    )
+
+            synthesized_response = await self._synthesize_parallel_results(
+                request, successful_results
+            )
+            overall_confidence = self._calculate_overall_confidence(
+                successful_results
+            )
+
             return {
                 "type": "parallel_specialists",
                 "complexity": analysis["complexity"],
@@ -473,9 +541,9 @@ class MultiAgentOrchestrator:
                 "results": specialist_results,
                 "synthesized_response": synthesized_response,
                 "confidence": overall_confidence,
-                "coordination_summary": f"Parallel analysis by {len(successful_results)} specialists"
+                "coordination_summary": f"Parallel analysis by {len(successful_results)} specialists",
             }
-            
+
         except Exception as e:
             logger.error(f"Parallel specialist analysis failed: {e}")
             return self._create_error_response(str(e), request)
@@ -489,12 +557,21 @@ class MultiAgentOrchestrator:
         specialist_results = {}
         
         task = self._create_specialist_task(request, code, user_context)
-        
+
         try:
             for specialist_type in specialists_needed:
+                specialist = self.specialists[specialist_type]
+
+                models = self._route_model_preferences(
+                    specialist, analysis["complexity"]
+                )
+
                 # Process with accumulated context
-                result = await self.dispatch_specialist(
-                    specialist_type, task, context=shared_context, user_context=user_context
+                result = await specialist.process_task(
+                    task,
+                    context=shared_context,
+                    user_context=user_context,
+                    models=models,
                 )
                 specialist_results[specialist_type] = result
 
@@ -504,10 +581,10 @@ class MultiAgentOrchestrator:
                     "specialist": specialist_type,
                     "key_points": decisions,
                     "confidence": result.get("confidence", 0.7),
-                    "priority_issues": result.get("priority_issues", [])[:2]  # Top 2 issues
+                    "priority_issues": result.get("priority_issues", [])[:2] # Top 2 issues
                 })
                 path_memory.add_decisions(decisions)
-                
+
                 logger.info(f"Completed {specialist_type} analysis, passing context to next specialist")
             
             # Final synthesis with all results

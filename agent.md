@@ -245,6 +245,13 @@
 - Documented decision trace transparency roadmap in docs/feature-3-todo.md.
 
 
+=======
+## 2025-08-24
+- Implemented dynamic model routing with resource-aware model selection.
+- Added Redis-backed caching and request batching in MCP client and orchestrator.
+- Created tests for routing, caching, and batching.
+=======
+
 ## 2025-08-25
 - Integrated deep research mode via orchestrator in CLI.
 - Added specialist dispatch interface and MCP tool execution endpoint.
@@ -260,4 +267,5 @@
 - Added workflow graph panel logging tool calls and agent contributions.
 - Integrated LangSmith tracing and reasoning toggle in DAG panel.
 - Created tests for enhanced DAG panel and executed pytest.
+
 
