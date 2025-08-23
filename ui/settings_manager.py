@@ -24,11 +24,13 @@ class SettingsManager:
                 "OpenAI API Key",
                 type="password",
                 value=os.getenv("OPENAI_API_KEY", ""),
+                help="Used for OpenAI models. Get a key from platform.openai.com",
             )
             anthropic_key = st.text_input(
                 "Anthropic API Key",
                 type="password",
                 value=os.getenv("ANTHROPIC_API_KEY", ""),
+                help="Required for Anthropic's Claude models",
             )
             if openai_key:
                 secrets["OPENAI_API_KEY"] = openai_key
@@ -41,6 +43,7 @@ class SettingsManager:
                 "LangSmith API Key",
                 type="password",
                 value=os.getenv("LANGSMITH_API_KEY", ""),
+                help="Needed to enable LangSmith tracing",
             )
             if langsmith_key:
                 secrets["LANGSMITH_API_KEY"] = langsmith_key
@@ -51,6 +54,7 @@ class SettingsManager:
                 "GitHub Token",
                 type="password",
                 value=os.getenv("GITHUB_TOKEN", ""),
+                help="Personal access token for GitHub operations",
             )
             if github_token:
                 secrets["GITHUB_TOKEN"] = github_token

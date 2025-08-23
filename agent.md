@@ -353,3 +353,10 @@
 - Registered new explorer in `jarvis.agents` exports.
 - Attempted to run `pytest -q` after installing missing dependencies (`networkx`, `graphviz`).
 
+## 2025-08-23
+- Added tooltips to Streamlit settings manager for clearer guidance.
+- Introduced colored status badges and progress bar in modern Streamlit app.
+- Implemented two-factor authentication helper, audit logging, and rate limiting utilities.
+- Expanded workflow templates with reusable Code Review workflow and documentation.
+- Created dependency scan script and added pyotp dependency.
+- Ran `pytest -q` (missing modules caused import errors).
