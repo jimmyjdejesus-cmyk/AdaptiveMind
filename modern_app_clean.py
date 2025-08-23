@@ -8,6 +8,7 @@ import sys
 import logging
 from datetime import datetime
 import os
+import time
 
 from v2.agent.adapters.langgraph_ui import visualizer
 from ui.settings_manager import SettingsManager
@@ -130,10 +131,13 @@ def render_modern_chat(agent, db_manager):
     col1, col2 = st.columns([3, 1])
     with col2:
         st.info(f"Model: {agent.model_name}")
-        if agent.is_available():
-            st.success("🟢 AI Service Online")
-        else:
-            st.error("🔴 AI Service Offline")
+        badge_color = "#28a745" if agent.is_available() else "#dc3545"
+        badge_label = "Online" if agent.is_available() else "Offline"
+        st.markdown(
+            f"<span style='background-color:{badge_color};color:white;padding:0.2em 0.6em;"
+            "border-radius:0.25em;font-weight:bold;'>Agent {badge_label}</span>",
+            unsafe_allow_html=True,
+        )
     
     # Initialize chat history
     if 'chat_history' not in st.session_state:
@@ -154,9 +158,14 @@ def render_modern_chat(agent, db_manager):
         
         # Get AI response
         with st.chat_message("assistant"):
+            progress = st.progress(0)
             with st.spinner("Thinking..."):
                 try:
+                    for i in range(100):
+                        progress.progress(i + 1)
+                        time.sleep(0.01)
                     response = agent.chat(prompt)
+                    progress.empty()
                     st.write(response)
 
                     # Visualisation features
