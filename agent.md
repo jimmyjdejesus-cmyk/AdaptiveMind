@@ -1,5 +1,19 @@
 # Agent Log
 
+## 2025-08-28
+- Added minimal HierarchicalHypergraph loader and enhanced Napoleon demo with 3-layer trace.
+- Ran `python demo_bravetto.py` and `pytest tests/test_simulation_agent.py -q`.
+
+## 2025-08-27
+- Refined SimulationAgent with structured prompt enforcing causal intervention.
+- Updated demo and tests to utilize new specialist interface.
+- Ran `python demo_bravetto.py` and `pytest tests/test_simulation_agent.py -q`.
+
+## 2025-08-23
+- Implemented counterfactual `SimulationAgent` for Napoleon victory scenario.
+- Added `run_napoleon_test` demo with 3-layer trace output.
+- Updated unit tests and executed simulation demo.
+
 ## 2025-08-26
 - Added proactive hypergraph navigation to ExecutiveAgent's mission steps.
 - Introduced minimal `HierarchicalHypergraph` and strategy override for dead-end queries.
