@@ -321,3 +321,9 @@
 - Exported the agent via `jarvis.agents` package.
 - Ran `pytest test_basic.py` to confirm no test regressions.
 
+## 2025-08-23
+- Built Cerebro real-time visualization dashboard with performance tracking.
+- Added FastAPI endpoints for event ingestion and metrics.
+- Created unit test `tests/test_cerebro_dashboard.py`.
+- Installed graphviz dependency.
+- Ran `pytest tests/test_cerebro_dashboard.py -q`.
