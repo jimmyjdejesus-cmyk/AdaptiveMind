@@ -5,6 +5,7 @@ import sys
 sys.path.append(os.getcwd())
 
 from jarvis.agents import SimulationAgent
+from jarvis.world_model.hypergraph import HierarchicalHypergraph
 
 
 class DummyMCPClient:
@@ -18,20 +19,23 @@ class DummyMCPClient:
         return "Narrative"
 
 
-def test_simulation_agent_structures_prompt_with_intervention() -> None:
+def test_simulation_agent_records_causal_belief() -> None:
     mcp = DummyMCPClient()
-    agent = SimulationAgent(mcp)
+    hg = HierarchicalHypergraph()
+    agent = SimulationAgent(mcp, hypergraph=hg)
 
     concrete = {"troops": "large"}
     causal_event = {"name": "battle_of_waterloo", "outcome": "defeat"}
     intervention = {"node": "battle_of_waterloo", "new_outcome": "victory"}
 
     narrative = asyncio.run(
-        agent.run_counterfactual(concrete, causal_event, intervention)
+        agent.run_counterfactual(concrete, causal_event, intervention, confidence=0.85)
     )
 
     assert mcp.last_prompt is not None
     assert "victory" in mcp.last_prompt
     assert causal_event["outcome"] == "defeat"  # original dict remains unchanged
     assert narrative == "Narrative"
+    belief = hg.query(3, "battle_of_waterloo->victory")
+    assert belief is not None and belief["confidence"] == 0.85
 

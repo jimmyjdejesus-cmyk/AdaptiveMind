@@ -16,19 +16,25 @@ from typing import Any, Dict, List, Optional
 import json
 
 from jarvis.agents.base_specialist import BaseSpecialist
+from jarvis.world_model.hypergraph import HierarchicalHypergraph
 
 
 class SimulationAgent(BaseSpecialist):
     """Runs counterfactual simulations based on an altered world state."""
 
-    def __init__(self, mcp_client: Any) -> None:
+    def __init__(self, mcp_client: Any, hypergraph: HierarchicalHypergraph | None = None) -> None:
         self.mcp_client = mcp_client
+        self.hypergraph = hypergraph
         self.specialization = (
             "Runs counterfactual simulations based on an altered world state."
         )
 
     async def run_counterfactual(
-        self, concrete_facts: Dict[str, Any], causal_event: Dict[str, Any], intervention: Dict[str, Any]
+        self,
+        concrete_facts: Dict[str, Any],
+        causal_event: Dict[str, Any],
+        intervention: Dict[str, Any],
+        confidence: float = 0.5,
     ) -> str:
         """Execute the counterfactual simulation.
 
@@ -76,6 +82,10 @@ class SimulationAgent(BaseSpecialist):
         """
 
         narrative = await self.mcp_client.generate_response(prompt=prompt)
+
+        if self.hypergraph:
+            self.hypergraph.add_causal_belief(event_to_change, new_outcome, confidence)
+
         return narrative
 
     # ------------------------------------------------------------------

@@ -13,6 +13,7 @@ except Exception:  # pragma: no cover
 from .mission_planner import MissionPlanner
 from .base_specialist import BaseSpecialist
 from .simulation_agent import SimulationAgent
+from .curiosity_agent import CuriosityAgent
 from .benchmark_agent import BenchmarkRewardAgent
 
 # New specialist agents
@@ -34,6 +35,7 @@ try:
         'MissionPlanner',
         'BaseSpecialist',
         'SimulationAgent',
+        'CuriosityAgent',
         'BenchmarkRewardAgent',
         'SpecialistAgent',
         'CodeReviewAgent',
@@ -51,6 +53,7 @@ except Exception:  # pragma: no cover
         'get_coding_agent',
         'MissionPlanner',
         'SimulationAgent',
+        'CuriosityAgent',
         'BenchmarkRewardAgent'
     ]
 
