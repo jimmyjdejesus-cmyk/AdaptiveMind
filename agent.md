@@ -1,6 +1,14 @@
 
 # Agent Log
 
+## 2025-08-24
+- Added `SimulationAgent` using git sandbox and benchmarking harness.
+- Introduced optional import guard in tools package.
+- Created unit test for simulation forecasting.
+- Executed targeted pytest for simulation agent.
+=======
+# Agent Log
+
 ## 2025-08-22
 - Wired pruning triggers into orchestrator event loop.
 - Added visual graph indicators and documentation.

@@ -4,7 +4,10 @@ This package exposes common tooling used across the Jarvis ecosystem,
 including web research capabilities.
 """
 
-from .repository_indexer import RepositoryIndexer
+try:  # Optional dependency
+    from .repository_indexer import RepositoryIndexer
+except Exception:  # pragma: no cover - optional feature
+    RepositoryIndexer = None  # type: ignore
 from .environment_tools import read_file, write_file, run_shell_command, run_tests
 try:  # Optional dependency
     from .web_tools import WebSearchTool, WebReaderTool
