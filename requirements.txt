@@ -6,3 +6,4 @@ ollama
 fastapi
 uvicorn
 redis
+neo4j
