@@ -12,6 +12,7 @@ except Exception:  # pragma: no cover
         raise ImportError("CodingAgent not available")
 from .mission_planner import MissionPlanner
 from .base_specialist import BaseSpecialist
+from .simulation_agent import SimulationAgent
 
 # New specialist agents
 try:
@@ -31,6 +32,7 @@ try:
         'get_coding_agent',
         'MissionPlanner',
         'BaseSpecialist',
+        'SimulationAgent',
         'SpecialistAgent',
         'CodeReviewAgent',
         'SecurityAgent',
@@ -42,7 +44,7 @@ try:
     
 except Exception:  # pragma: no cover
     # Fallback if specialist agents not available
-    __all__ = ['CodingAgent', 'get_coding_agent', 'MissionPlanner']
+    __all__ = ['CodingAgent', 'get_coding_agent', 'MissionPlanner', 'SimulationAgent']
 
 # Version info
 __version__ = "2.0.0"
