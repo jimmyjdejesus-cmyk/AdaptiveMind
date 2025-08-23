@@ -18,12 +18,12 @@ import logging
 from pathlib import Path
 import ast
 from jarvis.tools.repository_indexer import RepositoryIndexer
-from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
 from jarvis.memory import MemoryManager, ProjectMemory
 from jarvis.world_model.knowledge_graph import KnowledgeGraph
 from jarvis.homeostasis.monitor import SystemMonitor
 
 from jarvis.agents.critics import BlueTeamCritic, ConstitutionalCritic
+from jarvis.agents.curiosity_agent import CuriosityAgent
 from jarvis.agents.mission_planner import MissionPlanner
 from jarvis.persistence.session import SessionManager
 
@@ -294,6 +294,8 @@ class ExecutiveAgent(AIAgent):
         if self.mcp_client:
             self.mcp_client.monitor = self.system_monitor
         self._initialize_knowledge_graph()
+        self.learning_history: List[Dict[str, Any]] = []
+        self.curiosity_agent = CuriosityAgent(self.hypergraph)
 
     def _initialize_knowledge_graph(self) -> None:
         if not self.repo_indexer:
@@ -347,6 +349,12 @@ class ExecutiveAgent(AIAgent):
             query = task.get("query", "")
             k = task.get("k", 5)
             result = {"success": True, "results": self.search_repository(query, k)}
+        elif task_type == "pursue_curiosity":
+            question = self.curiosity_agent.generate_question()
+            if question:
+                result = self.manage_directive(question)
+            else:
+                result = {"success": False, "error": "No low-confidence items"}
         else:
             result = {"success": False, "error": f"Unknown meta-task: {task_type}"}
         if self.blue_team:
@@ -522,6 +530,16 @@ class ExecutiveAgent(AIAgent):
         except Exception as exc:  # pragma: no cover - best effort
             logger.warning("Mission planning failed: %s", exc)
 
+        plan = {"request": request, "tasks": tasks}
+        critique = self.constitutional_critic.review(plan)
+        if critique.get("veto"):
+            return {
+                "success": False,
+                "error": "Plan vetoed by constitutional critic",
+                "critique": critique,
+                "step_id": step_id,
+            }
+
         orchestrator = self.sub_orchestrators.get(step_id)
         if not orchestrator:
             spec = {"allowed_specialists": specialists or None, "mission_name": step_id}
@@ -532,7 +550,13 @@ class ExecutiveAgent(AIAgent):
             step.get("code"),
             step.get("user_context"),
         )
-        return {"success": True, "result": result, "step_id": step_id, "tasks": tasks}
+        return {
+            "success": True,
+            "result": result,
+            "step_id": step_id,
+            "tasks": tasks,
+            "critique": critique,
+        }
     
 
     def search_repository(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
@@ -601,21 +625,36 @@ class SpecialistAIAgent(AIAgent):
             }
     
     async def learn_from_feedback(self, feedback: Dict[str, Any]) -> bool:
-        """Learn from task feedback"""
-        self.learning_history.append({
-            "timestamp": datetime.now(),
-            "feedback": feedback,
-            "performance_before": self.metrics.overall_performance()
-        })
-        
-        # Simple learning: adjust behavior based on feedback
+        """Learn from task feedback and harvest successful strategies."""
+        self.learning_history.append(
+            {
+                "timestamp": datetime.now(),
+                "feedback": feedback,
+                "performance_before": self.metrics.overall_performance(),
+            }
+        )
+
         if feedback.get("success", False):
-            self.metrics.learning_progress = min(1.0, self.metrics.learning_progress + 0.1)
+            self.metrics.learning_progress = min(
+                1.0, self.metrics.learning_progress + 0.1
+            )
+            trace = feedback.get("successful_trace")
+            if trace:
+                confidence = feedback.get("confidence", 1.0)
+                self._record_strategy_from_trace(trace, confidence)
         else:
             # Learn from failure
-            self.metrics.adaptation_score = min(1.0, self.metrics.adaptation_score + 0.05)
-        
+            self.metrics.adaptation_score = min(
+                1.0, self.metrics.adaptation_score + 0.05
+            )
+
         return True
+
+    def _record_strategy_from_trace(
+        self, trace: List[str], confidence: float = 1.0
+    ) -> str:
+        """Store a successful reasoning trace as a strategy node."""
+        return self.hypergraph.add_strategy(trace, confidence)
 
 class MetaIntelligenceCore:
     """Core meta-intelligence system that manages the AI ecosystem"""
@@ -715,6 +754,10 @@ class MetaIntelligenceCore:
         """Optimize system-wide performance"""
         optimize_task = {"type": "optimize_agents"}
         return await self.meta_agent.execute_task(optimize_task)
+
+    def record_successful_strategy(self, trace: List[str], confidence: float = 1.0) -> str:
+        """Record a strategy node from a successful reasoning trace."""
+        return self.meta_agent._record_strategy_from_trace(trace, confidence)
     
     def get_system_status(self) -> Dict[str, Any]:
         """Get comprehensive system status"""

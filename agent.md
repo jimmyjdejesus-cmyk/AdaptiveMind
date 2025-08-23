@@ -1,5 +1,13 @@
 # Agent Log
 
+## 2025-08-30
+- Enhanced SimulationAgent to record causal beliefs with confidence.
+- Added strategy capture in MetaIntelligenceCore and enforced constitutional veto in mission steps.
+- Introduced CuriosityAgent for self-generated research goals.
+- Updated tests.
+
+# Agent Log
+
 ## 2025-08-28
 - Added minimal HierarchicalHypergraph loader and enhanced Napoleon demo with 3-layer trace.
 - Ran `python demo_bravetto.py` and `pytest tests/test_simulation_agent.py -q`.
