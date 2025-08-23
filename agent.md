@@ -341,9 +341,15 @@
 - Ran `pytest tests/test_cerebro_dashboard.py -q`.
 
 ## 2025-08-23
+
+- Integrated Oracle score-based path classification into memory service and orchestrator.
+- Updated tests and path memory recording accordingly.
+- Ran `pytest tests/path_memory_test.py tests/test_orchestrator_path_memory.py tests/test_pruning.py tests/test_routing_cache_batch.py -q`.
+=======
 - Reviewed user description of Monte Carlo exploration mechanism; no code changes performed.
 - Logged actions only as per instructions.
 ## 2025-08-23
 - Implemented Monte Carlo exploration capability with `MonteCarloExplorer` and `SimulationAgent.quick_simulate`.
 - Registered new explorer in `jarvis.agents` exports.
 - Attempted to run `pytest -q` after installing missing dependencies (`networkx`, `graphviz`).
+
