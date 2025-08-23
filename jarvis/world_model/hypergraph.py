@@ -1,33 +1,61 @@
 from __future__ import annotations
 
-"""Simple hierarchical hypergraph for demo purposes.
-
-This utility loads a three-layer dataset (concrete, abstract, causal) from a
-JSON file and supports basic node lookup per layer. It is intentionally minimal
-and only implements the features required by the Napoleon counterfactual demo.
-"""
+"""Persistent hierarchical hypergraph backed by Neo4j with in-memory fallback."""
 
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 import json
+import os
+import time
+from neo4j import GraphDatabase, Driver
 
 
 class HierarchicalHypergraph:
-    """Load and query a multi-layer hypergraph dataset."""
+    """Persistent multi-layer hypergraph backed by Neo4j when available."""
 
-    def __init__(self) -> None:
-        self.layers: Dict[int, Dict[str, Dict[str, Any]]] = {1: {}, 2: {}, 3: {}}
+    def __init__(
+        self,
+        uri: Optional[str] = None,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
+    ) -> None:
+        uri = uri or os.environ.get("NEO4J_URI")
+        user = user or os.environ.get("NEO4J_USER")
+        password = password or os.environ.get("NEO4J_PASSWORD")
+        if uri and user and password:
+            self.driver: Optional[Driver] = GraphDatabase.driver(uri, auth=(user, password))
+            self.layers = None
+        else:
+            self.driver = None
+            self.layers = {1: {}, 2: {}, 3: {}}  # type: ignore[assignment]
 
     def load_from_json(self, path: str | Path) -> None:
         """Populate layers from a JSON file."""
         with open(Path(path), "r", encoding="utf-8") as fh:
             data = json.load(fh)
-        self.layers[1] = data.get("layer1_concrete", {})
-        self.layers[2] = data.get("layer2_abstract", {})
-        self.layers[3] = data.get("layer3_causal", {})
+        if self.driver:
+            for key, node in data.get("layer1_concrete", {}).items():
+                self.update_node(1, key, node)
+            for key, node in data.get("layer2_abstract", {}).items():
+                self.update_node(2, key, node)
+            for key, node in data.get("layer3_causal", {}).items():
+                self.update_node(3, key, node)
+        else:
+            self.layers[1] = data.get("layer1_concrete", {})
+            self.layers[2] = data.get("layer2_abstract", {})
+            self.layers[3] = data.get("layer3_causal", {})
 
     def query(self, layer: int, node: str) -> Optional[Dict[str, Any]]:
         """Retrieve a node from a specific layer."""
+        if self.driver:
+            with self.driver.session() as session:
+                result = session.run(
+                    "MATCH (n {layer: $layer, key: $key}) RETURN n",
+                    layer=layer,
+                    key=node,
+                )
+                record = result.single()
+                return dict(record["n"]) if record else None
         return self.layers.get(layer, {}).get(node)
 
     # ------------------------------------------------------------------
@@ -50,30 +78,52 @@ class HierarchicalHypergraph:
         """
 
         key = f"{intervention}->{result}"
-        self.layers.setdefault(3, {})[key] = {
+        data = {
             "intervention": intervention,
             "result": result,
             "confidence": confidence,
         }
+        self.update_node(3, key, data)
         return key
 
     def add_strategy(self, steps: List[str], confidence: float) -> str:
         """Create a strategy node in Layer 2 from reasoning steps."""
-        key = f"strategy_{len(self.layers.get(2, {})) + 1}"
-        self.layers.setdefault(2, {})[key] = {
-            "steps": steps,
-            "confidence": confidence,
-        }
+        key = f"strategy_{len(self.layers.get(2, {})) + 1}" if not self.driver else f"strategy_{int(time.time()*1000)}"
+        data = {"steps": steps, "confidence": confidence}
+        self.update_node(2, key, data)
         return key
 
     def get_low_confidence_nodes(self, threshold: float) -> List[Tuple[int, str, Dict[str, Any]]]:
         """Return nodes across layers with confidence below ``threshold``."""
+        if self.driver:
+            with self.driver.session() as session:
+                result = session.run(
+                    "MATCH (n) WHERE n.confidence < $th RETURN n.layer AS layer, n.key AS key, n",
+                    th=threshold,
+                )
+                return [
+                    (record["layer"], record["key"], dict(record["n"]))
+                    for record in result
+                ]
         low: List[Tuple[int, str, Dict[str, Any]]] = []
         for layer, nodes in self.layers.items():
             for key, data in nodes.items():
                 if data.get("confidence", 1.0) < threshold:
                     low.append((layer, key, data))
         return low
+
+    def update_node(self, layer: int, key: str, data: Dict[str, Any]) -> None:
+        """Insert or update a node in the hypergraph."""
+        data = {**data, "layer": layer, "key": key}
+        if self.driver:
+            set_clause = ", ".join([f"n.{k} = ${k}" for k in data])
+            with self.driver.session() as session:
+                session.run(
+                    f"MERGE (n {{layer: $layer, key: $key}}) SET {set_clause}",
+                    **data,
+                )
+        else:
+            self.layers.setdefault(layer, {}).setdefault(key, {}).update(data)
 
 
 __all__ = ["HierarchicalHypergraph"]

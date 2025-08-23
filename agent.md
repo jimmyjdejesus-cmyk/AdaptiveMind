@@ -1,5 +1,11 @@
 # Agent Log
 
+## 2025-08-31
+- Added GitHub issue monitor `LiveTestAgent` with directive dispatch and learning loop.
+- Introduced `PolicyOptimizer` and Neo4j-backed `HierarchicalHypergraph` with fallback.
+- Extended GitHub tools for bug listings and wrote unit tests.
+- Ran `pytest tests/test_policy_optimizer.py tests/test_live_test_agent.py tests/test_simulation_agent.py tests/test_curiosity_agent.py -q`.
+
 ## 2025-08-30
 - Enhanced SimulationAgent to record causal beliefs with confidence.
 - Added strategy capture in MetaIntelligenceCore and enforced constitutional veto in mission steps.

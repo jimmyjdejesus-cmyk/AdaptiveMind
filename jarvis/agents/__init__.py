@@ -15,6 +15,7 @@ from .base_specialist import BaseSpecialist
 from .simulation_agent import SimulationAgent
 from .curiosity_agent import CuriosityAgent
 from .benchmark_agent import BenchmarkRewardAgent
+from .live_test_agent import LiveTestAgent
 
 # New specialist agents
 try:
@@ -37,6 +38,7 @@ try:
         'SimulationAgent',
         'CuriosityAgent',
         'BenchmarkRewardAgent',
+        'LiveTestAgent',
         'SpecialistAgent',
         'CodeReviewAgent',
         'SecurityAgent',
@@ -54,7 +56,8 @@ except Exception:  # pragma: no cover
         'MissionPlanner',
         'SimulationAgent',
         'CuriosityAgent',
-        'BenchmarkRewardAgent'
+        'BenchmarkRewardAgent',
+        'LiveTestAgent'
     ]
 
 # Version info
