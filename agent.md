@@ -327,3 +327,11 @@
 - Created unit test `tests/test_cerebro_dashboard.py`.
 - Installed graphviz dependency.
 - Ran `pytest tests/test_cerebro_dashboard.py -q`.
+
+## 2025-08-23
+- Reviewed user description of Monte Carlo exploration mechanism; no code changes performed.
+- Logged actions only as per instructions.
+## 2025-08-23
+- Implemented Monte Carlo exploration capability with `MonteCarloExplorer` and `SimulationAgent.quick_simulate`.
+- Registered new explorer in `jarvis.agents` exports.
+- Attempted to run `pytest -q` after installing missing dependencies (`networkx`, `graphviz`).
