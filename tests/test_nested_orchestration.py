@@ -4,7 +4,7 @@ import pytest
 
 sys.path.append(os.getcwd())
 
-from jarvis.ecosystem.meta_intelligence import MetaAgent
+from jarvis.ecosystem.meta_intelligence import ExecutiveAgent
 from jarvis.orchestration.sub_orchestrator import SubOrchestrator
 from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
 
@@ -51,9 +51,9 @@ class DummySubOrchestrator(SubOrchestrator):
 
 
 @pytest.mark.asyncio
-async def test_meta_agent_spawns_sub_orchestrator():
+async def test_executive_agent_spawns_sub_orchestrator():
     mcp = DummyMCP()
-    meta = MetaAgent("meta", mcp_client=mcp, orchestrator_cls=DummySubOrchestrator)
+    meta = ExecutiveAgent("meta", mcp_client=mcp, orchestrator_cls=DummySubOrchestrator)
 
     task = {
         "type": "mission_step",

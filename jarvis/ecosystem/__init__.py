@@ -4,15 +4,15 @@ This lightweight __init__ exposes only the minimal components required for
 internal tests to avoid heavy optional dependencies."""
 
 try:
-    from .meta_intelligence import MetaAgent, SpecialistAIAgent, AgentCapability, SystemHealth
+    from .meta_intelligence import ExecutiveAgent, SpecialistAIAgent, AgentCapability, SystemHealth
 except Exception:  # pragma: no cover
-    MetaAgent = None
+    ExecutiveAgent = None
     SpecialistAIAgent = None
     AgentCapability = None
     SystemHealth = None
 
 __all__ = [
-    "MetaAgent",
+    "ExecutiveAgent",
     "SpecialistAIAgent",
     "AgentCapability",
     "SystemHealth",
@@ -20,7 +20,7 @@ __all__ = [
 
 """Minimal ecosystem package for tests."""
 
-from .meta_intelligence import MetaAgent
+from .meta_intelligence import ExecutiveAgent
 
-__all__ = ["MetaAgent"]
+__all__ = ["ExecutiveAgent"]
 

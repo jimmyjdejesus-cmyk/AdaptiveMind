@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Optional, Dict, Any, List
 from ..mcp import MCPClient, ModelRouter, MCPServerManager
-from ..ecosystem.meta_intelligence import MetaAgent
+from ..ecosystem.meta_intelligence import ExecutiveAgent
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class EnhancedJarvisAgent:
                 
                 # Initialize meta-agent orchestrator if enabled
                 if enable_multi_agent:
-                    self.orchestrator = MetaAgent("meta")
+                    self.orchestrator = ExecutiveAgent("meta")
                     logger.info("Meta-agent initialized")
                     
             except Exception as e:

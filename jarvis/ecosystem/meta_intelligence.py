@@ -22,7 +22,7 @@ from jarvis.memory import MemoryManager, ProjectMemory
 from jarvis.world_model.knowledge_graph import KnowledgeGraph
 from jarvis.homeostasis.monitor import SystemMonitor
 
-from jarvis.agents.critics import BlueTeamCritic
+from jarvis.agents.critics import BlueTeamCritic, ConstitutionalCritic
 from jarvis.agents.mission_planner import MissionPlanner
 from jarvis.persistence.session import SessionManager
 
@@ -198,8 +198,8 @@ class AIAgent(ABC):
         
         self.metrics.last_updated = datetime.now()
 
-class MetaAgent(AIAgent):
-    """Meta-agent that manages other AI agents.
+class ExecutiveAgent(AIAgent):
+    """Executive agent that manages other AI agents.
 
     Parameters
     ----------
@@ -248,6 +248,7 @@ class MetaAgent(AIAgent):
                 logger.warning("Knowledge graph population failed: %s", exc)
         self.mission_planner = mission_planner if mission_planner is not None else MissionPlanner()
         self.session_manager = SessionManager()
+        self.constitutional_critic = ConstitutionalCritic()
         self.enable_blue_team = enable_blue_team
         self.blue_team = (
             BlueTeamCritic(sensitivity=blue_team_sensitivity)
@@ -276,18 +277,30 @@ class MetaAgent(AIAgent):
         self.sub_orchestrators[name] = orchestrator
         return orchestrator
 
-    def plan_mission(self, goal: str, session_id: Optional[str] = None) -> Dict[str, Any]:
-        """Create a LangGraph definition from a high-level goal."""
-        if session_id:
-            cached = self.session_manager.load_mission_plan(session_id)
-            if cached and cached.get("goal") == goal:
-                return cached["graph"]
-        tasks = self.mission_planner.plan(goal)
+    def manage_directive(self, directive_text: str, session_id: Optional[str] = None) -> Dict[str, Any]:
+        """Decompose a directive into a task graph with constitutional review."""
+        tasks = self.mission_planner.plan(directive_text)
         graph = self.mission_planner.to_graph(tasks)
+        critique = self.constitutional_critic.review(graph)
+        if critique.get("veto"):
+            return {
+                "success": False,
+                "error": "Plan vetoed by constitutional critic",
+                "critique": critique,
+            }
         if session_id:
-            plan = {"goal": goal, "tasks": tasks, "graph": graph}
+            plan = {"goal": directive_text, "tasks": tasks, "graph": graph}
             self.session_manager.save_mission_plan(session_id, plan)
-        return graph
+        return {
+            "success": True,
+            "directive": directive_text,
+            "tasks": tasks,
+            "graph": graph,
+            "critique": critique,
+        }
+
+    # Backwards compatibility
+    plan_mission = manage_directive
 
     async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute meta-level coordination tasks with optional risk critique."""
@@ -464,14 +477,6 @@ class MetaAgent(AIAgent):
             step.get("user_context"),
         )
         return {"success": True, "result": result, "step_id": step_id}
-            orchestrator = self.create_sub_orchestrator(step_id, spec)
-
-        result = await orchestrator.coordinate_specialists(
-            request,
-            step.get("code"),
-            step.get("user_context"),
-        )
-        return {"success": True, "result": result, "step_id": step_id}
     
 
     def search_repository(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
@@ -560,7 +565,7 @@ class MetaIntelligenceCore:
         enable_blue_team: bool = True,
         blue_team_sensitivity: float = 0.5,
     ):
-        self.meta_agent = MetaAgent(
+        self.meta_agent = ExecutiveAgent(
             "meta_core",
             enable_blue_team=enable_blue_team,
             blue_team_sensitivity=blue_team_sensitivity,
@@ -796,3 +801,6 @@ def get_agent_performance() -> Dict[str, Any]:
         "system_health": status.get("system_health", "unknown"),
         "detailed_agents": agents
     }
+
+# Backwards compatibility
+MetaAgent = ExecutiveAgent
