@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 import json
+import random
 
 from jarvis.agents.base_specialist import BaseSpecialist
 from jarvis.world_model.hypergraph import HierarchicalHypergraph
@@ -28,6 +29,27 @@ class SimulationAgent(BaseSpecialist):
         self.specialization = (
             "Runs counterfactual simulations based on an altered world state."
         )
+
+    async def quick_simulate(self, state: Any, move: str) -> float:
+        """Estimate outcome score for a potential move.
+
+        This helper method performs a lightweight simulation by asking the
+        underlying model to rate the desirability of applying ``move`` to the
+        provided ``state``.  It returns a floating point score in the range
+        ``[0, 1]``.  If the model fails to respond with a valid number the
+        method falls back to a random score, allowing Monte Carlo search to
+        continue exploring.
+        """
+
+        prompt = (
+            "Rate from 0 to 1 how promising the following move is in the given "
+            f"state. Only return the numeric score.\nSTATE: {state}\nMOVE: {move}"
+        )
+        try:
+            response = await self.mcp_client.generate_response(prompt=prompt)
+            return float(response.strip())
+        except Exception:
+            return random.random()
 
     async def run_counterfactual(
         self,
