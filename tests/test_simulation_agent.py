@@ -1,28 +1,37 @@
 import asyncio
-from pathlib import Path
 import os
 import sys
-
-import pytest
 
 sys.path.append(os.getcwd())
 
 from jarvis.agents import SimulationAgent
-from benchmarks import BenchmarkScenario
 
 
-@pytest.mark.asyncio
-async def test_run_plan_returns_forecast_and_logs(tmp_path):
-    async def scenario(ctx):
-        await asyncio.sleep(0)
-        return "hello world"
+class DummyMCPClient:
+    """Stub MCP client that records the last prompt."""
 
-    agent = SimulationAgent(repo_root=Path.cwd())
-    plan = [["status"]]
-    scenarios = [BenchmarkScenario(name="demo", fn=scenario)]
+    def __init__(self) -> None:
+        self.last_prompt = None
 
-    result = await agent.run_plan(plan, scenarios)
+    async def generate_response(self, prompt: str) -> str:
+        self.last_prompt = prompt
+        return "Narrative"
 
-    assert any("git status" in log for log in result.logs)
-    assert "demo" in result.forecast
-    assert result.forecast["demo"].token_count == 2
+
+def test_simulation_agent_structures_prompt_with_intervention() -> None:
+    mcp = DummyMCPClient()
+    agent = SimulationAgent(mcp)
+
+    concrete = {"troops": "large"}
+    causal_event = {"name": "battle_of_waterloo", "outcome": "defeat"}
+    intervention = {"node": "battle_of_waterloo", "new_outcome": "victory"}
+
+    narrative = asyncio.run(
+        agent.run_counterfactual(concrete, causal_event, intervention)
+    )
+
+    assert mcp.last_prompt is not None
+    assert "victory" in mcp.last_prompt
+    assert causal_event["outcome"] == "defeat"  # original dict remains unchanged
+    assert narrative == "Narrative"
+
