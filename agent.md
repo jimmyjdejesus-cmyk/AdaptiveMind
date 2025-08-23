@@ -1,4 +1,10 @@
+# Agent Log
 
+## 2025-08-26
+- Added proactive hypergraph navigation to ExecutiveAgent's mission steps.
+- Introduced minimal `HierarchicalHypergraph` and strategy override for dead-end queries.
+- Ran `pytest tests/test_constitutional_critic.py`.
+======
 # Agent Log
 
 ## 2025-08-24
