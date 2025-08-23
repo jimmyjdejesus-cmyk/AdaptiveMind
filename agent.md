@@ -269,3 +269,9 @@
 - Created tests for enhanced DAG panel and executed pytest.
 
 
+
+# Agent Log
+
+## 2025-02-14
+- Added `data/rex_rag_benchmarks/dead_end_qa.json` with a demo QA pair.
+- Ran `pytest test_basic.py -q and pytest tests/simple_test.py -q`.
