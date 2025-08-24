@@ -371,3 +371,7 @@
 - Ran `pytest tests/test_competitive_oracle.py -q`.
 
 
+## 2025-08-24
+- Implemented centralized critic module `CTDECritic` and decentralized actors with shared gradient buffers.
+- Added CTDE benchmark utilities and corresponding tests.
+- Installed `networkx` and executed `pytest tests/test_ctde_learning.py -q`.

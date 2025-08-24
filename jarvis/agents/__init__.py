@@ -16,7 +16,12 @@ from .simulation_agent import SimulationAgent
 from .monte_carlo_explorer import MonteCarloExplorer
 from .curiosity_agent import CuriosityAgent
 from .benchmark_agent import BenchmarkRewardAgent
-from .live_test_agent import LiveTestAgent
+
+try:
+    from .live_test_agent import LiveTestAgent
+except Exception:  # pragma: no cover
+    LiveTestAgent = None
+from .decentralized_actor import DecentralizedActor
 
 # New specialist agents
 try:
@@ -47,7 +52,8 @@ try:
         'ArchitectureAgent',
         'TestingAgent',
         'DevOpsAgent',
-        'RedTeamCritic'
+        'RedTeamCritic',
+        'DecentralizedActor'
     ]
     
 except Exception:  # pragma: no cover
@@ -60,7 +66,8 @@ except Exception:  # pragma: no cover
         'MonteCarloExplorer',
         'CuriosityAgent',
         'BenchmarkRewardAgent',
-        'LiveTestAgent'
+        'LiveTestAgent',
+        'DecentralizedActor'
     ]
 
 # Version info
