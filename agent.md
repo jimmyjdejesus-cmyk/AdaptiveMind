@@ -1,5 +1,18 @@
+## 2025-09-02
+- Implemented secure git command execution with subprocess, input sanitization, and error handling.
+- Added unit tests covering typical git commands and failure scenarios.
+- Ran `pytest tests/test_git_command_tool.py -q`.
+=======
 # Agent Log
 
+## 2025-09-02
+- Replaced template code generation with specialist agent invocation in `CodeGenerationAdapter`.
+- Added unit tests covering success and error paths.
+- Ran `pytest tests/test_code_generation_adapter.py -q`.
+
+## 2025-09-02
+- Added unit tests for `parse_natural_language` and `execute_plan` in `legacy/tests/tests/test_core.py` using mocks for approval and workflow parsing failures.
+- Ran `pytest legacy/tests/tests/test_core.py -q`.
 
 ## 2025-09-01
 - Added root cause failure analysis with `RootCauseAnalyzer` and negative pathway support in `PolicyOptimizer` and `HierarchicalHypergraph`.
@@ -372,8 +385,15 @@
 
 
 
+
 ## 2025-08-24
 - Integrated JetBrains IDE commands for file opening and lint execution with prompts.
 - Added unit tests mocking IDE interface to verify dispatch.
 - Installed `psutil` to support JetBrains integration.
 - Ran `pytest legacy/tests/test_ide_commands.py -q`.
+=======
+## 2025-08-24
+- Enhanced test generation with assertions and edge-case checks in `TestingAdapter`.
+- Added tests verifying generated suites run and invalid code handling.
+- Ran `ruff check jarvis/workflows/integrations.py tests/test_workflow_test_generation.py --fix` (TOML parse error).
+- Ran `pytest tests/test_workflow_test_generation.py -q`.
