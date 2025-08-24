@@ -479,3 +479,8 @@
 - Added nested orchestrator context/result propagation and recursive tests.
 - Ran `pytest tests/test_nested_orchestration.py::test_recursive_orchestrators_context_flow -q`.
 
+## 2025-08-24
+- Added secure plugin publishing endpoint with role-based access control.
+- Extended plugin hub auth to support multiple roles and publisher accounts.
+- Hardened plugin installation utilities and added comprehensive tests.
+- Ran `pytest tests/test_plugin_hub.py -q`.
