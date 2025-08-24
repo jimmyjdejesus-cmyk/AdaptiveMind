@@ -7,6 +7,15 @@
 
 ## 2025-09-02
 
+- Implemented repository indexer with AST, CFG, and DFG generation.
+- Added Neo4j adapter and docker-compose service.
+- Created tests for flow graphs and Neo4j connector.
+- Ran `pytest tests/test_repository_indexer_graphs.py -q`.
+=======
+
+# Agent Log
+=======
+
 - Enhanced `MetaAgent` with planning heuristics, critic feedback loop, and metrics tracking.
 - Integrated orchestrator results with `jarvis.ecosystem.superintelligence` and emergent metrics registry.
 - Added unit test for MetaAgent planning and updated tests to load modules directly.
