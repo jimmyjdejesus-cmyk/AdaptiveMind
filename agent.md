@@ -436,7 +436,13 @@
 
 
 
-## 2025-08-24
+## 2025-08-24a
+- Added graph construction utilities in `jarvis/retrieval/graph_rag.py` with build, save, and load helpers.
+- Stored knowledge graph data during repository indexing and persisted to `graph_<commit>.json`.
+- Extended benchmarking harness with answer relevance and citation metrics.
+- Created unit tests for graph utilities, repository graph persistence, and benchmark metrics.
+- Ran `pytest tests/test_graph_rag.py tests/test_repository_indexer_graph.py tests/test_benchmark_metrics.py -q`.
+=======
 
 
 ## 2025-08-24
@@ -484,7 +490,7 @@
 - Added unit tests mocking IDE interface to verify dispatch.
 - Installed `psutil` to support JetBrains integration.
 - Ran `pytest legacy/tests/test_ide_commands.py -q`.
-=======
+ax=======
 ## 2025-08-24
 - Enhanced test generation with assertions and edge-case checks in `TestingAdapter`.
 - Added tests verifying generated suites run and invalid code handling.
@@ -508,3 +514,4 @@
 - Exposed retrieval gating configuration in `config/config.yaml`.
 - Added unit tests for gating logic and metrics.
 - Ran `pytest tests/test_self_rag_gate.py -q`.
+

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import zlib
 
+import networkx as nx
 import numpy as np
 
 from jarvis.models.client import model_client
@@ -181,7 +182,7 @@ Here is the file content:
         return results
 
     # ------------------------------------------------------------------
-    def _build_cfg(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> List[Tuple[int, int]]:
+def _build_cfg(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> List[Tuple[int, int]]:
         """Generate a rudimentary control-flow graph as line-number pairs."""
 
         edges: List[Tuple[int, int]] = []
@@ -274,7 +275,12 @@ Here is the file content:
                         },
                     )
                     graph.add_edge(rel, func_id, "contains")
-                    for call in [n for n in ast.walk(node) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)]:
+                    calls = [
+                        n
+                        for n in ast.walk(node)
+                        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                    ]
+                    for call in calls:
                         target = f"{rel}::{call.func.id}"
                         graph.add_node(target, "function")
                         graph.add_edge(func_id, target, "calls")
@@ -293,3 +299,7 @@ Here is the file content:
                         target = f"{module}.{alias.name}" if module else alias.name
                         graph.add_node(target, "module")
                         graph.add_edge(rel, target, "imports")
+
+        graph_file = self.index_dir / f"graph_{self.version}.json"
+        data = nx.node_link_data(graph.graph)
+        graph_file.write_text(json.dumps(data, indent=2))
