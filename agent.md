@@ -5,6 +5,10 @@
 =======
 # Agent Log
 
+## 2025-09-02
+- Replaced template code generation with specialist agent invocation in `CodeGenerationAdapter`.
+- Added unit tests covering success and error paths.
+- Ran `pytest tests/test_code_generation_adapter.py -q`.
 
 ## 2025-09-02
 - Added unit tests for `parse_natural_language` and `execute_plan` in `legacy/tests/tests/test_core.py` using mocks for approval and workflow parsing failures.
