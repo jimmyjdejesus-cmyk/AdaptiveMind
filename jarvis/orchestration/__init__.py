@@ -1,4 +1,17 @@
-"""Orchestration package providing mission planning and agent coordination."""
+# Orchestration Package
+"""
+Multi-agent orchestration system for coordinating specialist AI agents
+
+This package provides:
+- MultiAgentOrchestrator: Coordinates multiple specialists for complex tasks
+- SubOrchestrator: Scoped orchestrator used for nested missions
+- Workflow management and task delegation
+- Result synthesis and conflict resolution
+This package provides building blocks for creating LangGraph based
+orchestration workflows.  The previous specialised orchestrator has been
+replaced by a small, generic template which can dynamically assemble graphs
+from ``AgentSpec`` definitions.
+"""
 
 from importlib import import_module
 from types import ModuleType
@@ -13,6 +26,7 @@ __all__ = [
     "MessageBus",
     "HierarchicalMessageBus",
     "Event",
+    "BandwidthLimitedChannel",
     "MissionPlanner",
     "RedisTaskQueue",
     "END",
@@ -31,6 +45,7 @@ def __getattr__(name: str) -> Any:  # pragma: no cover - thin wrapper
         "MessageBus": (".message_bus", "MessageBus"),
         "HierarchicalMessageBus": (".message_bus", "HierarchicalMessageBus"),
         "Event": (".message_bus", "Event"),
+        "BandwidthLimitedChannel": (".bandwidth_channel", "BandwidthLimitedChannel"),
         "MissionPlanner": (".mission_planner", "MissionPlanner"),
         "RedisTaskQueue": (".task_queue", "RedisTaskQueue"),
     }

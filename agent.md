@@ -5,6 +5,12 @@
 =======
 # Agent Log
 
+
+## 2025-08-24
+- Introduced bandwidth-limited communication channel with penalty delays and integrated it into the MessageBus.
+- Added partial observability benchmark and unit tests.
+- Ran `pip install psutil networkx bcrypt pytest-asyncio -q` and `pytest tests/test_bandwidth_channel.py tests/test_message_bus_events.py -q`.
+=======
 ## 2025-09-02
 
 - Implemented repository indexer with AST, CFG, and DFG generation.
@@ -54,6 +60,7 @@
 - Generated result cards with summaries and latency plot.
 - Hooked harness into CI and created unit test.
 - Ran `flake8 benchmarks/harness.py tests/test_benchmark_harness.py`, `black benchmarks/harness.py tests/test_benchmark_harness.py --config /dev/null`, `pytest tests/test_benchmark_harness.py -q` and `python benchmarks/harness.py`.
+
 
 
 ## 2025-09-01
