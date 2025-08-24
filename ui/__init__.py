@@ -6,6 +6,11 @@ import sys
 from pathlib import Path
 
 
+# Allow falling back to legacy UI components if the modern ones are missing
+legacy_path = Path(__file__).parent.parent / "legacy"
+sys.path.insert(0, str(legacy_path))
+
+
 try:  # Prefer modern UI implementations
     from .sidebar import sidebar
     from .analytics import render_analytics_dashboard
