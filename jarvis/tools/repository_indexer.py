@@ -1,8 +1,12 @@
+"""Utilities for indexing a repository into search and graph structures."""
+
+from __future__ import annotations
+
 import ast
 import json
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
 import zlib
 
 import numpy as np
@@ -135,8 +139,74 @@ class RepositoryIndexer:
         return results
 
     # ------------------------------------------------------------------
-    def index_repository(self, graph: KnowledgeGraph) -> None:
-        """Populate a :class:`KnowledgeGraph` with code entities."""
+    def _build_cfg(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> List[Tuple[int, int]]:
+        """Generate a rudimentary control-flow graph as line-number pairs."""
+
+        edges: List[Tuple[int, int]] = []
+
+        prev_line: Optional[int] = None
+        for stmt in node.body:
+            line = getattr(stmt, "lineno", None)
+            if line is None:
+                continue
+            if prev_line is not None:
+                edges.append((prev_line, line))
+            prev_line = line
+
+            if isinstance(stmt, ast.If):
+                if stmt.body:
+                    edges.append((line, stmt.body[0].lineno))
+                if stmt.orelse:
+                    edges.append((line, stmt.orelse[0].lineno))
+            elif isinstance(stmt, (ast.For, ast.While)):
+                if stmt.body:
+                    edges.append((line, stmt.body[0].lineno))
+                    last = getattr(stmt.body[-1], "lineno", None)
+                    if last is not None:
+                        edges.append((last, line))
+                if stmt.orelse:
+                    edges.append((line, stmt.orelse[0].lineno))
+
+        return edges
+
+    def _build_dfg(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> List[Tuple[int, int, str]]:
+        """Generate a simple data-flow graph as (def_line, use_line, variable)."""
+
+        class _Visitor(ast.NodeVisitor):
+            def __init__(self) -> None:
+                self.last_def: Dict[str, int] = {}
+                self.edges: List[Tuple[int, int, str]] = []
+
+            def visit_Assign(self, assign: ast.Assign) -> None:  # type: ignore[override]
+                lineno = assign.lineno
+                self.visit(assign.value)
+                for target in assign.targets:
+                    if isinstance(target, ast.Name):
+                        self.last_def[target.id] = lineno
+                self.generic_visit(assign)
+
+            def visit_AugAssign(self, assign: ast.AugAssign) -> None:  # type: ignore[override]
+                self.visit(assign.value)
+                if isinstance(assign.target, ast.Name):
+                    def_line = self.last_def.get(assign.target.id)
+                    if def_line is not None:
+                        self.edges.append((def_line, assign.lineno, assign.target.id))
+                    self.last_def[assign.target.id] = assign.lineno
+                self.generic_visit(assign)
+
+            def visit_Name(self, name: ast.Name) -> None:  # type: ignore[override]
+                if isinstance(name.ctx, ast.Load):
+                    def_line = self.last_def.get(name.id)
+                    if def_line is not None:
+                        self.edges.append((def_line, name.lineno, name.id))
+                self.generic_visit(name)
+
+        visitor = _Visitor()
+        visitor.visit(node)
+        return visitor.edges
+
+    def index_repository(self, graph: Any) -> None:
+        """Populate ``graph`` with code entities and flow information."""
 
         for file_path in self.repo_path.rglob("*.py"):
             rel = str(file_path.relative_to(self.repo_path))
@@ -148,7 +218,19 @@ class RepositoryIndexer:
             for node in ast.walk(tree):
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     func_id = f"{rel}::{node.name}"
-                    graph.add_node(func_id, "function", {"name": node.name, "file": rel})
+                    cfg = self._build_cfg(node)
+                    dfg = self._build_dfg(node)
+                    graph.add_node(
+                        func_id,
+                        "function",
+                        {
+                            "name": node.name,
+                            "file": rel,
+                            "ast": ast.dump(node),
+                            "cfg": cfg,
+                            "dfg": dfg,
+                        },
+                    )
                     graph.add_edge(rel, func_id, "contains")
                     for call in [n for n in ast.walk(node) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)]:
                         target = f"{rel}::{call.func.id}"

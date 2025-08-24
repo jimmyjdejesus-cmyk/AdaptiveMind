@@ -1,5 +1,14 @@
 # Agent Log
 
+## 2025-09-02
+- Implemented repository indexer with AST, CFG, and DFG generation.
+- Added Neo4j adapter and docker-compose service.
+- Created tests for flow graphs and Neo4j connector.
+- Ran `pytest tests/test_repository_indexer_graphs.py -q`.
+=======
+
+# Agent Log
+
 
 ## 2025-09-01
 - Added root cause failure analysis with `RootCauseAnalyzer` and negative pathway support in `PolicyOptimizer` and `HierarchicalHypergraph`.
