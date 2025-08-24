@@ -9,7 +9,6 @@ __all__ = [
     "DynamicOrchestrator",
     "MultiAgentOrchestrator",
     "SubOrchestrator",
-    "PruningManager",
     "PathMemory",
     "MessageBus",
     "HierarchicalMessageBus",
