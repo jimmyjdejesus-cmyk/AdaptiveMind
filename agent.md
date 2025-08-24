@@ -1,5 +1,9 @@
 # Agent Log
 
+## 2025-08-24
+- Introduced bandwidth-limited communication channel with penalty delays and integrated it into the MessageBus.
+- Added partial observability benchmark and unit tests.
+- Ran `pip install psutil networkx bcrypt pytest-asyncio -q` and `pytest tests/test_bandwidth_channel.py tests/test_message_bus_events.py -q`.
 
 ## 2025-09-01
 - Added root cause failure analysis with `RootCauseAnalyzer` and negative pathway support in `PolicyOptimizer` and `HierarchicalHypergraph`.

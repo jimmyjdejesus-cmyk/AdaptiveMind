@@ -18,6 +18,7 @@ from .sub_orchestrator import SubOrchestrator
 from .pruning import PruningManager
 from .path_memory import PathMemory
 from .message_bus import MessageBus, HierarchicalMessageBus, Event
+from .bandwidth_channel import BandwidthLimitedChannel
 
 
 __all__ = [
@@ -30,6 +31,7 @@ __all__ = [
     "MessageBus",
     "HierarchicalMessageBus",
     "Event",
+    "BandwidthLimitedChannel",
     "END",
 ]
 
