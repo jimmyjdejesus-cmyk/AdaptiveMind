@@ -22,7 +22,8 @@ from jarvis.memory import MemoryManager, ProjectMemory
 from jarvis.world_model.knowledge_graph import KnowledgeGraph
 from jarvis.homeostasis.monitor import SystemMonitor
 
-from jarvis.agents.critics import BlueTeamCritic, ConstitutionalCritic
+from jarvis.critics import BlueTeamCritic, RedTeamCritic
+from jarvis.agents.critics import ConstitutionalCritic
 from jarvis.agents.curiosity_agent import CuriosityAgent
 from jarvis.agents.mission_planner import MissionPlanner
 from jarvis.persistence.session import SessionManager
@@ -244,9 +245,12 @@ class ExecutiveAgent(AIAgent):
     ----------
     agent_id: str
         Identifier for this meta agent.
+    enable_red_team: bool, optional
+        Whether to enable Red Team reviews for intermediate outputs. If
+        ``None`` (default), the value is loaded from configuration toggles.
     enable_blue_team: bool, optional
-        Whether to enable Blue Team critiques of final outputs. Defaults to
-        ``True``.
+        Whether to enable Blue Team critiques of final outputs. If ``None``
+        (default), the value is loaded from configuration toggles.
     blue_team_sensitivity: float, optional
         Threshold for the Blue Team critic escalation. Defaults to ``0.5``.
     """
@@ -258,7 +262,8 @@ class ExecutiveAgent(AIAgent):
         orchestrator_cls: Type[MultiAgentOrchestrator] = SubOrchestrator,
         memory_manager: Optional[MemoryManager] = None,
         mission_planner: Optional['MissionPlanner'] = None,
-        enable_blue_team: bool = True,
+        enable_red_team: bool | None = None,
+        enable_blue_team: bool | None = None,
         blue_team_sensitivity: float = 0.5,
     ):
         super().__init__(agent_id, [
@@ -284,10 +289,25 @@ class ExecutiveAgent(AIAgent):
         self.mission_planner = mission_planner if mission_planner is not None else MissionPlanner()
         self.session_manager = SessionManager()
         self.constitutional_critic = ConstitutionalCritic()
-        self.enable_blue_team = enable_blue_team
+
+        if enable_red_team is None or enable_blue_team is None:
+            try:  # pragma: no cover - config loading is best effort
+                from config.config_loader import load_config
+
+                cfg = load_config()
+            except Exception:  # pragma: no cover
+                cfg = {}
+            if enable_red_team is None:
+                enable_red_team = cfg.get("ENABLE_RED_TEAM", False)
+            if enable_blue_team is None:
+                enable_blue_team = cfg.get("ENABLE_BLUE_TEAM", True)
+
+        self.enable_red_team = bool(enable_red_team)
+        self.red_team = RedTeamCritic(mcp_client) if self.enable_red_team else None
+        self.enable_blue_team = bool(enable_blue_team)
         self.blue_team = (
             BlueTeamCritic(sensitivity=blue_team_sensitivity)
-            if enable_blue_team
+            if self.enable_blue_team
             else None
         )
         self.system_monitor = SystemMonitor()
@@ -357,8 +377,30 @@ class ExecutiveAgent(AIAgent):
                 result = {"success": False, "error": "No low-confidence items"}
         else:
             result = {"success": False, "error": f"Unknown meta-task: {task_type}"}
+        critics: List[Dict[str, Any]] = []
+
+        if self.red_team:
+            try:
+                red_review = await self.red_team.review(self.agent_id, json.dumps(result))
+            except Exception as exc:  # pragma: no cover - best effort
+                logger.error("Red team review failed: %s", exc)
+                red_review = {"approved": True, "feedback": "Critic error"}
+            result["red_team_review"] = red_review
+            if not red_review.get("approved", True):
+                critics.append(
+                    {
+                        "critic_id": "red_team",
+                        "message": red_review.get("feedback", ""),
+                        "severity": "high",
+                    }
+                )
+
+        if critics:
+            result["critic_synthesis"] = await self.integrate_critic_feedback(critics)
+
         if self.blue_team:
             result["blue_team_evaluation"] = self.blue_team.evaluate(result)
+
         return result
     
     async def learn_from_feedback(self, feedback: Dict[str, Any]) -> bool:
@@ -662,11 +704,13 @@ class MetaIntelligenceCore:
     def __init__(
         self,
         *,
+        enable_red_team: bool = False,
         enable_blue_team: bool = True,
         blue_team_sensitivity: float = 0.5,
     ):
         self.meta_agent = ExecutiveAgent(
             "meta_core",
+            enable_red_team=enable_red_team,
             enable_blue_team=enable_blue_team,
             blue_team_sensitivity=blue_team_sensitivity,
         )

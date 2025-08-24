@@ -371,3 +371,10 @@
 - Ran `pytest tests/test_competitive_oracle.py -q`.
 
 
+
+## 2025-08-24
+- Introduced dedicated `jarvis/critics` package with Red and Blue Team critics.
+- Wired critics into `ExecutiveAgent` for staged self-correction using config toggles.
+- Added per-critic enable flags in configuration and tests validating toggles.
+- Ran `pytest tests/test_constitutional_critic.py tests/test_critic_toggle.py -q`.
+
