@@ -397,6 +397,13 @@
 
 
 
+## 2025-08-24
+- Added specialized agent and tool registries in `jarvis_sdk` with dedicated decorators.
+- Updated documentation with examples for `jarvis_tool` and `jarvis_agent`.
+- Added unit tests for SDK registration.
+- Created separate `pyproject.toml` for SDK packaging and attempted build & TestPyPI upload.
+- Ran `pytest tests/test_sdk_registration.py -q` and `python -m build` in `jarvis_sdk/`.
+=======
 ## 2025-02-14
 - Implemented `ResearchAgent` with web scraping, summarization, and citation tracking utilities.
 - Added `WebSearchTool` and `WebReaderTool` helpers.
@@ -423,5 +430,3 @@
 - Added tests verifying generated suites run and invalid code handling.
 - Ran `ruff check jarvis/workflows/integrations.py tests/test_workflow_test_generation.py --fix` (TOML parse error).
 - Ran `pytest tests/test_workflow_test_generation.py -q`.
-
-
