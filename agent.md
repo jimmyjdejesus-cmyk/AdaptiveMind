@@ -1,5 +1,13 @@
 # Agent Log
 
+## 2025-08-24
+- Added GitHub Actions workflows for linting, testing, and deployment.
+- Configured ELK stack in docker-compose.logging.yml with Filebeat and Logstash.
+- Documented deployment steps in docs/operations.md.
+- Attempted `pip install -e .` (failed: TOML decode error).
+- Ran `pytest test_basic.py` (0 tests collected).
+
+
 
 ## 2025-09-01
 - Added root cause failure analysis with `RootCauseAnalyzer` and negative pathway support in `PolicyOptimizer` and `HierarchicalHypergraph`.
