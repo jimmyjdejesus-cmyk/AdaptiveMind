@@ -399,6 +399,13 @@
 
 
 ## 2025-08-24
+- Moved VS Code integration into `integrations/vscode` with repository indexer suggestions and debugging.
+- Documented setup in `docs/vscode_extension.md`.
+- Added unit tests and ran `pytest tests/test_vscode_extension.py -q`.
+
+=======
+
+## 2025-08-24
 - Integrated JetBrains IDE commands for file opening and lint execution with prompts.
 - Added unit tests mocking IDE interface to verify dispatch.
 - Installed `psutil` to support JetBrains integration.
@@ -409,3 +416,4 @@
 - Added tests verifying generated suites run and invalid code handling.
 - Ran `ruff check jarvis/workflows/integrations.py tests/test_workflow_test_generation.py --fix` (TOML parse error).
 - Ran `pytest tests/test_workflow_test_generation.py -q`.
+
