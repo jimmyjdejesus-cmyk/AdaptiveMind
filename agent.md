@@ -1,6 +1,12 @@
 # Agent Log
 
 
+## 2025-08-24
+- Introduced `MissionPlanner` with Redis-backed `RedisTaskQueue` for sub-task planning.
+- Extended `MetaAgent` to plan missions and queue tasks; added mission configs.
+- Created tests for mission planning and queue integration.
+- Ran `PYTHONPATH=. pytest tests/test_mission_planner.py -q`.
+
 ## 2025-09-01
 - Added root cause failure analysis with `RootCauseAnalyzer` and negative pathway support in `PolicyOptimizer` and `HierarchicalHypergraph`.
 - Created unit test for negative pathway creation.

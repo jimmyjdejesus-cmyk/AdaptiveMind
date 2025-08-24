@@ -6,5 +6,6 @@ ollama
 fastapi
 uvicorn
 redis
+fakeredis
 neo4j
 pyotp

@@ -10,6 +10,7 @@ from jarvis.memory.memory_bus import MemoryBus
 from jarvis.tools.web_tools import search_web
 from jarvis.orchestration.message_bus import MessageBus
 from jarvis.orchestration.pruning import PruningEvaluator
+from jarvis.orchestration.mission_planner import MissionPlanner
 
 class TeamMemberAgent:
     """Base class for all team member agents."""
@@ -186,11 +187,37 @@ class MetaAgent:
         self.orchestrators: List[OrchestratorAgent] = []
         # The MetaAgent manages the shared bus for all its orchestrators
         self.shared_memory_bus = MemoryBus(os.path.join(directory, "shared_orchestrator_bus"))
+        missions_dir = os.path.join(directory, "config", "missions")
+        self.mission_planner = MissionPlanner(missions_dir)
         self.log("Meta-Agent initialized and shared memory bus is active.")
 
     def log(self, message: str, data: Dict[str, Any] = None):
         """Logs a message from the Meta-Agent to the shared bus."""
         self.shared_memory_bus.log_interaction(self.agent_id, "Meta", message, data)
+
+    def plan_mission(self, mission_name: str) -> List[Dict[str, Any]]:
+        """Break a mission into sub-tasks and enqueue them.
+
+        Parameters
+        ----------
+        mission_name: str
+            Name of the mission file (without extension) located in ``config/missions``.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            The tasks that were enqueued.
+        """
+        tasks = self.mission_planner.plan(mission_name)
+        self.log(f"Planned mission '{mission_name}' with {len(tasks)} tasks.")
+        return tasks
+
+    def next_task(self) -> Dict[str, Any] | None:
+        """Retrieve the next task from the mission queue."""
+        task = self.mission_planner.queue.dequeue()
+        if task:
+            self.log(f"Dequeued task {task.get('id', '')}.")
+        return task
 
     def spawn_orchestrator(self, objective: str, directory: str = ".") -> OrchestratorAgent:
         """Dynamically creates and deploys an OrchestratorAgent for a new objective."""
