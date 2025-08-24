@@ -7,6 +7,7 @@ import agent.features.code_search as code_search
 import agent.features.repo_context as repo_context
 from tools.code_intelligence import engine as code_intelligence
 import requests
+import os
 
 def preview_tool_action(step):
     return f"Will run {step['tool']} with args {step['args']}"
@@ -63,8 +64,49 @@ def run_tool(step, expert_model=None, draft_model=None, user=None):
         return code_intelligence.record_completion_feedback(file_path, cursor_line, cursor_column, suggestion, accepted, user or 'anonymous')
     elif step['tool'] == "github_api":
         action = step['args'].get("action", "")
-        # TODO: Implement proper github API integration
-        return f"GitHub API action '{action}' requested but integration module not available yet"
+        token = step['args'].get("token") or os.environ.get("GITHUB_TOKEN")
+        if not token:
+            raise ValueError("GitHub token required")
+
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github+json",
+        }
+
+        try:
+            if action == "open_issue":
+                repo = step['args'].get("repo")
+                title = step['args'].get("title")
+                body = step['args'].get("body", "")
+                if not repo or not title:
+                    raise ValueError("'repo' and 'title' are required for opening an issue")
+
+                url = f"https://api.github.com/repos/{repo}/issues"
+                res = requests.post(url, json={"title": title, "body": body}, headers=headers, timeout=10)
+
+            elif action == "create_pull_request":
+                repo = step['args'].get("repo")
+                title = step['args'].get("title")
+                head = step['args'].get("head")
+                base = step['args'].get("base")
+                body = step['args'].get("body", "")
+                if not repo or not title or not head or not base:
+                    raise ValueError("'repo', 'title', 'head', and 'base' are required for creating a pull request")
+
+                url = f"https://api.github.com/repos/{repo}/pulls"
+                payload = {"title": title, "head": head, "base": base, "body": body}
+                res = requests.post(url, json=payload, headers=headers, timeout=10)
+
+            else:
+                return {"error": f"Unsupported GitHub action '{action}'"}
+
+            if res.status_code == 403 and res.headers.get("X-RateLimit-Remaining") == "0":
+                return {"error": "GitHub API rate limit exceeded"}
+
+            res.raise_for_status()
+            return res.json()
+        except requests.RequestException as e:
+            return {"error": str(e)}
     elif step['tool'] == "ide_command":
         command = step['args'].get("command", "")
         # TODO: Implement proper IDE command integration

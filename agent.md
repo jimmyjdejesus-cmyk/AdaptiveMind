@@ -1,6 +1,11 @@
 # Agent Log
 
 
+## 2025-08-24
+- Implemented authenticated GitHub API tools for issues and pull requests with rate-limit handling.
+- Added unit tests mocking API responses.
+- Ran `pytest legacy/tests/test_github_api.py -q`.
+=======
 ## 2025-09-01
 - Added root cause failure analysis with `RootCauseAnalyzer` and negative pathway support in `PolicyOptimizer` and `HierarchicalHypergraph`.
 - Created unit test for negative pathway creation.
