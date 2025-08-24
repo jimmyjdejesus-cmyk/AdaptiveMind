@@ -7,6 +7,55 @@ import agent.features.code_search as code_search
 import agent.features.repo_context as repo_context
 from tools.code_intelligence import engine as code_intelligence
 import requests
+import os
+import shlex
+import subprocess
+import re
+
+ALLOWED_GIT_COMMANDS = {"status", "log", "branch"}
+
+
+def run_git_command(repository_path: str, command: str) -> str:
+    """Execute a restricted git command in the specified repository.
+
+    Args:
+        repository_path: Path to the git repository.
+        command: Git command string (e.g., "status").
+
+    Returns:
+        Output from the git command.
+
+    Raises:
+        FileNotFoundError: If the repository path is missing or invalid.
+        ValueError: If the command is not allowed or contains unsafe characters.
+        RuntimeError: If the git command fails to execute.
+    """
+    if not repository_path:
+        raise FileNotFoundError("Repository path is required")
+    repo_git = os.path.join(repository_path, ".git")
+    if not os.path.isdir(repository_path) or not os.path.isdir(repo_git):
+        raise FileNotFoundError(f"Repository not found: {repository_path}")
+
+    tokens = shlex.split(command)
+    if not tokens or tokens[0] not in ALLOWED_GIT_COMMANDS:
+        raise ValueError("Unsupported git command")
+
+    token_re = re.compile(r"^[\w./-]+$")
+    for token in tokens:
+        if not token_re.match(token):
+            raise ValueError("Invalid characters in command")
+
+    try:
+        result = subprocess.run(
+            ["git", "-C", repository_path] + tokens,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.strip()
+        raise RuntimeError(stderr or "Git command failed") from e
 
 def preview_tool_action(step):
     return f"Will run {step['tool']} with args {step['args']}"
@@ -35,8 +84,7 @@ def run_tool(step, expert_model=None, draft_model=None, user=None):
     elif step['tool'] == "git_command":
         command = step['args'].get("command", "")
         repository_path = step['args'].get("repository_path")
-        # TODO: Implement proper git command handling
-        return f"Git command '{command}' requested but github_integration module not available yet"
+        return run_git_command(repository_path, command)
     elif step['tool'] == "code_review":
         file_path = step['args'].get("file_path", "")
         check_types = step['args'].get("check_types")
