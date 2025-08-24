@@ -422,6 +422,14 @@
 - Documented setup in `docs/vscode_extension.md`.
 - Added unit tests and ran `pytest tests/test_vscode_extension.py -q`.
 
+
+## 2025-08-24
+- Introduced dedicated `jarvis/critics` package with Red and Blue Team critics.
+- Wired critics into `ExecutiveAgent` for staged self-correction using config toggles.
+- Added per-critic enable flags in configuration and tests validating toggles.
+- Ran `pytest tests/test_constitutional_critic.py tests/test_critic_toggle.py -q`.
+
+=======
 =======
 
 ## 2025-08-24
@@ -435,3 +443,4 @@
 - Added tests verifying generated suites run and invalid code handling.
 - Ran `ruff check jarvis/workflows/integrations.py tests/test_workflow_test_generation.py --fix` (TOML parse error).
 - Ran `pytest tests/test_workflow_test_generation.py -q`.
+
