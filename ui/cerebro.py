@@ -2,11 +2,11 @@
 
 This module combines features from ``v2.agent.adapters.langgraph_ui`` and
 ``ui.visualizer`` to provide a lightweight web API that exposes a workflow
-visualization and live performance metrics.  Events are expected to follow the
+visualization and live performance metrics. Events are expected to follow the
 structure defined in ``schemas/event.json`` where the ``data`` field contains
 node information understood by :class:`WorkflowVisualizer`.
 
-The dashboard also tracks benchmark performance.  Metrics are recorded through
+The dashboard also tracks benchmark performance. Metrics are recorded through
 :func:`legacy.agent.core.performance_monitor.get_performance_monitor` which
 allows historical analysis and aligns with ``BenchmarkRewardAgent`` outputs.
 """
