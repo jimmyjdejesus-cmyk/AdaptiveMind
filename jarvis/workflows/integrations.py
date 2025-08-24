@@ -18,6 +18,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Lazy-import placeholders for optional Jarvis modules
+get_coding_agent = None  # type: ignore
+jarvis_agent = None  # type: ignore
+
 class IntegrationAdapter(ABC):
     """Base class for system integration adapters"""
     
@@ -263,29 +267,35 @@ class CodeGenerationAdapter(IntegrationAdapter):
         specification = params.get("specification")
         language = params.get("language", "python")
         style = params.get("style", "standard")
-        
-        # This would integrate with our specialist agents
-        # For now, return a template response
-        
-        code_template = f"""
-# Generated code for: {specification}
-# Language: {language}
-# Style: {style}
 
-# TODO: Implement based on specification
-def generated_function():
-    \"\"\"
-    {specification}
-    \"\"\"
-    pass
-"""
-        
-        return {
-            "success": True,
-            "code": code_template,
-            "language": language,
-            "specification": specification
-        }
+        if not specification:
+            return {"success": False, "error": "No specification provided"}
+
+        try:
+            # Lazy import to avoid heavy dependencies during module import
+            global get_coding_agent  # type: ignore
+            global jarvis_agent  # type: ignore
+            if get_coding_agent is None or jarvis_agent is None:
+                from jarvis import get_coding_agent as _get_coding_agent
+                from jarvis.core.agent import jarvis_agent as _jarvis_agent
+                get_coding_agent = _get_coding_agent
+                jarvis_agent = _jarvis_agent
+
+            coding_agent = get_coding_agent(jarvis_agent)
+            generated_code = await asyncio.to_thread(
+                coding_agent.generate_code, specification, language, style
+            )
+
+            return {
+                "success": True,
+                "code": generated_code,
+                "language": language,
+                "specification": specification,
+                "style": style,
+            }
+        except Exception as e:
+            logger.error(f"Code generation failed: {e}")
+            return {"success": False, "error": str(e)}
     
     async def _analyze_code(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze code structure and quality"""

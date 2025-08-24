@@ -1,5 +1,9 @@
 # Agent Log
 
+## 2025-09-02
+- Replaced template code generation with specialist agent invocation in `CodeGenerationAdapter`.
+- Added unit tests covering success and error paths.
+- Ran `pytest tests/test_code_generation_adapter.py -q`.
 
 ## 2025-09-01
 - Added root cause failure analysis with `RootCauseAnalyzer` and negative pathway support in `PolicyOptimizer` and `HierarchicalHypergraph`.
