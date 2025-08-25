@@ -41,7 +41,6 @@ pyyaml>=6.0
 duckduckgo-search>=4.0.0
 beautifulsoup4>=4.12.0
 pydantic
-beautifulsoup4>=4.12.0
 
 # --- Security & System ---
 # Cryptography, password hashing, system monitoring

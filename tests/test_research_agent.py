@@ -116,3 +116,21 @@ def test_web_reader_tool_rejects_invalid_url() -> None:
     reader = WebReaderTool()
     with pytest.raises(ValueError):
         reader.read("javascript:alert('xss')")
+
+
+def test_citation_deduplication() -> None:
+    """Duplicate URLs are recorded only once in the source list."""
+
+    search_html = (
+        "<a class='result__a' href='http://example.com'>A</a>"
+        "<a class='result__a' href='http://example.com'>B</a>"
+    )
+    read_html = "<p>Same content</p>"
+
+    side_effects = [_make_response(search_html), _make_response(read_html), _make_response(read_html)]
+
+    with patch("jarvis.tools.web_tools.requests.get", side_effect=side_effects):
+        agent = ResearchAgent()
+        report = agent.research("Question")
+
+    assert len(report["sources"]) == 1

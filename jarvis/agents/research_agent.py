@@ -1,6 +1,7 @@
 """Research agent capable of iterative web search and structured reporting."""
 
-from __future-annotations
+from __future__ import annotations
+
 import json
 import logging
 import re
@@ -34,6 +35,8 @@ class ResearchAgent:
         self.memory_bus = memory_bus
         self.session_memory: List[Dict[str, List[Dict[str, str]]]] = []
         self.citations: List[Dict[str, str]] = []
+        # Map URLs to citation IDs for de-duplication
+        self._citation_lookup: Dict[str, int] = {}
         self.last_report: Dict[str, Any] | None = None
 
     # ------------------------------------------------------------------
@@ -58,6 +61,7 @@ class ResearchAgent:
 
         self.session_memory = []
         self.citations = []
+        self._citation_lookup = {}
         self._recursive_search(question, depth)
 
         claim_evidence = []
@@ -120,10 +124,13 @@ class ResearchAgent:
                 continue
 
             summary = self.summarizer(content)
-            citation_id = len(self.citations) + 1
-            self.citations.append(
-                {"id": citation_id, "url": url, "title": result.get("title", "")}
-            )
+            citation_id = self._citation_lookup.get(url)
+            if citation_id is None:
+                citation_id = len(self.citations) + 1
+                self._citation_lookup[url] = citation_id
+                self.citations.append(
+                    {"id": citation_id, "url": url, "title": result.get("title", "")}
+                )
 
             processed.append(
                 {
