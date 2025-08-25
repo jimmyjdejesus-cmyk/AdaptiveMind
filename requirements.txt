@@ -22,7 +22,7 @@ websockets>=15.0.1
 # --- Database Clients ---
 # Clients for the services defined in docker-compose.yml
 qdrant-client>=1.7.0
-neo4j>=5.14.0
+neo4j==5.14.0
 redis>=5.0.0
 
 # --- UI & Data Visualization ---

@@ -1,7 +1,6 @@
 """Research agent capable of iterative web search and structured reporting."""
 
-from __future__ import annotations
-
+from __future-annotations
 import json
 import logging
 import re
@@ -227,4 +226,3 @@ class ResearchAgent:
             json.dump(self.last_report, f, indent=2)
         with open(md_path, "w", encoding="utf-8") as f:
             f.write(self.get_report_markdown())
-

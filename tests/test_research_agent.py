@@ -116,4 +116,3 @@ def test_web_reader_tool_rejects_invalid_url() -> None:
     reader = WebReaderTool()
     with pytest.raises(ValueError):
         reader.read("javascript:alert('xss')")
-
