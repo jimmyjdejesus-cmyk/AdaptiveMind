@@ -70,7 +70,6 @@ class ProjectMemory:
         injection attacks. The approach is intentionally simple; callers may
         implement additional sanitisation if required.
         """
-
         sanitized = (
             str(text)
             .replace("<", "&lt;")
@@ -110,7 +109,6 @@ class ProjectMemory:
             Optional list of existing node identifiers to which this entry
             should link. Missing nodes are ignored.
         """
-
         if layer not in _VALID_LAYERS:
             raise ValueError(f"Invalid layer: {layer}")
         if not run_id or not mission_id:
