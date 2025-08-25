@@ -1,15 +1,16 @@
 """Tests for tool registry RBAC and HITL security."""
 
 import logging
-
 import pytest
 import asyncio
 import importlib.util
 import pathlib
+from typing import Any
 
 from agent.hitl.policy import HITLPolicy
 from jarvis.auth.security_manager import SecurityManager
 from jarvis.tools.registry import Registry
+from jarvis.tools import environment_tools
 
 _main_spec = importlib.util.spec_from_file_location(
     "jarvis_app_main", pathlib.Path(__file__).resolve().parents[1] / "app" / "main.py"
@@ -80,3 +81,78 @@ def test_hitl_endpoints_update_gate():
     assert hitl_gates["t1"] is True
     asyncio.run(deny(_main.HitlDecision(action="t2")))
     assert hitl_gates["t2"] is False
+
+
+def modal_deny(_):
+    return False
+
+
+def test_shell_command_denied_by_hitl(caplog):
+    db = DummyDB({"alice": {"role": "admin"}})
+    sm = SecurityManager(db)
+    sm.grant_command_access("alice", "echo")
+    policy = HITLPolicy()
+    registry = Registry()
+
+    def shell(command: str, username: str, security_manager: Any = None) -> None:
+        environment_tools.run_shell_command(command, username, security_manager)
+
+    registry.register(
+        "shell",
+        shell,
+        "Run shell command",
+        ["shell"],
+        risk_tier="high",
+        required_role="admin",
+    )
+
+    with caplog.at_level(logging.WARNING):
+        with pytest.raises(PermissionError):
+            registry.execute(
+                "shell",
+                "echo hi",
+                "alice",
+                user="alice",
+                security=sm,
+                hitl=policy,
+                modal=modal_deny,
+                security_manager=sm,
+            )
+        assert any("HITLDenied" in rec.message for rec in caplog.records)
+
+
+def test_write_file_denied_by_hitl(tmp_path, caplog):
+    db = DummyDB({"alice": {"role": "admin"}})
+    sm = SecurityManager(db)
+    sm.grant_path_access("alice", str(tmp_path))
+    policy = HITLPolicy()
+    registry = Registry()
+
+    def writer(path: str, content: str, username: str, security_manager: Any = None) -> bool:
+        return environment_tools.write_file(path, content, username, security_manager)
+
+    registry.register(
+        "write",
+        writer,
+        "Write file",
+        ["fs"],
+        risk_tier="high",
+        required_role="admin",
+    )
+
+    target = tmp_path / "out.txt"
+    with caplog.at_level(logging.WARNING):
+        with pytest.raises(PermissionError):
+            registry.execute(
+                "write",
+                str(target),
+                "data",
+                "alice",
+                user="alice",
+                security=sm,
+                hitl=policy,
+                modal=modal_deny,
+                security_manager=sm,
+            )
+        assert any("HITLDenied" in rec.message for rec in caplog.records)
+    assert not target.exists()
