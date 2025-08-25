@@ -45,7 +45,6 @@ class PluginRegistry:
             name: Optional explicit name; defaults to object name.
             description: Optional human-readable description.
         """
-
         plugin_name = name or getattr(item, "__name__", item.__class__.__name__)
         self._plugins[plugin_name] = PluginDescriptor(
             item, plugin_type, description, _validate_permissions(permissions)
