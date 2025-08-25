@@ -2,17 +2,17 @@ from __future__ import annotations
 
 """Lightweight branch simulation hooks for scout and scholar roles."""
 
-from typing import Any
+from typing import Any, Dict, Tuple
 
 from jarvis.world_model.hypergraph import HierarchicalHypergraph
 from .root_cause_analyzer import RootCauseAnalyzer
 
 
 def simulate(
-    branch_spec: dict[str, Any],
+    branch_spec: Dict[str, Any],
     hypergraph: HierarchicalHypergraph,
     analyzer: RootCauseAnalyzer | None = None,
-) -> tuple[float, str, dict[str, Any]]:
+) -> Tuple[float, str, Dict[str, Any]]:
     """Simulate a branch and return its score, notes and diffs.
 
     Parameters
@@ -30,12 +30,12 @@ def simulate(
 
     branch_type = branch_spec.get("type")
     notes = ""
-    diffs: dict[str, Any] = {}
+    diffs: Dict[str, Any] = {}
 
     if branch_type == "scout":
         strategy_id = branch_spec.get("strategy_id")
         if not isinstance(strategy_id, str):
-            raise ValueError("strategy_id must be provided for scout branch")
+            raise ValueError("strategy_id must be provided for a scout branch")
         node = hypergraph.query(2, strategy_id) or {}
         score = float(node.get("confidence", 0.5))
         notes = f"scouted {strategy_id}"
@@ -45,7 +45,7 @@ def simulate(
     if branch_type == "scholar":
         neg_id = branch_spec.get("neg_path_id")
         if not isinstance(neg_id, str):
-            raise ValueError("neg_path_id must be provided for scholar branch")
+            raise ValueError("neg_path_id must be provided for a scholar branch")
         raw_budget = branch_spec.get("budget", 0.1)
         try:
             budget = float(raw_budget)

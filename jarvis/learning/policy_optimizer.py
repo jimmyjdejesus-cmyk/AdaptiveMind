@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Simple REX-RAG policy optimizer with failure analysis."""
 
-from typing import Any
+from typing import Dict, Any
 import random
 
 from jarvis.world_model.hypergraph import HierarchicalHypergraph
@@ -25,7 +25,7 @@ class PolicyOptimizer:
         self.history: list[dict[str, Any]] = []
         self.root_cause_analyzer = root_cause_analyzer or RootCauseAnalyzer()
         self.remediation_agent = remediation_agent or RemediationAgent()
-        self.baseline: dict[str, float] = {}
+        self.baseline: Dict[str, float] = {}
         self.reg_strength = 0.1
 
     def update_strategy(self, strategy_key: str, reward: float) -> None:
@@ -63,7 +63,7 @@ class PolicyOptimizer:
         branch_type: str,
         reference_id: str,
         reward: float,
-        rca: dict[str, Any] | None = None,
+        rca: Dict[str, Any] | None = None,
     ) -> None:
         """Apply branch result to the hypergraph and update policies.
 
@@ -89,7 +89,7 @@ class PolicyOptimizer:
 
         if branch_type == "scholar":
             if rca is None:
-                raise ValueError("rca required for scholar branch")
+                raise ValueError("rca is required for a scholar branch")
             neg_key = self.hypergraph.add_negative_pathway(reference_id, rca)
             self.hypergraph.update_node(2, neg_key, {"mission": branch_type})
             belief_key = self.hypergraph.add_causal_belief(

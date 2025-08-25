@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import os
 import sys
 import types
 
+# Mock neo4j to make tests runnable without the dependency
 dummy_neo4j = types.SimpleNamespace(GraphDatabase=object, Driver=object)
 sys.modules.setdefault("neo4j", dummy_neo4j)
 
