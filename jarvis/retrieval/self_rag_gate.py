@@ -1,8 +1,9 @@
-"""Self-RAG gating logic.
+"""Self-RAG gating logic with decision metrics.
 
-This module decides whether a retrieval step should be triggered based on
-precision and latency metrics. It also records these metrics for
-observability.
+The gate analyses retrieval results to determine whether an additional
+retrieval step should be performed. Decisions are guided by precision and
+latency thresholds. Each evaluation is logged via :class:`RetrievalMetrics`
+for later inspection.
 """
 
 from __future__ import annotations
@@ -60,7 +61,9 @@ class SelfRAGGate:
         relevant = sum(1 for r in results if r.get("relevant"))
         return relevant / len(results)
 
-    def should_retrieve(self, query: str, results: Sequence[Dict[str, Any]]) -> bool:
+    def should_retrieve(
+        self, query: str, results: Sequence[Dict[str, Any]]
+    ) -> bool:
         """Determine whether retrieval should be triggered.
 
         Parameters
