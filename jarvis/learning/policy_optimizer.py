@@ -22,21 +22,30 @@ class PolicyOptimizer:
     ) -> None:
         self.hypergraph = hypergraph
         self.learning_rate = learning_rate
-        self.history: list[Dict[str, Any]] = []
+        self.history: list[dict[str, Any]] = []
         self.root_cause_analyzer = root_cause_analyzer or RootCauseAnalyzer()
         self.remediation_agent = remediation_agent or RemediationAgent()
         self.baseline: Dict[str, float] = {}
         self.reg_strength = 0.1
 
     def update_strategy(self, strategy_key: str, reward: float) -> None:
-        """Adjust the confidence of a strategy node using REX-RAG update rule."""
+        """Adjust strategy confidence using reward feedback.
+
+        Applies a simple incremental update and then blends the result with a
+        baseline value using Monte Carlo functional regularization. This
+        interpolation prevents catastrophic forgetting by retaining part of the
+        original confidence.
+        """
+
         node = self.hypergraph.query(2, strategy_key)
         if not node:
             return
+        reward = float(reward)
         confidence = node.get("confidence", 0.5)
         baseline = self.baseline.setdefault(strategy_key, confidence)
         updated = confidence + self.learning_rate * (reward - confidence)
-        lam = random.random()
+        lam = random.random()  # sample mixing coefficient
+        # Blend with baseline; higher reg_strength keeps memory of prior belief
         updated = (1 - self.reg_strength * lam) * updated + self.reg_strength * lam * baseline
         self.hypergraph.update_node(2, strategy_key, {"confidence": updated})
         self.history.append({"strategy": strategy_key, "reward": reward, "confidence": updated})
@@ -56,7 +65,19 @@ class PolicyOptimizer:
         reward: float,
         rca: Dict[str, Any] | None = None,
     ) -> None:
-        """Apply branch result to the hypergraph and update policies."""
+        """Apply branch result to the hypergraph and update policies.
+
+        Parameters
+        ----------
+        branch_type:
+            Either ``"scout"`` or ``"scholar"``.
+        reference_id:
+            Strategy or negative-pathway identifier in the hypergraph.
+        reward:
+            Reward returned by :class:`RewardOracle`.
+        rca:
+            Root cause analysis memo for scholar branches.
+        """
 
         if branch_type == "scout":
             new_key = self.hypergraph.add_strategy(
@@ -66,7 +87,9 @@ class PolicyOptimizer:
             self.update_strategy(reference_id, reward)
             return
 
-        if branch_type == "scholar" and rca:
+        if branch_type == "scholar":
+            if rca is None:
+                raise ValueError("rca is required for a scholar branch")
             neg_key = self.hypergraph.add_negative_pathway(reference_id, rca)
             self.hypergraph.update_node(2, neg_key, {"mission": branch_type})
             belief_key = self.hypergraph.add_causal_belief(

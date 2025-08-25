@@ -1,5 +1,12 @@
+from __future__ import annotations
+
 import os
 import sys
+import types
+
+# Mock neo4j to make tests runnable without the dependency
+dummy_neo4j = types.SimpleNamespace(GraphDatabase=object, Driver=object)
+sys.modules.setdefault("neo4j", dummy_neo4j)
 
 sys.path.append(os.getcwd())
 
@@ -41,3 +48,25 @@ def test_scout_and_scholar_update_hypergraph():
 
     layer3 = hypergraph.layers[3]
     assert any(n.get("mission") == "scholar" for n in layer3.values())
+
+
+def test_scholar_budget_bounds():
+    hypergraph = HierarchicalHypergraph()
+    strategy_key = hypergraph.add_strategy(["step1"], confidence=0.2)
+    rc = {"component": "db", "reason": "db correlated with failure"}
+    neg_path = hypergraph.add_negative_pathway(strategy_key, rc)
+
+    _, _, diffs_default = simulate(
+        {"type": "scholar", "neg_path_id": neg_path}, hypergraph
+    )
+    assert diffs_default["budget"] == 0.1
+
+    _, _, diffs_cap = simulate(
+        {"type": "scholar", "neg_path_id": neg_path, "budget": 1.0}, hypergraph
+    )
+    assert diffs_cap["budget"] == 0.1
+
+    _, _, diffs_neg = simulate(
+        {"type": "scholar", "neg_path_id": neg_path, "budget": -0.5}, hypergraph
+    )
+    assert diffs_neg["budget"] == 0.0

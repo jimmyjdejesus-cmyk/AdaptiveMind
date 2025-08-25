@@ -33,7 +33,9 @@ def simulate(
     diffs: Dict[str, Any] = {}
 
     if branch_type == "scout":
-        strategy_id = branch_spec["strategy_id"]
+        strategy_id = branch_spec.get("strategy_id")
+        if not isinstance(strategy_id, str):
+            raise ValueError("strategy_id must be provided for a scout branch")
         node = hypergraph.query(2, strategy_id) or {}
         score = float(node.get("confidence", 0.5))
         notes = f"scouted {strategy_id}"
@@ -41,8 +43,15 @@ def simulate(
         return score, notes, diffs
 
     if branch_type == "scholar":
-        neg_id = branch_spec["neg_path_id"]
-        budget = min(branch_spec.get("budget", 0.1), 0.1)
+        neg_id = branch_spec.get("neg_path_id")
+        if not isinstance(neg_id, str):
+            raise ValueError("neg_path_id must be provided for a scholar branch")
+        raw_budget = branch_spec.get("budget", 0.1)
+        try:
+            budget = float(raw_budget)
+        except (TypeError, ValueError) as exc:  # defensive parse
+            raise ValueError("budget must be numeric") from exc
+        budget = max(0.0, min(budget, 0.1))
         neg_node = hypergraph.query(2, neg_id) or {}
         rca = neg_node.get("root_cause")
         if not rca:
