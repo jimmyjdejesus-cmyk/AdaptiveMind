@@ -27,6 +27,11 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 *   **[2025-08-24T22:19:48+00:00]** Started implementing log enhancements: extending scoped writer, logging orchestration events, FastAPI endpoint, and UI log viewer.
 *   **[2025-08-24T22:22:49+00:00]** Completed log enhancements, server integration, and UI updates with tests.
 
+
+*   **[2025-08-25]** Added project memory hypergraph with provenance tracking and recorded retrieval decisions in SelfRAGGate with tests.
+*   **[2025-08-25]** Hardened project memory with sanitisation, validation and additional tests; documented retrieval gating and mirrored networkx dependency.
+*   **[2025-08-25]** Added pluggable persistence backend with JSON file support, expanded sanitisation using `bleach`, documented GraphRAG/REX-RAG hooks and added stress and persistence tests.
+=======
 *   **[2025-08-25]** Added log viewer filters, connection status indicator, and HITL pending badge; updated styles and docs.
 *   **[2025-08-25]** Hardened WebSocket handlers in log viewer, documented component, and introduced Jest tests for filtering, connection state, and HITL badge with supporting config and dependencies.
 =======
@@ -79,4 +84,3 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 *   **[2025-08-26]** Added hierarchical orchestrator template with step context/results, child orchestrator spawning with event bubbling, crew presets, and tests verifying log aggregation and crew swapping.
 =======
 *   **[2025-08-25]** Added mission DAG schema with persistence, planner, UI workflow endpoint, and resume tests.
-

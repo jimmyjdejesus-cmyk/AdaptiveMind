@@ -8,17 +8,25 @@ and provenance in the form of ``run_id`` and ``mission_id``. Edges connect
 related entries, providing a lightweight hypergraph suitable for retrieval
 and reasoning tasks.
 
+This graph underpins future GraphRAG and REX-RAG components where community
+summaries, neighbourhood traversal and code-aware retrieval rely on these
+structured relationships.
+
 All content is sanitised before storage to avoid injection of malicious graph
-data.
+data, and a pluggable persistence backend allows the hypergraph to be saved
+and restored across process restarts.
 """
 
 from __future__ import annotations
 
+import json
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
 import networkx as nx
+import bleach
 
 # Layer constants
 L1_FACT = "fact"
@@ -49,6 +57,46 @@ class Namespace:
     team: str
 
 
+class MemoryBackend(ABC):
+    """Persistence backend interface for :class:`ProjectMemory`."""
+
+    @abstractmethod
+    def load(self) -> Dict[Tuple[str, str, str], nx.DiGraph]:
+        """Return graphs previously saved to the backend."""
+
+    @abstractmethod
+    def save(self, graphs: Dict[Tuple[str, str, str], nx.DiGraph]) -> None:
+        """Persist ``graphs`` to the backend."""
+
+
+class JSONFileBackend(MemoryBackend):
+    """Persist graphs as node-link JSON on disk."""
+
+    def __init__(self, path: str) -> None:
+        self.path = path
+
+    def load(self) -> Dict[Tuple[str, str, str], nx.DiGraph]:
+        try:
+            with open(self.path, "r", encoding="utf-8") as fh:
+                raw = json.load(fh)
+        except FileNotFoundError:
+            return {}
+
+        graphs: Dict[Tuple[str, str, str], nx.DiGraph] = {}
+        for key, data in raw.items():
+            graphs[tuple(key.split(":"))] = nx.node_link_graph(
+                data, directed=True, multigraph=False, links="links"
+            )
+        return graphs
+
+    def save(self, graphs: Dict[Tuple[str, str, str], nx.DiGraph]) -> None:
+        raw: Dict[str, Dict[str, object]] = {}
+        for key, graph in graphs.items():
+            raw[":".join(key)] = nx.node_link_data(graph, edges="links")
+        with open(self.path, "w", encoding="utf-8") as fh:
+            json.dump(raw, fh)
+
+
 class ProjectMemory:
     """Store and relate memories across project namespaces.
 
@@ -56,27 +104,24 @@ class ProjectMemory:
     entries annotated with their layer and provenance (``run_id`` and
     ``mission_id``). Edges connect related entries, enabling a simple
     hypergraph structure. Graphs are stored in memory; applications needing
-    persistence or distribution may subclass :class:`ProjectMemory` to
-    provide alternative storage backends.
+    persistence or distribution may supply a :class:`MemoryBackend` to persist
+    data.
     """
 
-    def __init__(self) -> None:
-        self._graphs: Dict[Tuple[str, str, str], nx.DiGraph] = {}
+    def __init__(self, backend: Optional[MemoryBackend] = None) -> None:
+        self._backend = backend
+        if backend:
+            self._graphs = backend.load()
+        else:
+            self._graphs: Dict[Tuple[str, str, str], nx.DiGraph] = {}
+
+    def _persist(self) -> None:
+        if self._backend:
+            self._backend.save(self._graphs)
 
     def _sanitize(self, text: str) -> str:
-        """Basic input sanitisation.
-
-        Replaces angle brackets and null bytes to minimise the risk of graph
-        injection attacks. The approach is intentionally simple; callers may
-        implement additional sanitisation if required.
-        """
-        sanitized = (
-            str(text)
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\x00", "")
-        )
-        return sanitized
+        """Sanitise input using :mod:`bleach`."""
+        return bleach.clean(str(text), strip=True)
 
     def _key(self, ns: Namespace) -> Tuple[str, str, str]:
         return (ns.project, ns.session, ns.team)
@@ -127,6 +172,7 @@ class ProjectMemory:
             for target in links:
                 if graph.has_node(target):
                     graph.add_edge(node_id, target)
+        self._persist()
         return node_id
 
     def get_graph(self, ns: Namespace) -> nx.DiGraph:
@@ -137,6 +183,8 @@ class ProjectMemory:
 __all__ = [
     "ProjectMemory",
     "Namespace",
+    "MemoryBackend",
+    "JSONFileBackend",
     "L1_FACT",
     "L2_STRATEGY",
     "L3_BELIEF",

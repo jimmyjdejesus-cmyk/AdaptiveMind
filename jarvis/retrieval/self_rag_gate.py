@@ -3,8 +3,10 @@
 The gate analyses retrieval results to determine whether an additional
 retrieval step should be performed. Decisions are guided by precision and
 latency thresholds. Each evaluation is logged via :class:`RetrievalMetrics`
-for later inspection.
-"""
+for later inspection. Future GraphRAG and REX-RAG components will feed their
+vector, neighbourhood and code-aware retrieval scores into this gate to keep
+the decision pipeline consistent.
+
 
 from __future__ import annotations
 
