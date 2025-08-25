@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { http } from '@tauri-apps/api';
+import { socket } from '../socket';
 
 // DEV-COMMENT: This component displays run-scoped logs produced by the
 // `ScopedLogWriter`.  It queries the backend for the latest run transcript
@@ -36,6 +37,15 @@ const LogViewerPane = () => {
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
+
+  // DEV-COMMENT: Subscribe to live log updates via WebSocket.
+  useEffect(() => {
+    const handler = (entry) => {
+      setLogs((prev) => `${prev}\n${entry}`.trim());
+    };
+    socket.on('log_update', handler);
+    return () => socket.off('log_update', handler);
+  }, []);
 
   return (
     <div className="pane">
