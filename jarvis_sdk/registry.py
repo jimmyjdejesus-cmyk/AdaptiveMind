@@ -14,6 +14,15 @@ class PluginDescriptor:
     permissions: List[str] = field(default_factory=list)
 
 
+def _validate_permissions(permissions: List[str] | None) -> List[str]:
+    """Ensure permissions is a list of strings."""
+    if permissions is None:
+        return []
+    if not isinstance(permissions, list) or not all(isinstance(p, str) for p in permissions):
+        raise ValueError("permissions must be a list of strings")
+    return permissions
+
+
 class PluginRegistry:
     """Holds registered plugins for discovery by Jarvis."""
 
@@ -36,10 +45,9 @@ class PluginRegistry:
             name: Optional explicit name; defaults to object name.
             description: Optional human-readable description.
         """
-
         plugin_name = name or getattr(item, "__name__", item.__class__.__name__)
         self._plugins[plugin_name] = PluginDescriptor(
-            item, plugin_type, description, permissions or []
+            item, plugin_type, description, _validate_permissions(permissions)
         )
         return item
 
@@ -94,69 +102,34 @@ def jarvis_plugin(
     return decorator
 
 
-def jarvis_agent(
-    *, name: str | None = None, description: str = "", permissions: List[str] | None = None
-):
-    """Decorator for registering agent classes."""
+def _decorator_factory(plugin_type: str, target: PluginRegistry) -> Callable:
+    """Return a decorator registering to both global and target registries."""
 
-    def decorator(cls: Callable) -> Callable:
-        registry.register(
-            cls, "agent", name=name, description=description, permissions=permissions
-        )
-        return agent_registry.register(
-            cls, "agent", name=name, description=description, permissions=permissions
-        )
+    def decorator(
+        *, name: str | None = None, description: str = "", permissions: List[str] | None = None
+    ) -> Callable:
+        def wrapper(obj: Callable) -> Callable:
+            registry.register(
+                obj,
+                plugin_type,
+                name=name,
+                description=description,
+                permissions=permissions,
+            )
+            return target.register(
+                obj,
+                plugin_type,
+                name=name,
+                description=description,
+                permissions=permissions,
+            )
 
-    return decorator
-
-
-def jarvis_tool(
-    *, name: str | None = None, description: str = "", permissions: List[str] | None = None
-):
-    """Decorator for registering tool callables."""
-
-    def decorator(func: Callable) -> Callable:
-        registry.register(
-            func, "tool", name=name, description=description, permissions=permissions
-        )
-        return tool_registry.register(
-            func,
-            "tool",
-            name=name,
-            description=description,
-            permissions=permissions,
-        )
+        return wrapper
 
     return decorator
 
 
-def jarvis_crew(
-    *, name: str | None = None, description: str = "", permissions: List[str] | None = None
-):
-    """Decorator for registering crew classes."""
-
-    def decorator(cls: Callable) -> Callable:
-        registry.register(
-            cls, "crew", name=name, description=description, permissions=permissions
-        )
-        return crew_registry.register(
-            cls, "crew", name=name, description=description, permissions=permissions
-        )
-
-    return decorator
-
-
-def jarvis_critic(
-    *, name: str | None = None, description: str = "", permissions: List[str] | None = None
-):
-    """Decorator for registering critic callables."""
-
-    def decorator(func: Callable) -> Callable:
-        registry.register(
-            func, "critic", name=name, description=description, permissions=permissions
-        )
-        return critic_registry.register(
-            func, "critic", name=name, description=description, permissions=permissions
-        )
-
-    return decorator
+jarvis_agent = _decorator_factory("agent", agent_registry)
+jarvis_tool = _decorator_factory("tool", tool_registry)
+jarvis_crew = _decorator_factory("crew", crew_registry)
+jarvis_critic = _decorator_factory("critic", critic_registry)
