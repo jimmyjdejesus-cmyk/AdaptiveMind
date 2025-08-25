@@ -129,3 +129,4 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 =======
 *   **[2025-08-25]** Added crew and critic registries with permission-aware descriptors, sample crew plugin, docs, and tests.
 
+*   **[2025-08-25]** Added Documentation, Database, Localization, EthicalHacker, CloudCostOptimizer, and UserFeedback specialist agents with prompts, methods, and tests.
