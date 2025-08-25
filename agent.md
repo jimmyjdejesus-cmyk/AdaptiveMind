@@ -115,6 +115,10 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 *   **[2025-08-25]** Added mission DAG schema with persistence, planner, UI workflow endpoint, and resume tests.
 
 
+*   **[2025-08-25T21:11:00Z]** Added VS Code extension commands and implemented "Open DAG Here" to visualize mission node for current file.
+* [2025-08-25] Improved VS Code extension: added mission ID sanitization, configurable backend URL, ESLint setup, and unit tests for Open DAG Here command.
+=======
+
 *   **[2025-08-25]** Added crew and critic registries with permission-aware descriptors, sample crew plugin, docs, and tests.
 
 *   **[2025-08-25]** Fixed specialist plugin indentation, added plugin docstrings, validated permission descriptors, introduced manifest discovery tests, and refactored registry decorators.
