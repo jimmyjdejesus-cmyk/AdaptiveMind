@@ -85,7 +85,7 @@ class JSONFileBackend(MemoryBackend):
         graphs: Dict[Tuple[str, str, str], nx.DiGraph] = {}
         for key, data in raw.items():
             graphs[tuple(key.split(":"))] = nx.node_link_graph(
-                data, edges="links"
+                data, directed=True, multigraph=False, links="links"
             )
         return graphs
 
@@ -121,7 +121,6 @@ class ProjectMemory:
 
     def _sanitize(self, text: str) -> str:
         """Sanitise input using :mod:`bleach`."""
-
         return bleach.clean(str(text), strip=True)
 
     def _key(self, ns: Namespace) -> Tuple[str, str, str]:
@@ -155,7 +154,6 @@ class ProjectMemory:
             Optional list of existing node identifiers to which this entry
             should link. Missing nodes are ignored.
         """
-
         if layer not in _VALID_LAYERS:
             raise ValueError(f"Invalid layer: {layer}")
         if not run_id or not mission_id:
