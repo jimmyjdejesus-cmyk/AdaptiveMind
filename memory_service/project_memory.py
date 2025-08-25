@@ -124,7 +124,7 @@ class JSONFileBackend(MemoryBackend):
         graphs: Dict[Tuple[str, str, str], nx.DiGraph] = {}
         for key, data in raw.items():
             graphs[tuple(key.split(":"))] = nx.node_link_graph(
-                data, edges="links"
+                data, directed=True, multigraph=False, links="links"
             )
         return graphs
 
@@ -242,13 +242,11 @@ class ProjectMemory:
 
     def _persist(self) -> None:
         """Flush graphs to the backend after each mutation."""
-
         if self._backend:
             self._backend.save(self._graphs)
 
     def _sanitize(self, text: str) -> str:
         """Sanitise input using :mod:`bleach` with a strict policy."""
-
         return bleach.clean(
             str(text),
             tags=_BLEACH_ALLOWED_TAGS,
@@ -287,7 +285,6 @@ class ProjectMemory:
             Optional list of existing node identifiers to which this entry
             should link. Missing nodes are ignored.
         """
-
         if layer not in _VALID_LAYERS:
             raise ValueError(f"Invalid layer: {layer}")
         if not run_id or not mission_id:
@@ -319,6 +316,11 @@ __all__ = [
     "Namespace",
     "MemoryBackend",
     "JSONFileBackend",
+    "JSONBackendConfig",
+    "RedisBackend",
+    "RedisBackendConfig",
+    "SQLBackend",
+    "SQLBackendConfig",
     "L1_FACT",
     "L2_STRATEGY",
     "L3_BELIEF",
