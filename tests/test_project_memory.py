@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 
 from memory_service.project_memory import (
+    JSONBackendConfig,
     JSONFileBackend,
     Namespace,
     ProjectMemory,
@@ -158,7 +159,7 @@ def test_content_is_sanitised():
 
 def test_persistence_backend_roundtrip(tmp_path):
     backend_path = tmp_path / "mem.json"
-    backend = JSONFileBackend(str(backend_path))
+    backend = JSONFileBackend(JSONBackendConfig(path=str(backend_path)))
     pm = ProjectMemory(backend=backend)
     ns = Namespace(project="p", session="s", team="t")
     node_id = pm.add_entry(
@@ -208,3 +209,23 @@ def test_parallel_writes():
     g = pm.get_graph(ns)
     assert len(g) == 100
     assert set(ids) == set(g.nodes)
+
+
+def test_backend_write_benchmark(tmp_path):
+    backend = JSONFileBackend(
+        JSONBackendConfig(path=str(tmp_path / "bench.json"))
+    )
+    pm = ProjectMemory(backend=backend)
+    ns = Namespace(project="p", session="s", team="t")
+
+    for i in range(1000):
+        pm.add_entry(
+            ns=ns,
+            layer=L1_FACT,
+            content=f"n{i}",
+            run_id="r",
+            mission_id="m",
+        )
+
+    g = pm.get_graph(ns)
+    assert len(g) == 1000

@@ -12,9 +12,13 @@ This graph underpins future GraphRAG and REX-RAG components where community
 summaries, neighbourhood traversal and code-aware retrieval rely on these
 structured relationships.
 
-All content is sanitised before storage to avoid injection of malicious graph
-data, and a pluggable persistence backend allows the hypergraph to be saved
-and restored across process restarts.
+All content is sanitised before storage to avoid injection of malicious
+graph data. A pluggable persistence backend allows the hypergraph to be
+saved and restored across process restarts. Example backends include the
+``JSONFileBackend`` provided here, a Redis adapter storing node-link JSON in
+memory, or an SQL implementation persisting graphs in relational tables.
+Backends may batch or debounce writes; :meth:`ProjectMemory._persist`
+flushes mutations immediately for simplicity.
 """
 
 from __future__ import annotations
@@ -64,8 +68,10 @@ class Namespace:
 class MemoryBackend(ABC):
     """Interface for persistence backends used by :class:`ProjectMemory`.
 
-    Custom backends (e.g., database or cloud stores) should implement this
-    interface to provide ``load`` and ``save`` hooks.
+    Custom backends (e.g., SQL databases, Redis or cloud stores) should
+    implement this interface to provide ``load`` and ``save`` hooks. A backend
+    typically serialises graphs using :func:`networkx.node_link_data` and may
+    decide when to flush data to durable storage.
     """
 
     @abstractmethod
@@ -77,15 +83,38 @@ class MemoryBackend(ABC):
         """Persist ``graphs`` to the backend."""
 
 
-class JSONFileBackend(MemoryBackend):
-    """Persist graphs as node-link JSON on disk."""
+@dataclass
+class JSONBackendConfig:
+    """Configuration for :class:`JSONFileBackend`.
 
-    def __init__(self, path: str) -> None:
-        self.path = path
+    Attributes
+    ----------
+    path:
+        File path where graphs are stored as node-link JSON.
+    """
+
+    path: str
+
+
+class JSONFileBackend(MemoryBackend):
+    """Persist graphs as node-link JSON on disk.
+
+    Example
+    -------
+    >>> backend = JSONFileBackend(JSONBackendConfig(path="mem.json"))
+    >>> pm = ProjectMemory(backend=backend)
+
+    Other adapters, such as ``RedisBackend`` or ``SQLBackend``, can provide
+    compatible ``load`` and ``save`` methods using their respective storage
+    primitives.
+    """
+
+    def __init__(self, config: JSONBackendConfig) -> None:
+        self.config = config
 
     def load(self) -> Dict[Tuple[str, str, str], nx.DiGraph]:
         try:
-            with open(self.path, "r", encoding="utf-8") as fh:
+            with open(self.config.path, "r", encoding="utf-8") as fh:
                 raw = json.load(fh)
         except FileNotFoundError:
             return {}
@@ -101,7 +130,7 @@ class JSONFileBackend(MemoryBackend):
         raw: Dict[str, Dict[str, object]] = {}
         for key, graph in graphs.items():
             raw[":".join(key)] = nx.node_link_data(graph, edges="links")
-        with open(self.path, "w", encoding="utf-8") as fh:
+        with open(self.config.path, "w", encoding="utf-8") as fh:
             json.dump(raw, fh)
 
 
