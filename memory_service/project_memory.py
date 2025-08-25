@@ -28,6 +28,10 @@ from uuid import uuid4
 import networkx as nx
 import bleach
 
+# Sanitisation configuration; adjust if richer markup is required.
+_BLEACH_ALLOWED_TAGS: List[str] = []
+_BLEACH_ALLOWED_ATTRS: Dict[str, List[str]] = {}
+
 # Layer constants
 L1_FACT = "fact"
 L2_STRATEGY = "strategy"
@@ -58,7 +62,11 @@ class Namespace:
 
 
 class MemoryBackend(ABC):
-    """Persistence backend interface for :class:`ProjectMemory`."""
+    """Interface for persistence backends used by :class:`ProjectMemory`.
+
+    Custom backends (e.g., database or cloud stores) should implement this
+    interface to provide ``load`` and ``save`` hooks.
+    """
 
     @abstractmethod
     def load(self) -> Dict[Tuple[str, str, str], nx.DiGraph]:
@@ -105,7 +113,8 @@ class ProjectMemory:
     ``mission_id``). Edges connect related entries, enabling a simple
     hypergraph structure. Graphs are stored in memory; applications needing
     persistence or distribution may supply a :class:`MemoryBackend` to persist
-    data.
+    data. Backends may batch or debounce writes if immediate durability is not
+    required.
     """
 
     def __init__(self, backend: Optional[MemoryBackend] = None) -> None:
@@ -116,12 +125,18 @@ class ProjectMemory:
             self._graphs: Dict[Tuple[str, str, str], nx.DiGraph] = {}
 
     def _persist(self) -> None:
+        """Flush graphs to the backend after each mutation."""
         if self._backend:
             self._backend.save(self._graphs)
 
     def _sanitize(self, text: str) -> str:
-        """Sanitise input using :mod:`bleach`."""
-        return bleach.clean(str(text), strip=True)
+        """Sanitise input using :mod:`bleach` with a strict policy."""
+        return bleach.clean(
+            str(text),
+            tags=_BLEACH_ALLOWED_TAGS,
+            attributes=_BLEACH_ALLOWED_ATTRS,
+            strip=True,
+        )
 
     def _key(self, ns: Namespace) -> Tuple[str, str, str]:
         return (ns.project, ns.session, ns.team)

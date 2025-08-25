@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 from memory_service.project_memory import (
     JSONFileBackend,
     Namespace,
@@ -175,7 +177,7 @@ def test_persistence_backend_roundtrip(tmp_path):
 def test_large_graph_stress():
     pm = ProjectMemory()
     ns = Namespace(project="p", session="s", team="t")
-    for i in range(1000):
+    for i in range(2000):
         pm.add_entry(
             ns=ns,
             layer=L1_FACT,
@@ -184,4 +186,25 @@ def test_large_graph_stress():
             mission_id="m",
         )
     g = pm.get_graph(ns)
-    assert len(g) == 1000
+    assert len(g) == 2000
+
+
+def test_parallel_writes():
+    pm = ProjectMemory()
+    ns = Namespace(project="p", session="s", team="t")
+
+    def task(i: int) -> str:
+        return pm.add_entry(
+            ns=ns,
+            layer=L1_FACT,
+            content=f"n{i}",
+            run_id="r",
+            mission_id="m",
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        ids = list(ex.map(task, range(100)))
+
+    g = pm.get_graph(ns)
+    assert len(g) == 100
+    assert set(ids) == set(g.nodes)

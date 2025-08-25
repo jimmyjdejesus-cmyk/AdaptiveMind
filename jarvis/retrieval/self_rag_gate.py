@@ -6,7 +6,7 @@ latency thresholds. Each evaluation is logged via :class:`RetrievalMetrics`
 for later inspection. Future GraphRAG and REX-RAG components will feed their
 vector, neighbourhood and code-aware retrieval scores into this gate to keep
 the decision pipeline consistent.
-
+"""
 
 from __future__ import annotations
 
