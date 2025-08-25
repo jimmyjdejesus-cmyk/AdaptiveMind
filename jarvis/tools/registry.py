@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """Tool registry v2 with JSON schema export and capability tagging."""
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, get_type_hints
 
+# These imports are required by the main branch's implementation
 from pydantic import BaseModel, create_model
 
 from agent.hitl.policy import ApprovalCallback, HITLPolicy
@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class Tool:
-    name: str
+class ToolMeta:
+    """Metadata for a registered tool."""
+
     func: Callable[..., Any]
     description: str
     capabilities: List[str]
@@ -26,12 +27,15 @@ class Tool:
     args_schema: type[BaseModel] | None = None
 
     def json_schema(self) -> Dict[str, Any]:
+        """Return the JSON schema for the tool's arguments."""
         return self.args_schema.schema() if self.args_schema else {}
 
 
-class Registry:
+class ToolsRegistry:
+    """Registry that enforces policy before tool execution."""
+
     def __init__(self) -> None:
-        self._tools: Dict[str, Tool] = {}
+        self._tools: Dict[str, ToolMeta] = {}
 
     def register(
         self,
@@ -43,15 +47,15 @@ class Registry:
         risk_tier: str = "low",
         required_role: str | None = None,
     ) -> None:
+        """Add a tool to the registry and generate its argument schema."""
         annotations = get_type_hints(func)
         fields: Dict[str, tuple[Any, Any]] = {}
         for arg, annotation in annotations.items():
             if arg == "return":
                 continue
             fields[arg] = (annotation, ...)
-        schema = create_model(f"{name}_Args", **fields)  # type: ignore[arg-type]
-        self._tools[name] = Tool(
-            name,
+        schema = create_model(f"{name}_Args", **fields)
+        self._tools[name] = ToolMeta(
             func,
             description,
             capabilities,
@@ -60,13 +64,16 @@ class Registry:
             schema,
         )
 
-    def get(self, name: str) -> Tool:
+    def get(self, name: str) -> ToolMeta:
+        """Get a tool by name."""
         return self._tools[name]
 
-    def all(self) -> Dict[str, Tool]:
+    def all(self) -> Dict[str, ToolMeta]:
+        """Return all registered tools."""
         return dict(self._tools)
 
     def json_export(self) -> Dict[str, Any]:
+        """Export the registry's contents as a JSON-serializable dictionary."""
         return {
             name: {
                 "description": tool.description,
@@ -78,7 +85,6 @@ class Registry:
             for name, tool in self._tools.items()
         }
 
-    # --------------------------------------------------------------
     def execute(
         self,
         name: str,
@@ -89,10 +95,9 @@ class Registry:
         modal: ApprovalCallback,
         **kwargs: Any,
     ) -> Any:
-        """Execute ``name`` for ``user`` enforcing RBAC and HITL policies."""
-
+        """Execute a tool for a user, enforcing RBAC and HITL policies."""
         tool = self.get(name)
-        role = security._get_user_role(user)  # leveraging existing lookup
+        role = security._get_user_role(user)  # Leveraging existing lookup
         if tool.required_role and role != tool.required_role:
             logger.warning("RBACDenied", extra={"user": user, "tool": name})
             raise PermissionError("Insufficient role")
@@ -104,10 +109,12 @@ class Registry:
             approved = hitl.request_approval_sync(name, req.message, modal, user=user)
             if not approved:
                 logger.warning("HITLDenied", extra={"user": user, "tool": name})
-                raise PermissionError("HITL denial")
+                raise PermissionError("HITL approval denied")
 
         logger.info("ToolExecuted", extra={"user": user, "tool": name})
         return tool.func(*args, **kwargs)
 
 
-registry = Registry()
+registry = ToolsRegistry()
+
+__all__ = ["ToolsRegistry", "ToolMeta", "registry"]
