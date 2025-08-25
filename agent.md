@@ -29,3 +29,17 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 
 *   **[2025-08-25]** Started implementing tool registry RBAC and HITL security features.
 *   **[2025-08-25]** Added RBAC-aware tool registry execution, HITL approve/deny endpoints, and tests.
+=======
+
+*   **[2025-08-25]** Added project memory hypergraph with provenance tracking and recorded retrieval decisions in SelfRAGGate with tests.
+=======
+
+* [2025-08-25] Added scout/scholar simulation hooks, reward oracle, and Monte Carlo regularized policy updates with tests.
+=======
+*   **[2025-08-25]** Added unified critic API with red, blue, and white gate integration. Implemented fix-loop retry pipeline and tests for dual-critic flow.
+=======
+
+
+*   **[2025-08-26]** Added hierarchical orchestrator template with step context/results, child orchestrator spawning with event bubbling, crew presets, and tests verifying log aggregation and crew swapping.
+=======
+*   **[2025-08-25]** Added mission DAG schema with persistence, planner, UI workflow endpoint, and resume tests.
