@@ -1,4 +1,8 @@
-from concurrent.futures import ThreadPoolExecutor
+import asyncio
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from multiprocessing import Manager
+
+import pytest
 
 from memory_service.project_memory import (
     JSONBackendConfig,
@@ -229,3 +233,55 @@ def test_backend_write_benchmark(tmp_path):
 
     g = pm.get_graph(ns)
     assert len(g) == 1000
+
+
+@pytest.mark.asyncio
+async def test_async_writes():
+    pm = ProjectMemory()
+    ns = Namespace(project="p", session="s", team="t")
+
+    async def task(i: int) -> str:
+        return await asyncio.to_thread(
+            pm.add_entry,
+            ns,
+            L1_FACT,
+            f"n{i}",
+            "r",
+            "m",
+        )
+
+    ids = await asyncio.gather(*(task(i) for i in range(50)))
+    g = pm.get_graph(ns)
+    assert len(g) == 50
+    assert set(ids) == set(g.nodes)
+
+
+def _proc_add_entry(args):
+    path, i, lock = args
+    with lock:
+        backend = JSONFileBackend(JSONBackendConfig(path=path))
+        pm = ProjectMemory(backend=backend)
+        ns = Namespace(project="p", session="s", team="t")
+        pm.add_entry(
+            ns=ns,
+            layer=L1_FACT,
+            content=f"n{i}",
+            run_id="r",
+            mission_id="m",
+        )
+
+
+def test_multiprocess_writes(tmp_path):
+    path = tmp_path / "multi.json"
+    with Manager() as manager:
+        lock = manager.Lock()
+        with ProcessPoolExecutor(max_workers=4) as ex:
+            ex.map(
+                _proc_add_entry,
+                [(str(path), i, lock) for i in range(20)],
+            )
+    pm = ProjectMemory(
+        backend=JSONFileBackend(JSONBackendConfig(path=str(path)))
+    )
+    g = pm.get_graph(Namespace(project="p", session="s", team="t"))
+    assert len(g) == 20

@@ -17,8 +17,10 @@ graph data. A pluggable persistence backend allows the hypergraph to be
 saved and restored across process restarts. Example backends include the
 ``JSONFileBackend`` provided here, a Redis adapter storing node-link JSON in
 memory, or an SQL implementation persisting graphs in relational tables.
-Backends may batch or debounce writes; :meth:`ProjectMemory._persist`
-flushes mutations immediately for simplicity.
+Typed configuration via ``JSONBackendConfig``, ``RedisBackendConfig`` and
+``SQLBackendConfig`` guides backend setup. Backends may batch or debounce
+writes; :meth:`ProjectMemory._persist` flushes mutations immediately for
+simplicity.
 """
 
 from __future__ import annotations
@@ -29,8 +31,8 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
-import networkx as nx
-import bleach
+import networkx as nx  # monitor compatibility with newer releases
+import bleach  # reassess policy as sanitisation needs evolve
 
 # Sanitisation configuration; adjust if richer markup is required.
 _BLEACH_ALLOWED_TAGS: List[str] = []
@@ -134,6 +136,91 @@ class JSONFileBackend(MemoryBackend):
             json.dump(raw, fh)
 
 
+@dataclass
+class RedisBackendConfig:
+    """Configuration for a Redis-backed persistence layer.
+
+    Attributes
+    ----------
+    host:
+        Redis server hostname.
+    port:
+        Redis server port.
+    key:
+        Base key under which graphs are stored.
+    password:
+        Optional password for authentication.
+    """
+
+    host: str = "localhost"
+    port: int = 6379
+    key: str = "project_memory"
+    password: Optional[str] = None
+
+
+class RedisBackend(MemoryBackend):
+    """Store graphs in Redis using node-link JSON.
+
+    Example
+    -------
+    >>> config = RedisBackendConfig(host="localhost", port=6379)
+    >>> backend = RedisBackend(config)
+    >>> pm = ProjectMemory(backend=backend)
+
+    Load/save are left unimplemented to guide future adapters.
+    """
+
+    def __init__(self, config: RedisBackendConfig) -> None:
+        self.config = config
+
+    def load(self) -> Dict[Tuple[str, str, str], nx.DiGraph]:
+        raise NotImplementedError("Redis backend not implemented")
+
+    def save(self, graphs: Dict[Tuple[str, str, str], nx.DiGraph]) -> None:
+        raise NotImplementedError("Redis backend not implemented")
+
+
+@dataclass
+class SQLBackendConfig:
+    """Configuration for an SQL-based persistence backend.
+
+    Attributes
+    ----------
+    url:
+        Database URL (e.g., ``sqlite:///mem.db``).
+    table:
+        Table used to store graph data.
+    echo:
+        Whether to log SQL statements (useful for debugging).
+    """
+
+    url: str
+    table: str = "project_memory"
+    echo: bool = False
+
+
+class SQLBackend(MemoryBackend):
+    """Persist graphs in a relational database.
+
+    Example
+    -------
+    >>> config = SQLBackendConfig(url="sqlite:///mem.db")
+    >>> backend = SQLBackend(config)
+    >>> pm = ProjectMemory(backend=backend)
+
+    Load/save are placeholders pending a concrete SQL adapter.
+    """
+
+    def __init__(self, config: SQLBackendConfig) -> None:
+        self.config = config
+
+    def load(self) -> Dict[Tuple[str, str, str], nx.DiGraph]:
+        raise NotImplementedError("SQL backend not implemented")
+
+    def save(self, graphs: Dict[Tuple[str, str, str], nx.DiGraph]) -> None:
+        raise NotImplementedError("SQL backend not implemented")
+
+
 class ProjectMemory:
     """Store and relate memories across project namespaces.
 
@@ -229,6 +316,11 @@ __all__ = [
     "Namespace",
     "MemoryBackend",
     "JSONFileBackend",
+    "JSONBackendConfig",
+    "RedisBackend",
+    "RedisBackendConfig",
+    "SQLBackend",
+    "SQLBackendConfig",
     "L1_FACT",
     "L2_STRATEGY",
     "L3_BELIEF",
