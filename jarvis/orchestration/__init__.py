@@ -1,38 +1,79 @@
-# Orchestration Package
 """
-Multi-agent orchestration system for coordinating specialist AI agents
-
-This package provides:
-- MultiAgentOrchestrator: Coordinates multiple specialists for complex tasks
-- SubOrchestrator: Scoped orchestrator used for nested missions
-- Workflow management and task delegation
-- Result synthesis and conflict resolution
-This package provides building blocks for creating LangGraph based
-orchestration workflows.  The previous specialised orchestrator has been
-replaced by a small, generic template which can dynamically assemble graphs
-from ``AgentSpec`` definitions.
+Multi-agent orchestration system for coordinating specialist AI agents.
 """
-
-from .orchestrator import AgentSpec, DynamicOrchestrator, MultiAgentOrchestrator, END
-from .sub_orchestrator import SubOrchestrator
-from .pruning import PruningManager
+from .orchestrator import (
+    AgentSpec,
+    DynamicOrchestrator,
+    MultiAgentOrchestrator,
+    OrchestratorTemplate,
+    StepContext,
+    StepResult,
+    END,
+)
 from .path_memory import PathMemory
 from .message_bus import MessageBus, HierarchicalMessageBus, Event
+from .bandwidth_channel import BandwidthLimitedChannel
+
+# Optional imports for extended functionality
+try:  # pragma: no cover - optional import
+    from .sub_orchestrator import SubOrchestrator
+except Exception:  # pragma: no cover
+    SubOrchestrator = None  # type: ignore
+
+try:  # pragma: no cover - optional dependencies
+    from .mission_planner import MissionPlanner
+except Exception:  # pragma: no cover
+    MissionPlanner = None  # type: ignore
+
+try:
+    from .task_queue import RedisTaskQueue
+except Exception:  # pragma: no cover
+    RedisTaskQueue = None  # type: ignore
+
+try:
+    from .pruning import PruningManager
+except Exception:  # pragma: no cover
+    PruningManager = None  # type: ignore
+
+try:
+    from .semantic_cache import SemanticCache
+except Exception:  # pragma: no cover
+    SemanticCache = None  # type: ignore
+
+try:
+    from .server import app, bus
+except Exception:  # pragma: no cover
+    app = None  # type: ignore
+    bus = None  # type: ignore
+
+try:
+    from .crews import CodeAuditCrew, ResearchCrew
+except Exception:  # pragma: no cover
+    CodeAuditCrew = None  # type: ignore
+    ResearchCrew = None  # type: ignore
 
 
+# Combined __all__ list including additions from both branches
 __all__ = [
     "AgentSpec",
     "DynamicOrchestrator",
     "MultiAgentOrchestrator",
+    "OrchestratorTemplate",
+    "StepContext",
+    "StepResult",
     "SubOrchestrator",
-    "PruningManager",
     "PathMemory",
     "MessageBus",
     "HierarchicalMessageBus",
     "Event",
+    "BandwidthLimitedChannel",
+    "MissionPlanner",
+    "RedisTaskQueue",
+    "PruningManager",
+    "SemanticCache",
+    "CodeAuditCrew",
+    "ResearchCrew",
     "END",
+    "app",
+    "bus",
 ]
-
-# Version info
-__version__ = "1.0.0"
-__author__ = "Jarvis AI Team"

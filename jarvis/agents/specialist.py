@@ -8,30 +8,42 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import json
 
-from .base_specialist import BaseSpecialist
+from .base import AIAgent
+from jarvis.agents.agent_resources import AgentCapability
+from jarvis.world_model.knowledge_graph import KnowledgeGraph
 
 logger = logging.getLogger(__name__)
 
-class SpecialistAgent(BaseSpecialist):
-    """Concrete implementation of :class:`BaseSpecialist`.
+class SpecialistAgent(AIAgent):
+    """Concrete implementation of :class:`AIAgent` for specialized tasks.
 
     The class provides common functionality used by all specialist agents
-    such as context handling and prompt generation.  It previously acted as
-    the base class directly; now it implements the :class:`BaseSpecialist`
-    interface to provide a consistent contract for the orchestrator.
+    such as context handling and prompt generation.
     """
-    
-    def __init__(self, specialization: str, preferred_models: List[str], mcp_client):
+
+    def __init__(
+        self,
+        agent_id: str,
+        specialization: str,
+        capabilities: List[AgentCapability],
+        knowledge_graph: Optional[KnowledgeGraph],
+        mcp_client: Any,
+        preferred_models: Optional[List[str]] = None,
+    ):
         """
         Initialize specialist agent
-        
+
         Args:
+            agent_id: The unique identifier for the agent.
             specialization: Domain of expertise (e.g., 'code_review', 'security')
-            preferred_models: List of models in order of preference
+            capabilities: A list of capabilities for the agent.
+            knowledge_graph: The knowledge graph instance for the agent to use.
             mcp_client: MCP client for model communication
+            preferred_models: List of models in order of preference
         """
+        super().__init__(agent_id, capabilities, knowledge_graph)
         self.specialization = specialization
-        self.preferred_models = preferred_models
+        self.preferred_models = preferred_models or []
         self.mcp_client = mcp_client
         self.context_memory = []
         self.expertise_prompt = self._get_expertise_prompt()
@@ -179,32 +191,107 @@ Provide comprehensive testing recommendations with implementation guidance.""",
 - Capacity planning and cost optimization
 - Security integration and compliance
 
-Provide practical DevOps solutions with implementation roadmaps."""
+Provide practical DevOps solutions with implementation roadmaps.""",
+
+            "documentation": """You are a technical writer specializing in software documentation. Focus on:
+
+**Documentation Types:**
+- User guides and tutorials
+- API references with examples
+- Release notes and changelogs
+
+**Quality Principles:**
+- Clarity and conciseness
+- Consistent tone and terminology
+- Helpful code snippets
+
+Provide well-structured documentation with step-by-step guidance.""",
+            "database": """You are a database expert skilled in design and optimization. Focus on:
+
+**Schema Design:**
+- Normalization and relationships
+- Indexing strategies
+- Migration planning
+
+**Performance Optimization:**
+- Query tuning
+- Execution plan analysis
+- Resource utilization
+
+Provide actionable database recommendations with SQL examples.""",
+            "localization": """You are a localization specialist managing translation workflows. Focus on:
+
+**Translation Quality:**
+- Terminology consistency
+- Cultural adaptation
+- UI layout considerations
+
+**Process Automation:**
+- Translation memory usage
+- Format validation
+- Continuous localization
+
+Provide localized content guidelines with automation tips.""",
+            "ethical_hacking": """You are an ethical hacker simulating adversarial attacks. Focus on:
+
+**Penetration Testing:**
+- Reconnaissance and scanning
+- Exploit development
+- Privilege escalation
+
+**Collaboration:**
+- Vulnerability disclosure
+- Remediation guidance
+- Post-exploitation cleanup
+
+Provide actionable attack scenarios with mitigation steps.""",
+            "cloud_cost": """You are a cloud cost optimization analyst. Focus on:
+
+**Usage Analysis:**
+- Resource utilization patterns
+- Idle resource detection
+- Rightsizing opportunities
+
+**Cost Management:**
+- Pricing model comparison
+- Reserved instance planning
+- Budget forecasting
+
+Provide cost-saving recommendations with estimated impact.""",
+            "user_feedback": """You are a user feedback analyst turning comments into tasks. Focus on:
+
+**Feedback Sources:**
+- App store reviews
+- Support tickets
+- Community forums
+
+**Insight Extraction:**
+- Sentiment analysis
+- Feature request grouping
+- Pain point prioritization
+
+Provide prioritized user insights with suggested actions.""",
         }
         
         return prompts.get(self.specialization, f"You are a helpful AI assistant specializing in {self.specialization}.")
     
-    async def process_task(
-        self,
-        task: str,
-        context: List[Dict] = None,
-        user_context: str = None,
-        models: List[str] | None = None,
-    ) -> Dict[str, Any]:
+    async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process a task using specialist expertise
-        
+
         Args:
-            task: The specific task to analyze
-            context: Context from other specialists
-            user_context: Additional user-provided context
-            
+            task: The specific task to analyze, including context.
+
         Returns:
             Specialist analysis result
         """
+        task_str = task.get("request", "")
+        context = task.get("context")
+        user_context = task.get("user_context")
+        models = task.get("models")
         try:
             # Build comprehensive prompt
-            specialist_prompt = self.build_prompt(task, context, user_context)
+            specialist_prompt = self.build_prompt(task_str, context, user_context)
 
             # Determine model order (allows dynamic routing)
             model_order = models or self.preferred_models
@@ -215,20 +302,26 @@ Provide practical DevOps solutions with implementation roadmaps."""
                     response = await self._generate_response(model, specialist_prompt)
 
                     # Process and analyze the response
-                    result = self.process_model_response(response, model, task)
+                    result = self.process_model_response(response, model, task_str)
 
                     return result
-                    
+
                 except Exception as e:
                     logger.warning(f"{self.specialization} agent failed with {model}: {e}")
                     continue
-            
+
             # If all models failed
             raise Exception(f"All models failed for {self.specialization} agent")
-            
+
         except Exception as e:
             logger.error(f"Task processing failed for {self.specialization}: {e}")
-            return self._create_error_result(str(e), task)
+            return self._create_error_result(str(e), task_str)
+
+    async def learn_from_feedback(self, feedback: Dict[str, Any]) -> bool:
+        """Learn from feedback and adapt behavior"""
+        logger.info(f"[{self.agent_id}] Received feedback: {feedback}")
+        # Placeholder for learning logic
+        return True
     
     def build_prompt(
         self, task: str, context: List[Dict] = None, user_context: str = None
@@ -472,7 +565,14 @@ Provide practical DevOps solutions with implementation roadmaps."""
             "security": ["Vulnerability Assessment", "Secure Development", "Compliance", "Threat Analysis"],
             "architecture": ["System Design", "Scalability", "Technology Stack", "Quality Attributes"],
             "testing": ["Test Strategy", "Test Design", "Quality Metrics", "Continuous Quality"],
-            "devops": ["Infrastructure as Code", "CI/CD", "Monitoring", "Operational Excellence"]
+            "devops": ["Infrastructure as Code", "CI/CD", "Monitoring", "Operational Excellence"],
+
+            "documentation": ["User Guides", "API Docs", "Tutorials", "Release Notes"],
+            "database": ["Schema Design", "Query Optimization", "Migrations", "Performance"],
+            "localization": ["Translation", "Internationalization", "Automation", "Cultural Adaptation"],
+            "ethical_hacking": ["Penetration Testing", "Exploit Development", "Risk Reporting"],
+            "cloud_cost": ["Usage Analysis", "Rightsizing", "Budget Forecasting", "Cost Monitoring"],
+            "user_feedback": ["Sentiment Analysis", "Feature Requests", "Issue Categorization", "Task Prioritization"],
         }
         
         return expertise_map.get(self.specialization, ["General Analysis"])

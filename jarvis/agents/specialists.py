@@ -9,7 +9,6 @@ from .specialist import SpecialistAgent
 from jarvis.world_model.knowledge_graph import KnowledgeGraph
 
 from jarvis.tools.execution_sandbox import run_python_code, ExecutionResult
-=======
 
 
 class CodeReviewAgent(SpecialistAgent):
@@ -408,3 +407,192 @@ class DevOpsAgent(SpecialistAgent):
         """
         
         return await self.process_task(cicd_task)
+
+class DocumentationAgent(SpecialistAgent):
+    """Expert technical writer for project documentation."""
+
+    def __init__(self, mcp_client):
+        super().__init__(
+            specialization="documentation",
+            preferred_models=["claude-3.5-sonnet", "gpt-4", "llama3.2"],
+            mcp_client=mcp_client,
+        )
+
+    async def generate_documentation(self, code: str, commit_message: str | None = None) -> dict:
+        """Generate user-facing documentation from code and commit messages."""
+        doc_task = f"""
+        **DOCUMENTATION REQUEST**
+
+        **Code:**
+        ```
+        {code}
+        ```
+
+        **Commit Message:**
+        {commit_message or 'No commit message provided'}
+
+        **Documentation Requirements:**
+        1. User-friendly explanation of functionality
+        2. API usage examples
+        3. Setup or installation guidance
+        4. Important notes or warnings
+
+        Provide well-structured documentation.
+        """
+        return await self.process_task(doc_task)
+
+
+class DatabaseAgent(SpecialistAgent):
+    """Specialist in database design, optimization, and migrations."""
+
+    def __init__(self, mcp_client):
+        super().__init__(
+            specialization="database",
+            preferred_models=["gpt-4", "claude-3.5-sonnet", "llama3.2"],
+            mcp_client=mcp_client,
+        )
+
+    async def optimize_query(self, query: str, schema: str | None = None) -> dict:
+        """Optimize database queries and suggest improvements."""
+        db_task = f"""
+        **QUERY OPTIMIZATION REQUEST**
+
+        **Schema:**
+        {schema or 'Schema not provided'}
+
+        **Query:**
+        ```
+        {query}
+        ```
+
+        **Optimization Focus:**
+        1. Indexing recommendations
+        2. Execution plan analysis
+        3. Potential refactoring
+        4. Security considerations
+
+        Provide optimized query suggestions with rationale.
+        """
+        return await self.process_task(db_task)
+
+
+class LocalizationAgent(SpecialistAgent):
+    """Manages translation workflows and localization quality."""
+
+    def __init__(self, mcp_client):
+        super().__init__(
+            specialization="localization",
+            preferred_models=["gpt-4", "claude-3.5-sonnet", "llama3.2"],
+            mcp_client=mcp_client,
+        )
+
+    async def translate_content(self, text: str, target_language: str) -> dict:
+        """Translate text and provide localization guidance."""
+        loc_task = f"""
+        **LOCALIZATION REQUEST**
+
+        **Target Language:** {target_language}
+
+        **Content:**
+        ```
+        {text}
+        ```
+
+        **Localization Considerations:**
+        1. Terminology consistency
+        2. Cultural adaptation
+        3. Formatting and layout
+
+        Provide translated content with notes for reviewers.
+        """
+        return await self.process_task(loc_task)
+
+
+class EthicalHackerAgent(SpecialistAgent):
+    """Adversarial security specialist performing red-team assessments."""
+
+    def __init__(self, mcp_client):
+        super().__init__(
+            specialization="ethical_hacking",
+            preferred_models=["gpt-4", "claude-3.5-sonnet", "llama3.2"],
+            mcp_client=mcp_client,
+        )
+
+    async def penetration_test(self, system_description: str) -> dict:
+        """Simulate adversarial attack paths and report findings."""
+        hack_task = f"""
+        **PENETRATION TEST REQUEST**
+
+        **System Description:**
+        {system_description}
+
+        **Testing Objectives:**
+        1. Reconnaissance and scanning
+        2. Exploit and privilege escalation attempts
+        3. Potential impact assessment
+        4. Mitigation recommendations
+
+        Provide detailed attack narrative and remediation steps.
+        """
+        return await self.process_task(hack_task)
+
+
+class CloudCostOptimizerAgent(SpecialistAgent):
+    """Analyzes cloud usage and recommends cost savings."""
+
+    def __init__(self, mcp_client):
+        super().__init__(
+            specialization="cloud_cost",
+            preferred_models=["gpt-4", "claude-3.5-sonnet", "llama3.2"],
+            mcp_client=mcp_client,
+        )
+
+    async def analyze_usage(self, usage_report: str) -> dict:
+        """Analyze cloud usage reports for cost optimization."""
+        cost_task = f"""
+        **CLOUD COST ANALYSIS REQUEST**
+
+        **Usage Report:**
+        ```
+        {usage_report}
+        ```
+
+        **Optimization Goals:**
+        1. Identify idle resources
+        2. Recommend rightsizing
+        3. Suggest pricing model changes
+        4. Forecast potential savings
+
+        Provide prioritized cost optimization actions.
+        """
+        return await self.process_task(cost_task)
+
+
+class UserFeedbackAgent(SpecialistAgent):
+    """Transforms raw user comments into actionable insights."""
+
+    def __init__(self, mcp_client):
+        super().__init__(
+            specialization="user_feedback",
+            preferred_models=["gpt-4", "claude-3.5-sonnet", "llama3.2"],
+            mcp_client=mcp_client,
+        )
+
+    async def analyze_feedback(self, feedback: str) -> dict:
+        """Convert user feedback into development tasks."""
+        feedback_task = f"""
+        **USER FEEDBACK ANALYSIS REQUEST**
+
+        **Feedback:**
+        {feedback}
+
+        **Analysis Requirements:**
+        1. Sentiment classification
+        2. Key issue extraction
+        3. Feature request grouping
+        4. Suggested development tasks
+
+        Provide summarized insights with priority levels.
+        """
+        return await self.process_task(feedback_task)
+

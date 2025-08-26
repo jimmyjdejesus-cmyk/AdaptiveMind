@@ -8,7 +8,13 @@ run with its own focused set of tools and agents.
 from typing import Dict, List, Optional, Any
 
 from jarvis.homeostasis.monitor import SystemMonitor
-from jarvis.world_model.knowledge_graph import KnowledgeGraph
+from jarvis.memory.project_memory import ProjectMemory
+try:  # pragma: no cover - optional dependency
+    from jarvis.world_model.knowledge_graph import KnowledgeGraph
+except Exception:  # pragma: no cover
+    from typing import Any
+
+    KnowledgeGraph = Any  # type: ignore
 from .orchestrator import MultiAgentOrchestrator
 
 
@@ -21,8 +27,10 @@ class SubOrchestrator(MultiAgentOrchestrator):
         mission_name: Optional[str] = None,
         allowed_specialists: Optional[List[str]] = None,
         custom_specialists: Optional[Dict[str, Any]] = None,
+        child_specs: Optional[Dict[str, Dict[str, Any]]] = None,
         monitor: SystemMonitor | None = None,
         knowledge_graph: KnowledgeGraph | None = None,
+        memory: ProjectMemory | None = None,
     ):
         """Create a new sub-orchestrator.
 
@@ -34,9 +42,20 @@ class SubOrchestrator(MultiAgentOrchestrator):
             custom_specialists: Optional mapping of specialist name to a
                 specialist instance. When provided, these replace the default
                 specialist set. This is primarily useful for testing.
+            child_specs: Optional mapping of nested sub-orchestrator
+                specifications.
         """
-        super().__init__(mcp_client, monitor=monitor, knowledge_graph=knowledge_graph)
+        super().__init__(
+            mcp_client,
+            monitor=monitor,
+            knowledge_graph=knowledge_graph,
+            memory=memory,
+        )
         self.mission_name = mission_name
+
+        if child_specs:
+            for name, spec in child_specs.items():
+                self.create_child_orchestrator(name, spec)
 
         if custom_specialists is not None:
             self.specialists = custom_specialists

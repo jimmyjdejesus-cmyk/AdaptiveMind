@@ -6,6 +6,7 @@ Modern architecture with MCP, multi-agent, and advanced workflow capabilities.
 from __future__ import annotations
 
 __version__ = "4.0.0"
+__author__ = "Jimmy De Jesus"
 
 # Configuration flags
 DEFAULT_MCP_ENABLED = True
@@ -15,86 +16,39 @@ DEFAULT_WORKFLOWS_ENABLED = True  # Phase 4: Advanced Workflows!
 # Import with error handling - only working components
 try:
     from jarvis.core.simple_agent import JarvisAgent as SimpleJarvisAgent
-except Exception:  # pragma: no cover - optional component
+except ImportError:
     SimpleJarvisAgent = None
 
 try:
     from jarvis.core.enhanced_agent import EnhancedJarvisAgent
-except Exception:  # pragma: no cover
+except ImportError:
     EnhancedJarvisAgent = None
 
 try:
     from jarvis.core.mcp_agent import MCPJarvisAgent
-except Exception:  # pragma: no cover
+except ImportError:
     MCPJarvisAgent = None
 
 try:
     from jarvis.database.db_manager import DatabaseManager, get_database_manager
-except Exception:  # pragma: no cover
+except ImportError:
     DatabaseManager = None
     get_database_manager = None
 
 try:
     from jarvis.auth.security_manager import SecurityManager, get_security_manager
-except Exception:  # pragma: no cover
+except ImportError:
     SecurityManager = None
     get_security_manager = None
 
 try:
     from jarvis.agents.coding_agent import CodingAgent
-except Exception:  # pragma: no cover
+except ImportError:
     CodingAgent = None
 
 try:
     from jarvis.workflows.workflow_agent import WorkflowJarvisAgent, create_workflow_jarvis
-except Exception:  # pragma: no cover
-    WorkflowJarvisAgent = None
-    create_workflow_jarvis = None
-
-__version__ = "4.0.0"
-__author__ = "Jimmy De Jesus"
-
-# Configuration
-DEFAULT_MCP_ENABLED = True
-DEFAULT_MULTI_AGENT_ENABLED = True
-DEFAULT_WORKFLOWS_ENABLED = True  # Phase 4: Advanced Workflows!
-
-# Import with error handling - only working components
-try:
-    from jarvis.core.simple_agent import JarvisAgent as SimpleJarvisAgent
-except Exception:  # pragma: no cover
-    SimpleJarvisAgent = None
-
-try:
-    from jarvis.core.enhanced_agent import EnhancedJarvisAgent
-except Exception:  # pragma: no cover
-    EnhancedJarvisAgent = None
-
-try:
-    from jarvis.core.mcp_agent import MCPJarvisAgent
-except Exception:  # pragma: no cover
-    MCPJarvisAgent = None
-
-try:
-    from jarvis.database.db_manager import DatabaseManager, get_database_manager
-except Exception:  # pragma: no cover
-    DatabaseManager = None
-    get_database_manager = None
-
-try:
-    from jarvis.auth.security_manager import SecurityManager, get_security_manager
-except Exception:  # pragma: no cover
-    SecurityManager = None
-    get_security_manager = None
-
-try:
-    from jarvis.agents.coding_agent import CodingAgent
-except Exception:  # pragma: no cover
-    CodingAgent = None
-
-try:
-    from jarvis.workflows.workflow_agent import WorkflowJarvisAgent, create_workflow_jarvis
-except Exception:  # pragma: no cover
+except ImportError:
     WorkflowJarvisAgent = None
     create_workflow_jarvis = None
 
@@ -107,75 +61,79 @@ try:
         create_deployment_workflow,
         create_project_analysis_workflow,
         create_bug_fix_workflow,
-        WorkflowEngine,
-        create_workflow,
-        WorkflowTemplates,
-        create_code_review_workflow,
-        create_deployment_workflow,
-        create_project_analysis_workflow,
-        create_bug_fix_workflow,
     )
-except Exception:  # pragma: no cover
+except ImportError:
     WorkflowEngine = None
     WorkflowTemplates = None
     create_workflow = None
     create_code_review_workflow = None
     create_deployment_workflow = None
     create_project_analysis_workflow = None
-    create_project_analysis_workflow = None
     create_bug_fix_workflow = None
 
 
 def get_jarvis_agent(
-    
     mode: str = "auto",
     enable_mcp: bool | None = None,
     enable_multi_agent: bool | None = None,
     enable_workflows: bool | None = None,
 ):
-    """Get Jarvis agent with configurable capabilities"""
-
-    if mode == "simple" or not EnhancedJarvisAgent:
+    """Get Jarvis agent with configurable capabilities.
+    
+    Args:
+        mode: One of "simple", "mcp", "multi_agent", "workflow", or "auto"
+        enable_mcp: Enable MCP capabilities
+        enable_multi_agent: Enable multi-agent capabilities
+        enable_workflows: Enable workflow capabilities
+        
+    Returns:
+        Configured Jarvis agent instance
+    """
+    
+    if mode == "simple":
         if SimpleJarvisAgent:
             return SimpleJarvisAgent()
         else:
             raise ImportError("No Jarvis agent available")
-
+    
     elif mode == "mcp":
-        # Try enhanced agent first, fall back to MCP agent
         if EnhancedJarvisAgent:
             return EnhancedJarvisAgent(enable_mcp=True, enable_multi_agent=False)
         elif MCPJarvisAgent:
             return MCPJarvisAgent(enable_mcp=True, enable_multi_agent=False)
+        elif SimpleJarvisAgent:
+            print("Warning: Enhanced agents not available, using simple agent")
+            return SimpleJarvisAgent()
         else:
-            if SimpleJarvisAgent:
-                print("Warning: Enhanced agents not available, using simple agent")
-                return SimpleJarvisAgent()
-            else:
-                raise ImportError("No Jarvis agent available")
-
+            raise ImportError("No Jarvis agent available")
+    
     elif mode == "multi_agent":
         if EnhancedJarvisAgent:
             return EnhancedJarvisAgent(enable_mcp=True, enable_multi_agent=True)
         else:
             print("Warning: Multi-agent not available, falling back")
             return get_jarvis_agent(mode="mcp")
-
+    
     elif mode == "workflow":
         if WorkflowJarvisAgent:
-            return WorkflowJarvisAgent(enable_mcp=True, enable_multi_agent=True, enable_workflows=True)
+            return WorkflowJarvisAgent(
+                enable_mcp=True, 
+                enable_multi_agent=True, 
+                enable_workflows=True
+            )
         elif EnhancedJarvisAgent:
             print("Warning: Workflow agent not available, using enhanced agent")
             return EnhancedJarvisAgent(enable_mcp=True, enable_multi_agent=True)
         else:
             print("Warning: Workflow capabilities not available, falling back")
             return get_jarvis_agent(mode="multi_agent")
-
+    
     else:  # auto mode
         enable_mcp = enable_mcp if enable_mcp is not None else DEFAULT_MCP_ENABLED
         enable_multi_agent = enable_multi_agent if enable_multi_agent is not None else DEFAULT_MULTI_AGENT_ENABLED
         enable_workflows = enable_workflows if enable_workflows is not None else DEFAULT_WORKFLOWS_ENABLED
-
+        
+        # Try from most to least capable
         if WorkflowJarvisAgent and enable_workflows:
             try:
                 return WorkflowJarvisAgent(
@@ -185,105 +143,92 @@ def get_jarvis_agent(
                 )
             except Exception as e:
                 print(f"Warning: Workflow agent failed to initialize: {e}")
-
+        
         if EnhancedJarvisAgent:
             try:
-                return EnhancedJarvisAgent(enable_mcp=enable_mcp, enable_multi_agent=enable_multi_agent)
+                return EnhancedJarvisAgent(
+                    enable_mcp=enable_mcp, 
+                    enable_multi_agent=enable_multi_agent
+                )
             except Exception as e:
                 print(f"Warning: Enhanced agent failed to initialize: {e}")
-
+        
         if MCPJarvisAgent and enable_mcp:
             try:
                 return MCPJarvisAgent(enable_mcp=enable_mcp, enable_multi_agent=False)
             except Exception as e:
                 print(f"Warning: MCP agent failed to initialize: {e}")
-
+        
         if SimpleJarvisAgent:
             return SimpleJarvisAgent()
         else:
             raise ImportError("No Jarvis agent available")
 
+
 # Convenience functions
-    """Return an appropriate Jarvis agent based on configuration."""
-
-    enable_mcp = DEFAULT_MCP_ENABLED if enable_mcp is None else enable_mcp
-    enable_multi_agent = DEFAULT_MULTI_AGENT_ENABLED if enable_multi_agent is None else enable_multi_agent
-    enable_workflows = DEFAULT_WORKFLOWS_ENABLED if enable_workflows is None else enable_workflows
-
-    if enable_workflows and WorkflowJarvisAgent:
-        return WorkflowJarvisAgent()
-
-    if enable_mcp and MCPJarvisAgent:
-        return MCPJarvisAgent()
-
-    if enable_multi_agent and EnhancedJarvisAgent:
-        return EnhancedJarvisAgent()
-
-    if SimpleJarvisAgent:
-        return SimpleJarvisAgent()
-
-    raise RuntimeError("No available Jarvis agent implementation")
-
-
-# Convenience wrappers for backward compatibility
 def get_simple_jarvis():
     """Get basic single-agent Jarvis."""
-    return get_jarvis_agent(enable_mcp=False, enable_multi_agent=False, enable_workflows=False)
-
+    return get_jarvis_agent(mode="simple")
 
 
 def get_smart_jarvis():
     """Get Jarvis with MCP enabled."""
-    return get_jarvis_agent(enable_mcp=True, enable_multi_agent=False, enable_workflows=False)
-
+    return get_jarvis_agent(mode="mcp")
 
 
 def get_super_jarvis():
     """Get Jarvis with MCP and multi-agent features."""
-    return get_jarvis_agent(enable_mcp=True, enable_multi_agent=True, enable_workflows=False)
-
+    return get_jarvis_agent(mode="multi_agent")
 
 
 def get_workflow_jarvis():
     """Get workflow-capable Jarvis."""
-    return get_jarvis_agent(enable_mcp=True, enable_multi_agent=True, enable_workflows=True)
-
+    return get_jarvis_agent(mode="workflow")
 
 
 def get_ultimate_jarvis():
     """Get the most capable Jarvis configuration."""
-    return get_workflow_jarvis()
-
-    """Get the most advanced Jarvis (all capabilities enabled)"""
     return get_jarvis_agent(
+        mode="auto",
         enable_mcp=True,
         enable_multi_agent=True,
         enable_workflows=True,
-        mode="auto",
     )
 
-def get_coding_agent(base_agent=None, workspace_path: str | None = None):
-    """Return coding agent built on top of Jarvis."""
-    base_agent = base_agent or get_jarvis_agent()
 
-def get_coding_agent(base_agent=None, workspace_path: str = None):
-    """Get enhanced coding agent"""
+def get_coding_agent(base_agent=None, workspace_path: str | None = None):
+    """Get enhanced coding agent.
+    
+    Args:
+        base_agent: Base Jarvis agent to use (creates one if None)
+        workspace_path: Path to workspace for coding operations
+        
+    Returns:
+        CodingAgent instance or base agent if CodingAgent unavailable
+    """
     if base_agent is None:
         base_agent = get_jarvis_agent()
-
+    
     if CodingAgent:
         return CodingAgent(base_agent, workspace_path)
     return base_agent
 
-# Workflow convenience functions
-def create_and_run_workflow(workflow_type: str, **kwargs):
-    """Create and run a workflow using the workflow-enabled Jarvis"""
 
+def create_and_run_workflow(workflow_type: str, **kwargs):
+    """Create and run a workflow using the workflow-enabled Jarvis.
+    
+    Args:
+        workflow_type: Type of workflow to run
+        **kwargs: Workflow-specific parameters
+        
+    Returns:
+        Workflow execution results
+    """
     if not WorkflowJarvisAgent:
         raise ImportError("Workflow capabilities not available")
-
+    
     jarvis = get_workflow_jarvis()
-
+    
     if workflow_type == "code_review" and create_code_review_workflow:
         workflow = create_code_review_workflow(kwargs.get("file_path", "code.py"))
     elif workflow_type == "deployment" and create_deployment_workflow:
@@ -300,14 +245,19 @@ def create_and_run_workflow(workflow_type: str, **kwargs):
         )
     else:
         raise ValueError(f"Unknown or unavailable workflow type: {workflow_type}")
-
+    
     return jarvis.execute_workflow_by_name(workflow_type, kwargs)
+
 
 # Backward compatibility
 JarvisAgent = get_jarvis_agent  # Alias for backward compatibility
 
 __all__ = [
+    # Main function
     "get_jarvis_agent",
+    "JarvisAgent",  # Backward compatibility alias
+    
+    # Convenience functions
     "get_simple_jarvis",
     "get_smart_jarvis",
     "get_super_jarvis",
@@ -315,39 +265,21 @@ __all__ = [
     "get_ultimate_jarvis",
     "get_coding_agent",
     "create_and_run_workflow",
-    "JarvisAgent",
+    
+    # Agent classes (may be None if not available)
     "SimpleJarvisAgent",
     "MCPJarvisAgent",
     "EnhancedJarvisAgent",
     "WorkflowJarvisAgent",
+    "CodingAgent",
+    
+    # Managers
     "DatabaseManager",
     "get_database_manager",
     "SecurityManager",
     "get_security_manager",
-    "CodingAgent",
-    "WorkflowEngine",
-    "WorkflowTemplates",
-    "create_workflow",
-    "create_code_review_workflow",
-    "create_deployment_workflow",
-    "create_project_analysis_workflow",
-    "create_bug_fix_workflow",
-    "get_jarvis_agent",
-    "get_simple_jarvis",
-    "get_smart_jarvis",
-    "get_super_jarvis",
-    "get_workflow_jarvis",
-    "get_ultimate_jarvis",
-    "get_coding_agent",
-    "SimpleJarvisAgent",
-    "MCPJarvisAgent",
-    "EnhancedJarvisAgent",
-    "WorkflowJarvisAgent",
-    "DatabaseManager",
-    "get_database_manager",
-    "SecurityManager",
-    "get_security_manager",
-    "CodingAgent",
+    
+    # Workflow components
     "WorkflowEngine",
     "WorkflowTemplates",
     "create_workflow",
@@ -356,4 +288,3 @@ __all__ = [
     "create_project_analysis_workflow",
     "create_bug_fix_workflow",
 ]
-
