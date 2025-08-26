@@ -13,3 +13,15 @@ orch:
   prune_check_interval: 2
   min_active_teams: 2
   policy: balanced
+<<<<<<< HEAD
+=======
+
+hitl:
+  destructive_ops:
+    - git_write
+    - file_write
+    - file_delete
+    - external_post
+    - state_prune
+
+>>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6

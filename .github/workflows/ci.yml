@@ -17,16 +17,19 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .
-          pip install build
+          pip install flake8 black build .
       - name: Lint
         run: |
-          flake8 jarvis/logging
-          black --check jarvis/logging
+          flake8 benchmarks/harness.py benchmarks/perf_gate.py
+          black --check benchmarks/harness.py benchmarks/perf_gate.py
       - name: Test
         run: pytest
       - name: Benchmark harness
-        run: python benchmarks/harness.py --ci
+        run: |
+          python benchmarks/harness.py --ci --metrics benchmarks/candidate_metrics.json
+      - name: Performance gate
+        run: |
+          python benchmarks/perf_gate.py benchmarks/baseline_metrics.json benchmarks/candidate_metrics.json 0.05
       - name: Packaging
         run: python -m build --sdist --wheel
 

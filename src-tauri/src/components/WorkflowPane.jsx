@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { http } from '@tauri-apps/api';
 import Graph from 'vis-network-react';
+<<<<<<< HEAD
+=======
+import { socket } from '../socket';
+>>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
 
 // DEV-COMMENT: This component is responsible for visualizing the agent workflow.
 // It fetches graph data (nodes and edges) from our backend API and uses the
@@ -30,6 +34,18 @@ const WorkflowPane = () => {
     fetchWorkflow();
   }, []);
 
+<<<<<<< HEAD
+=======
+  // DEV-COMMENT: Listen for real-time workflow graph updates via WebSocket.
+  useEffect(() => {
+    const handler = (data) => {
+      setGraphData(data);
+    };
+    socket.on('workflow_update', handler);
+    return () => socket.off('workflow_update', handler);
+  }, []);
+
+>>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
   // DEV-COMMENT: Options for configuring the appearance and behavior of the graph.
   // This allows us to define layout algorithms, node/edge styles, and interaction settings.
   const options = {

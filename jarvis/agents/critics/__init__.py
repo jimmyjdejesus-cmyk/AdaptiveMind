@@ -5,6 +5,10 @@ from typing import Any, Dict
 from .blue_team import BlueTeamCritic
 from .constitutional_critic import ConstitutionalCritic
 from .red_team import RedTeamCritic
+<<<<<<< HEAD
+=======
+from jarvis.critics import CriticVerdict, WhiteGate
+>>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
 
 
 @dataclass
@@ -20,5 +24,10 @@ __all__ = [
     "RedTeamCritic",
     "BlueTeamCritic",
     "ConstitutionalCritic",
+<<<<<<< HEAD
+=======
+    "CriticVerdict",
+    "WhiteGate",
+>>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
     "CriticFeedback",
 ]
