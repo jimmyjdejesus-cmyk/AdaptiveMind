@@ -1,4 +1,4 @@
-# Jarvis AI - Agent Communication Log
+npm install -g @tauri-apps/cli# Jarvis AI - Agent Communication Log
 This file acts as a shared memory bus for all agent interactions in this directory.
 ----------------------------------------------------------------------------------
 
