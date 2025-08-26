@@ -25,6 +25,7 @@ from jarvis.agents.agent_resources import (
     SystemEvolutionPlan,
     SystemHealth,
 )
+from jarvis.agents.base import AIAgent
 from jarvis.agents.critics import (
     BlueTeamCritic,
     ConstitutionalCritic,
@@ -35,6 +36,7 @@ from jarvis.agents.critics import (
 )
 from jarvis.agents.curiosity_agent import CuriosityAgent
 from jarvis.agents.mission_planner import MissionPlanner
+from jarvis.agents.specialist import SpecialistAgent
 from jarvis.memory.project_memory import MemoryManager, ProjectMemory
 from jarvis.monitoring.performance import CriticInsightMerger, PerformanceTracker
 from jarvis.homeostasis import SystemMonitor
@@ -51,53 +53,6 @@ from jarvis.world_model.hypergraph import HierarchicalHypergraph
 logger = logging.getLogger(__name__)
 
 
-class AIAgent:
-    """Abstract base class for all AI agents."""
-
-    def __init__(self, agent_id: str, capabilities: List[AgentCapability], knowledge_graph: Optional[KnowledgeGraph] = None):
-        self.agent_id = agent_id
-        self.capabilities = capabilities
-        self.metrics = AgentMetrics(agent_id)
-        self.created_at = datetime.now()
-        self.is_active = True
-        self.knowledge_graph = knowledge_graph
-
-    @abstractmethod
-    async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a task and return results"""
-        pass
-
-    @abstractmethod
-    async def learn_from_feedback(self, feedback: Dict[str, Any]) -> bool:
-        """Learn from feedback and adapt behavior"""
-        pass
-
-    def update_metrics(self, success: bool, response_time: float, resource_usage: float):
-        """Update agent performance metrics"""
-        alpha = 0.1
-        if success:
-            self.metrics.success_rate = (1 - alpha) * self.metrics.success_rate + alpha * 1.0
-        else:
-            self.metrics.success_rate = (1 - alpha) * self.metrics.success_rate + alpha * 0.0
-        self.metrics.average_response_time = (
-            (1 - alpha) * self.metrics.average_response_time + alpha * response_time
-        )
-        self.metrics.resource_usage = (
-            (1 - alpha) * self.metrics.resource_usage + alpha * resource_usage
-        )
-        self.metrics.last_updated = datetime.now()
-
-    def set_knowledge_graph(self, graph: KnowledgeGraph) -> None:
-        """Attach a :class:`KnowledgeGraph` instance to this agent."""
-        self.knowledge_graph = graph
-
-    def query_knowledge_graph(self, query: str) -> Any:
-        """Query the attached knowledge graph."""
-        if not self.knowledge_graph:
-            raise ValueError("KnowledgeGraph not available")
-        return self.knowledge_graph.query(query)
-
-
 class ExecutiveAgent(AIAgent):
     """Executive agent that manages other AI agents."""
     def __init__(
@@ -110,6 +65,7 @@ class ExecutiveAgent(AIAgent):
         enable_red_team: bool | None = None,
         enable_blue_team: bool | None = None,
         blue_team_sensitivity: float = 0.5,
+        enable_curiosity: bool | None = None,
     ):
         super().__init__(agent_id, [
             AgentCapability.REASONING,
@@ -128,7 +84,7 @@ class ExecutiveAgent(AIAgent):
         self.hypergraph = HierarchicalHypergraph()
         self.curiosity_agent = CuriosityAgent(self.hypergraph)
 
-        if enable_red_team is None or enable_blue_team is None:
+        if enable_red_team is None or enable_blue_team is None or enable_curiosity is None:
             try:
                 from config.config_loader import load_config
                 cfg = load_config()
@@ -138,7 +94,10 @@ class ExecutiveAgent(AIAgent):
                 enable_red_team = cfg.get("ENABLE_RED_TEAM", False)
             if enable_blue_team is None:
                 enable_blue_team = cfg.get("ENABLE_BLUE_TEAM", True)
+            if enable_curiosity is None:
+                enable_curiosity = cfg.get("ENABLE_CURIOSITY", True)
 
+        self.enable_curiosity = bool(enable_curiosity)
         self.enable_red_team = bool(enable_red_team)
         self.red_team = RedTeamCritic(mcp_client) if self.enable_red_team else None
         self.enable_blue_team = bool(enable_blue_team)
@@ -157,13 +116,18 @@ class ExecutiveAgent(AIAgent):
         self.critic_merger = CriticInsightMerger()
         self.performance_tracker = PerformanceTracker()
 
+    def log_event(self, event: str, payload: Any):
+        """Log an event."""
+        logger.info(f"Event '{event}': {payload}")
+
     def _initialize_knowledge_graph(self):
         # Placeholder for KG initialization
         self.knowledge_graph = KnowledgeGraph()
 
-    def manage_directive(self, directive_text: str, session_id: str | None = None) -> Dict[str, Any]:
+    def manage_directive(self, directive_text: str, context: Dict[str, Any], session_id: str | None = None) -> Dict[str, Any]:
         """Break a directive into tasks and store the mission plan."""
-        tasks = self.mission_planner.plan(directive_text)
+        dag = self.mission_planner.plan(directive_text, context)
+        tasks = dag.tasks
         graph = self.mission_planner.to_graph(tasks)
         critique = self.constitutional_critic.review({"tasks": tasks, "goal": directive_text})
         if critique.get("veto"):
@@ -177,6 +141,80 @@ class ExecutiveAgent(AIAgent):
         }
 
     plan_mission = manage_directive
+
+    async def execute_mission(self, directive: str, context: Dict[str, Any], session_id: str | None = None) -> Dict[str, Any]:
+        """
+        Plan and execute a multi-step mission.
+
+        Args:
+            directive: The high-level mission objective.
+            context: The context for the mission, including code and other details.
+            session_id: An optional session ID for persistence.
+
+        Returns:
+            A dictionary containing the mission results.
+        """
+        # 1. Plan the mission
+        plan_result = self.manage_directive(directive, context, session_id)
+        if not plan_result.get("success"):
+            return {
+                "success": False,
+                "error": "Mission planning failed.",
+                "critique": plan_result.get("critique"),
+            }
+
+        tasks = plan_result.get("tasks", [])
+        logger.info(f"Mission '{directive}' planned with {len(tasks)} steps.")
+
+        # 2. Execute the mission steps
+        mission_results = []
+        for i, task_def in enumerate(tasks):
+            step_id = task_def.get("id", f"step_{i}")
+            logger.info(f"Executing mission step {i+1}/{len(tasks)}: {step_id}")
+
+            # Prepare the task for the execute_task method
+            task = {
+                "type": "mission_step",
+                "step_id": step_id,
+                "request": task_def.get("details", ""),
+                "specialists": task_def.get("specialists", []),
+                # Pass any other relevant info from the plan to the step
+                "code": task_def.get("code"),
+                "user_context": task_def.get("user_context"),
+            }
+
+            step_result = await self.execute_task(task)
+            mission_results.append(step_result)
+
+            if not step_result.get("success"):
+                logger.error(f"Mission step {step_id} failed. Aborting mission.")
+                return {
+                    "success": False,
+                    "error": f"Mission failed at step {step_id}",
+                    "results": mission_results,
+                }
+
+        # 3. Finalize and return results
+        logger.info(f"Mission '{directive}' completed successfully.")
+
+        # 4. Consider curiosity
+        if self.enable_curiosity:
+            await self._consider_curiosity(mission_results)
+
+        return {"success": True, "results": mission_results}
+
+    async def _consider_curiosity(self, mission_results: List[Dict[str, Any]]):
+        """
+        After a mission, check if there's an opportunity for curiosity-driven exploration.
+        """
+        # TODO: Update hypergraph with mission results to inform curiosity.
+        # This is a placeholder for a more sophisticated integration.
+        question = self.curiosity_agent.generate_question()
+        if question:
+            logger.info(f"Curiosity agent generated a new question: {question}")
+            # To prevent potential loops, we'll just log the question for now.
+            # A full implementation might queue this as a lower-priority mission.
+            self.log_event("curiosity_triggered", {"question": question})
 
     async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute meta-level coordination tasks with optional risk critique."""
@@ -333,14 +371,27 @@ class ExecutiveAgent(AIAgent):
         required_capabilities = task.get("capabilities", [])
         agent_type = task.get("agent_type", "specialist")
         agent_id = f"{agent_type}_{uuid.uuid4().hex[:8]}"
-        
+
         if required_capabilities:
-            capabilities = [AgentCapability(cap) for cap in required_capabilities if cap in [c.value for c in AgentCapability]]
-            new_agent = SpecialistAIAgent(agent_id, capabilities, self.knowledge_graph)
+            capabilities = [
+                AgentCapability(cap)
+                for cap in required_capabilities
+                if cap in [c.value for c in AgentCapability]
+            ]
+            specialization = required_capabilities[0] if required_capabilities else "general"
+            new_agent = SpecialistAgent(
+                agent_id=agent_id,
+                specialization=specialization,
+                capabilities=capabilities,
+                knowledge_graph=self.knowledge_graph,
+                mcp_client=self.mcp_client,
+                preferred_models=[],  # Let's use default models for now
+            )
             self.managed_agents[agent_id] = new_agent
             return {
-                "success": True, "agent_id": agent_id,
-                "capabilities": [cap.value for cap in capabilities]
+                "success": True,
+                "agent_id": agent_id,
+                "capabilities": [cap.value for cap in capabilities],
             }
         return {"success": False, "error": "No valid capabilities specified"}
 
@@ -353,7 +404,11 @@ class ExecutiveAgent(AIAgent):
         step_id = step.get("step_id", uuid.uuid4().hex[:8])
         orchestrator = self.sub_orchestrators.get(step_id)
         if not orchestrator:
-            spec = {"allowed_specialists": step.get("specialists")}
+            spec = {
+                "allowed_specialists": step.get("specialists"),
+                "knowledge_graph": self.knowledge_graph,
+                "memory": self.memory,
+            }
             orchestrator = self.create_sub_orchestrator(step_id, spec)
 
         critique = self.constitutional_critic.review({"tasks": [step.get("request", "")]})
@@ -427,11 +482,6 @@ class ExecutiveAgent(AIAgent):
                     raise
 
 
-# This class seems to be a dependency for ExecutiveAgent, adding a placeholder
-class SpecialistAIAgent(AIAgent):
-    pass
-
-
 class MetaIntelligenceCore:
     """Core meta-intelligence system that manages the AI ecosystem"""
     def __init__(
@@ -459,8 +509,13 @@ class MetaIntelligenceCore:
             ("learning_agent", [AgentCapability.LEARNING, AgentCapability.MONITORING])
         ]
         for agent_id, capabilities in base_agents:
-            agent = SpecialistAIAgent(
-                agent_id, capabilities, self.meta_agent.knowledge_graph
+            agent = SpecialistAgent(
+                agent_id=agent_id,
+                specialization=capabilities[0].value,
+                capabilities=capabilities,
+                knowledge_graph=self.meta_agent.knowledge_graph,
+                mcp_client=self.meta_agent.mcp_client,
+                preferred_models=[],
             )
             self.meta_agent.managed_agents[agent_id] = agent
 

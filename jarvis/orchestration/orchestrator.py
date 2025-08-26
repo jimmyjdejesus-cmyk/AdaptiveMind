@@ -4,15 +4,9 @@ This module provides orchestration templates for coordinating AI agents.
 This module provides two lightweight orchestration helpers:
 
 - ``MultiAgentOrchestrator``: Coordinates a dictionary of specialist agents,
-<<<<<<< HEAD
-    records the reasoning path, and manages specialist coordination.
-- ``DynamicOrchestrator``: Builds and runs LangGraph workflows from simple
-    ``AgentSpec`` definitions, primarily for testing arbitrary workflows.
-=======
   records the reasoning path, and manages specialist coordination.
 - ``DynamicOrchestrator``: Builds and runs LangGraph workflows from simple
   ``AgentSpec`` definitions, primarily for testing arbitrary workflows.
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
 """
 
 from __future__ import annotations
@@ -21,44 +15,19 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Set, Awaitable, Callable
 from datetime import datetime
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TYPE_CHECKING
 import json
 from collections import defaultdict
 from dataclasses import dataclass
-<<<<<<< HEAD
-
-try:
-    import yaml
-except ImportError:
-    yaml = None
-    
-try:
-    from langgraph.graph import END, StateGraph
-except ImportError:
-    # Fallback if langgraph is not installed
-    END = "END"
-    StateGraph = None
-
-from ..agents.specialists import (
-    CodeReviewAgent,
-    SecurityAgent,
-    ArchitectureAgent,
-    TestingAgent,
-    DevOpsAgent
-)
-from ..agents.critics import RedTeamCritic
-=======
-from datetime import datetime
-from typing import Any, Awaitable, Callable, Dict, List, Optional, TYPE_CHECKING
 
 from langgraph.graph import END, StateGraph
 
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
 from jarvis.scoring.vickrey_auction import Candidate, run_vickrey_auction
 from .path_memory import PathMemory
 from .semantic_cache import SemanticCache
 from .message_bus import HierarchicalMessageBus
+from jarvis.memory.project_memory import ProjectMemory
 
 if TYPE_CHECKING:  # pragma: no cover - used only for type hints
     from .sub_orchestrator import SubOrchestrator
@@ -108,11 +77,7 @@ class OrchestratorTemplate:
 # ---------------------------------------------------------------------------
 
 
-<<<<<<< HEAD
-class MultiAgentOrchestrator:
-=======
 class MultiAgentOrchestrator(OrchestratorTemplate):
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
     """Coordinate a collection of specialist agents."""
 
     def __init__(
@@ -124,10 +89,12 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
         *,
         message_bus: HierarchicalMessageBus | None = None,
         budgets: Optional[Dict[str, Any]] = None,
+        memory: Optional[ProjectMemory] = None,
     ) -> None:
         self.mcp_client = mcp_client
         self.monitor = monitor
         self.knowledge_graph = knowledge_graph
+        self.memory = memory
         self.specialists: Dict[str, Any] = specialists or {}
         self.semantic_cache = SemanticCache()
         self.child_orchestrators: Dict[str, "SubOrchestrator"] = {}
@@ -135,9 +102,6 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
         self.task_history = []
         self.active_collaborations = {}
         self.exploration_stats: List[Dict[str, float]] = []
-<<<<<<< HEAD
-
-=======
         self.message_bus = message_bus or HierarchicalMessageBus()
         self.budgets = budgets or {}
 
@@ -566,7 +530,6 @@ JSON Response:
             logger.error(f"Sequential specialist analysis failed: {e}")
             return self._create_error_response(str(e), request)
 
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
     def _create_specialist_task(self, request: str, code: str = None, user_context: str = None) -> str:
         task_parts = [request]
         if code:
@@ -1065,8 +1028,4 @@ class DynamicOrchestrator:
         return result
 
 
-<<<<<<< HEAD
 __all__ = ["AgentSpec", "DynamicOrchestrator", "MultiAgentOrchestrator", "END"]
-=======
-__all__ = ["AgentSpec", "DynamicOrchestrator", "MultiAgentOrchestrator", "END"]
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6

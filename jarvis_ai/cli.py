@@ -23,11 +23,14 @@ def main():
     
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
-    # Run command to start the application
-    run_parser = subparsers.add_parser("run", help="Start the Jarvis AI application")
-    run_parser.add_argument("--port", type=int, default=8501, help="Port to run on (default: 8501)")
-    run_parser.add_argument("--host", default="localhost", help="Host to bind to (default: localhost)")
-    run_parser.add_argument("--headless", action="store_true", help="Run in headless mode")
+    # Run command to start the application or execute a mission
+    run_parser = subparsers.add_parser("run", help="Start the Jarvis AI application or execute a mission")
+    run_parser.add_argument("directive", nargs="?", default=None, help="The mission directive to execute (optional)")
+    run_parser.add_argument("--code", help="Path to a code file to include in the context")
+    run_parser.add_argument("--context", help="Additional context for the mission")
+    run_parser.add_argument("--port", type=int, default=8501, help="Port to run on (if not executing a directive)")
+    run_parser.add_argument("--host", default="localhost", help="Host to bind to (if not executing a directive)")
+    run_parser.add_argument("--headless", action="store_true", help="Run in headless mode (if not executing a directive)")
     
     # Config command to manage configuration
     config_parser = subparsers.add_parser("config", help="Manage configuration")
@@ -56,25 +59,68 @@ def main():
         parser.print_help()
 
 def run_application(args):
-    """Run the Jarvis AI desktop application."""
-    try:
-        import subprocess
-        
-        desktop_app_path = current_dir / "desktop_app.py"
-        
-        if not desktop_app_path.exists():
-            print("❌ Could not find desktop_app.py")
+    """Run the Jarvis AI desktop application or execute a mission."""
+    if args.directive:
+        import asyncio
+        from jarvis.ecosystem.meta_intelligence import ExecutiveAgent
+
+        print(f"🚀 Executing mission: {args.directive}")
+
+        # Create agent and run mission
+        try:
+            # We need an MCP client for the agent, for now, we can use a mock or a placeholder
+            # depending on the setup. Assuming a None client is acceptable for now.
+            agent = ExecutiveAgent(agent_id="cli_agent", mcp_client=None)
+
+            # Prepare context for the mission planner
+            context = {
+                "project": "cli_project",
+                "session": "cli_session",
+                "title": args.directive,
+                "inputs": {
+                    "code": args.code,
+                    "user_context": args.context,
+                },
+                "risk_level": "medium", # Default risk level for CLI missions
+            }
+
+            # The mission planner expects a directive that it can find in its config files.
+            # For a direct CLI command, we might need to adjust how the planner works,
+            # or pass the directive in a way it can be processed directly.
+            # For now, let's assume the directive is the mission name.
+            # We also need to handle the fact that execute_mission is async.
+            result = asyncio.run(agent.execute_mission(args.directive, context))
+
+            import json
+            print("\n✅ Mission complete.")
+            print(json.dumps(result, indent=2))
+
+        except Exception as e:
+            print(f"❌ Error executing mission: {e}")
             sys.exit(1)
+
+    else:
+        # Run the desktop application
+        try:
+            import subprocess
             
-        print("🚀 Starting Jarvis AI Desktop App...")
-        
-        # Activate venv and run desktop_app.py
-        python_executable = str(current_dir / "venv" / "Scripts" / "python.exe")
-        subprocess.run([python_executable, str(desktop_app_path)])
-        
-    except Exception as e:
-        print(f"❌ Error starting application: {e}")
-        sys.exit(1)
+            desktop_app_path = current_dir / "desktop_app.py"
+
+            if not desktop_app_path.exists():
+                print("❌ Could not find desktop_app.py")
+                sys.exit(1)
+
+            print("🚀 Starting Jarvis AI Desktop App...")
+
+            # Activate venv and run desktop_app.py
+            # This is problematic as it assumes a specific venv structure.
+            # A better approach would be to ensure jarvis is installed as a package.
+            # For now, we'll just run with the current python interpreter.
+            subprocess.run([sys.executable, str(desktop_app_path)])
+
+        except Exception as e:
+            print(f"❌ Error starting application: {e}")
+            sys.exit(1)
 
 def manage_config(args):
     """Manage configuration."""

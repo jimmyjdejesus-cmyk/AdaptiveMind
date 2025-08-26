@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-fastapi
-uvicorn[standard]
-python-socketio
-websockets
-=======
 # == J.A.R.V.I.S. Consolidated Dependencies ==
 
 # --- Core Frameworks ---
@@ -18,7 +12,7 @@ langchain-core>=0.1.0
 langchain-community>=0.0.10
 langgraph>=0.0.40
 langsmith>=0.0.80
-langgraphstudio>=0.0.1
+# langgraphstudio>=0.0.1
 
 # --- Graph Utilities ---
 networkx>=3.0
@@ -66,4 +60,5 @@ mypy>=1.4.0
 # Web automation, image processing
 playwright>=1.35.0
 pillow>=10.0.0
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
+keyring>=24.0.0
+chromadb>=0.4.0

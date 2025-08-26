@@ -8,6 +8,7 @@ run with its own focused set of tools and agents.
 from typing import Dict, List, Optional, Any
 
 from jarvis.homeostasis.monitor import SystemMonitor
+from jarvis.memory.project_memory import ProjectMemory
 try:  # pragma: no cover - optional dependency
     from jarvis.world_model.knowledge_graph import KnowledgeGraph
 except Exception:  # pragma: no cover
@@ -29,6 +30,7 @@ class SubOrchestrator(MultiAgentOrchestrator):
         child_specs: Optional[Dict[str, Dict[str, Any]]] = None,
         monitor: SystemMonitor | None = None,
         knowledge_graph: KnowledgeGraph | None = None,
+        memory: ProjectMemory | None = None,
     ):
         """Create a new sub-orchestrator.
 
@@ -47,6 +49,7 @@ class SubOrchestrator(MultiAgentOrchestrator):
             mcp_client,
             monitor=monitor,
             knowledge_graph=knowledge_graph,
+            memory=memory,
         )
         self.mission_name = mission_name
 

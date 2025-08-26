@@ -14,7 +14,7 @@ import uuid
 import time
 
 from config.config_loader import load_config
-from jarvis.orchestration.agents import MetaAgent
+from jarvis.ecosystem.meta_intelligence import ExecutiveAgent as MetaAgent
 
 # Load environment variables
 def load_env():
@@ -45,7 +45,7 @@ class JarvisDesktopApp:
         self.root.configure(bg='#2b2b2b')
         
         # Initialize the Meta-Agent
-        self.meta_agent = MetaAgent()
+        self.meta_agent = MetaAgent(agent_id="desktop_app_agent", mcp_client=None)
         self.models = []
         
         # Create main interface
@@ -324,22 +324,23 @@ class JarvisDesktopApp:
     def run_agent_mode(self, objective: str, project_dir: str):
         """Handles the execution of the full multi-agent orchestration."""
         try:
-            self.log_output(f"Jarvis (Meta-Agent): Spawning orchestrator for objective...\n\n", "agent")
-            orchestrator = self.meta_agent.spawn_orchestrator(objective, project_dir)
+            self.log_output(f"Jarvis (Meta-Agent): Executing mission for objective...\n\n", "agent")
             
-            # Periodically update the memory bus viewer
-            stop_event = threading.Event()
-            monitor_thread = threading.Thread(target=self.monitor_memory_bus, args=(orchestrator.memory_bus, stop_event), daemon=True)
-            monitor_thread.start()
+            # Since execute_mission is async, we need to run it in an event loop.
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
-            # Run the orchestrator
-            final_result = orchestrator.run()
-
-            # Stop the monitor and show final state
-            stop_event.set()
-            self.update_memory_bus_viewer(orchestrator.memory_bus.read_log()) # Final update
+            # The context dictionary can be constructed here if needed
+            context = {
+                "project": project_dir,
+                "session": "desktop_app_session",
+                "title": objective,
+            }
+            final_result = loop.run_until_complete(self.meta_agent.execute_mission(objective, context))
+            loop.close()
             
-            self.log_output(f"Jarvis (Meta-Agent): Orchestration complete.\nFinal Result: {final_result}\n\n", "agent")
+            import json
+            self.log_output(f"Jarvis (Meta-Agent): Mission complete.\nFinal Result: {json.dumps(final_result, indent=2)}\n\n", "agent")
 
         except Exception as e:
             self.log_output(f"\n\nAn error occurred during orchestration: {str(e)}\n\n", "error")

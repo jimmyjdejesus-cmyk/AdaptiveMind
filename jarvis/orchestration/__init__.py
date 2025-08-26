@@ -1,17 +1,6 @@
 """
 Multi-agent orchestration system for coordinating specialist AI agents.
 """
-<<<<<<< HEAD
-from .orchestrator import AgentSpec, DynamicOrchestrator, MultiAgentOrchestrator, END
-from .sub_orchestrator import SubOrchestrator
-from .path_memory import PathMemory
-from .message_bus import MessageBus, HierarchicalMessageBus, Event
-from .bandwidth_channel import BandwidthLimitedChannel
-from .mission_planner import MissionPlanner
-from .task_queue import RedisTaskQueue
-from .pruning import PruningManager
-from .server import app, bus
-=======
 from .orchestrator import (
     AgentSpec,
     DynamicOrchestrator,
@@ -30,7 +19,6 @@ try:  # pragma: no cover - optional import
     from .sub_orchestrator import SubOrchestrator
 except Exception:  # pragma: no cover
     SubOrchestrator = None  # type: ignore
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
 
 try:  # pragma: no cover - optional dependencies
     from .mission_planner import MissionPlanner
@@ -82,12 +70,9 @@ __all__ = [
     "MissionPlanner",
     "RedisTaskQueue",
     "PruningManager",
-<<<<<<< HEAD
-=======
     "SemanticCache",
     "CodeAuditCrew",
     "ResearchCrew",
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
     "END",
     "app",
     "bus",

@@ -8,30 +8,42 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import json
 
-from .base_specialist import BaseSpecialist
+from .base import AIAgent
+from jarvis.agents.agent_resources import AgentCapability
+from jarvis.world_model.knowledge_graph import KnowledgeGraph
 
 logger = logging.getLogger(__name__)
 
-class SpecialistAgent(BaseSpecialist):
-    """Concrete implementation of :class:`BaseSpecialist`.
+class SpecialistAgent(AIAgent):
+    """Concrete implementation of :class:`AIAgent` for specialized tasks.
 
     The class provides common functionality used by all specialist agents
-    such as context handling and prompt generation.  It previously acted as
-    the base class directly; now it implements the :class:`BaseSpecialist`
-    interface to provide a consistent contract for the orchestrator.
+    such as context handling and prompt generation.
     """
-    
-    def __init__(self, specialization: str, preferred_models: List[str], mcp_client):
+
+    def __init__(
+        self,
+        agent_id: str,
+        specialization: str,
+        capabilities: List[AgentCapability],
+        knowledge_graph: Optional[KnowledgeGraph],
+        mcp_client: Any,
+        preferred_models: Optional[List[str]] = None,
+    ):
         """
         Initialize specialist agent
-        
+
         Args:
+            agent_id: The unique identifier for the agent.
             specialization: Domain of expertise (e.g., 'code_review', 'security')
-            preferred_models: List of models in order of preference
+            capabilities: A list of capabilities for the agent.
+            knowledge_graph: The knowledge graph instance for the agent to use.
             mcp_client: MCP client for model communication
+            preferred_models: List of models in order of preference
         """
+        super().__init__(agent_id, capabilities, knowledge_graph)
         self.specialization = specialization
-        self.preferred_models = preferred_models
+        self.preferred_models = preferred_models or []
         self.mcp_client = mcp_client
         self.context_memory = []
         self.expertise_prompt = self._get_expertise_prompt()
@@ -263,27 +275,23 @@ Provide prioritized user insights with suggested actions.""",
         
         return prompts.get(self.specialization, f"You are a helpful AI assistant specializing in {self.specialization}.")
     
-    async def process_task(
-        self,
-        task: str,
-        context: List[Dict] = None,
-        user_context: str = None,
-        models: List[str] | None = None,
-    ) -> Dict[str, Any]:
+    async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process a task using specialist expertise
-        
+
         Args:
-            task: The specific task to analyze
-            context: Context from other specialists
-            user_context: Additional user-provided context
-            
+            task: The specific task to analyze, including context.
+
         Returns:
             Specialist analysis result
         """
+        task_str = task.get("request", "")
+        context = task.get("context")
+        user_context = task.get("user_context")
+        models = task.get("models")
         try:
             # Build comprehensive prompt
-            specialist_prompt = self.build_prompt(task, context, user_context)
+            specialist_prompt = self.build_prompt(task_str, context, user_context)
 
             # Determine model order (allows dynamic routing)
             model_order = models or self.preferred_models
@@ -294,20 +302,26 @@ Provide prioritized user insights with suggested actions.""",
                     response = await self._generate_response(model, specialist_prompt)
 
                     # Process and analyze the response
-                    result = self.process_model_response(response, model, task)
+                    result = self.process_model_response(response, model, task_str)
 
                     return result
-                    
+
                 except Exception as e:
                     logger.warning(f"{self.specialization} agent failed with {model}: {e}")
                     continue
-            
+
             # If all models failed
             raise Exception(f"All models failed for {self.specialization} agent")
-            
+
         except Exception as e:
             logger.error(f"Task processing failed for {self.specialization}: {e}")
-            return self._create_error_result(str(e), task)
+            return self._create_error_result(str(e), task_str)
+
+    async def learn_from_feedback(self, feedback: Dict[str, Any]) -> bool:
+        """Learn from feedback and adapt behavior"""
+        logger.info(f"[{self.agent_id}] Received feedback: {feedback}")
+        # Placeholder for learning logic
+        return True
     
     def build_prompt(
         self, task: str, context: List[Dict] = None, user_context: str = None
