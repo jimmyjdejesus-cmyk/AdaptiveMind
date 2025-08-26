@@ -1,7 +1,19 @@
 # J.A.R.V.I.S. Desktop Application Development Log
 
+
+
+## 2025-08-24
+- Implemented authenticated GitHub API tools for issues and pull requests with rate-limit handling.
+- Added unit tests mocking API responses.
+- Ran `pytest legacy/tests/test_github_api.py -q`.
+=======
+## 2025-09-01
+- Added root cause failure analysis with `RootCauseAnalyzer` and negative pathway support in `PolicyOptimizer` and `HierarchicalHypergraph`.
+- Created unit test for negative pathway creation.
+- Ran `pip install networkx neo4j -q` and `pytest tests/test_policy_optimizer.py tests/test_live_test_agent.py tests/test_simulation_agent.py tests/test_curiosity_agent.py -q`.
+=======
 This file documents the development process for the J.A.R.V.I.S. desktop application, focusing on frontend, integration, and packaging.
-<<<<<<< HEAD
+
 =======
 
 **Phase 1: Project Scaffolding**
@@ -14,11 +26,9 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 *   **[2025-08-25]** Added tests for logging, vector store RAG, workflow adapter validation, HITL policy, and security path checks.
 *   **[2025-08-25]** Updated CI workflows to lint and test across modules.
 =======
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
 
 **Phase 1: Project Scaffolding**
 
-<<<<<<< HEAD
 *   **[2025-08-24]** Initializing project structure.
 *   **[2025-08-24]** Created a clean `agent.md` file to log development activities for this specific project, overwriting a pre-existing, unrelated log file.
 =======
@@ -147,5 +157,3 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 
 *   **[2025-08-25]** Added Documentation, Database, Localization, EthicalHacker, CloudCostOptimizer, and UserFeedback specialist agents with prompts, methods, and tests.
 =======
-
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
