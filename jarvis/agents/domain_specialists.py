@@ -123,11 +123,11 @@ class CodeReviewSpecialist(SpecialistAgent):
         self, mcp_client: Any, knowledge_graph: KnowledgeGraph | None = None
     ) -> None:
         super().__init__(
+            "codereview",
+            mcp_client,
             agent_id="code_review_specialist",
-            specialization="codereview",
             capabilities=[AgentCapability.ANALYSIS],
             knowledge_graph=knowledge_graph,
-            mcp_client=mcp_client,
             preferred_models=["gpt-4", "claude-3.5-sonnet", "llama3.2"],
         )
 
