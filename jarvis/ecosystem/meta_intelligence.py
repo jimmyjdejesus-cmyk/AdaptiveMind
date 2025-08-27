@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import uuid
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -35,6 +36,7 @@ from jarvis.agents.critics import (
     WhiteGate,
 )
 from jarvis.agents.curiosity_agent import CuriosityAgent
+from jarvis.agents.curiosity_router import CuriosityRouter
 from jarvis.agents.mission_planner import MissionPlanner
 from jarvis.agents.specialist import SpecialistAgent
 from jarvis.memory.project_memory import MemoryManager, ProjectMemory
@@ -61,75 +63,99 @@ logger = logging.getLogger(__name__)
 
 class ExecutiveAgent(AIAgent):
     """Executive agent that manages other AI agents."""
-    def __init__(
-        self,
-        agent_id: str,
-        mcp_client=None,
-        orchestrator_cls: Type[MultiAgentOrchestrator] = SubOrchestrator,
-        memory_manager: Optional[MemoryManager] = None,
-        mission_planner: Optional['MissionPlanner'] = None,
-        enable_red_team: bool | None = None,
-        enable_blue_team: bool | None = None,
-        blue_team_sensitivity: float = 0.5,
-        enable_curiosity: bool | None = None,
-    ):
-        super().__init__(agent_id, [
-            AgentCapability.REASONING,
-            AgentCapability.PLANNING,
-            AgentCapability.MONITORING,
-            AgentCapability.LEARNING,
-        ])
-        self.mcp_client = mcp_client
-        self.orchestrator_cls = orchestrator_cls
-        self.mission_planner = mission_planner or MissionPlanner()
-        self.session_manager = SessionManager()
-        self.constitutional_critic = ConstitutionalCritic(mcp_client=self.mcp_client)
-        self.memory: MemoryManager = memory_manager or ProjectMemory()
-        self.managed_agents: Dict[str, AIAgent] = {}
-        self.evolution_plans: List[SystemEvolutionPlan] = []
-        self.hypergraph = HierarchicalHypergraph()
-        self.curiosity_agent = CuriosityAgent(self.hypergraph)
+        def __init__(
+                self,
+                agent_id: str,
+                mcp_client=None,
+                orchestrator_cls: Type[MultiAgentOrchestrator] = SubOrchestrator,
+                memory_manager: Optional[MemoryManager] = None,
+                mission_planner: Optional['MissionPlanner'] = None,
+                enable_red_team: bool | None = None,
+                enable_blue_team: bool | None = None,
+                blue_team_sensitivity: float = 0.5,
+                enable_curiosity: bool | None = None,
+                enable_curiosity_routing: bool | None = None,
+            ):
+                super().__init__(agent_id, [
+                    AgentCapability.REASONING,
+                    AgentCapability.PLANNING,
+                    AgentCapability.MONITORING,
+                    AgentCapability.LEARNING,
+                ])
+                self.mcp_client = mcp_client
+                self.orchestrator_cls = orchestrator_cls
+                self.mission_planner = mission_planner or MissionPlanner()
+                self.memory_manager = memory_manager or MemoryManager(ProjectMemory())
+                self.session_manager = SessionManager()
+                self.curiosity_router: CuriosityRouter | None = None
 
-        if enable_red_team is None or enable_blue_team is None or enable_curiosity is None:
-            try:
-                from config.config_loader import load_config
-                cfg = load_config()
-            except Exception:
-                cfg = {}
-            if enable_red_team is None:
-                enable_red_team = cfg.get("ENABLE_RED_TEAM", False)
-            if enable_blue_team is None:
-                enable_blue_team = cfg.get("ENABLE_BLUE_TEAM", True)
-            if enable_curiosity is None:
-                enable_curiosity = cfg.get("ENABLE_CURIOSITY", True)
+                if (
+                    enable_red_team is None
+                    or enable_blue_team is None
+                    or enable_curiosity is None
+                    or enable_curiosity_routing is None
+                ):
+                    try:
+                        from config.config_loader import load_config
+                        cfg = load_config()
+                    except Exception:
+                        cfg = {}
+                    if enable_red_team is None:
+                        enable_red_team = cfg.get("ENABLE_RED_TEAM", False)
+                    if enable_blue_team is None:
+                        enable_blue_team = cfg.get("ENABLE_BLUE_TEAM", True)
+                    if enable_curiosity is None:
+                        enable_curiosity = cfg.get("ENABLE_CURIOSITY", True)
+                    if enable_curiosity_routing is None:
+                        enable_curiosity_routing = cfg.get("ENABLE_CURIOSITY_ROUTING", True)
 
-        self.enable_curiosity = bool(enable_curiosity)
-        self.enable_red_team = bool(enable_red_team)
-        self.red_team = RedTeamCritic(mcp_client) if self.enable_red_team else None
-        self.enable_blue_team = bool(enable_blue_team)
-        self.blue_team = (
-            BlueTeamCritic(sensitivity=blue_team_sensitivity)
-            if self.enable_blue_team
-            else None
-        )
-        self.white_gate = WhiteGate()
-        self.system_monitor = SystemMonitor()
-        if self.mcp_client:
-            self.mcp_client.monitor = self.system_monitor
-        self._initialize_knowledge_graph()
-        self.learning_history: List[Dict[str, Any]] = []
-        self.sub_orchestrators: Dict[str, MultiAgentOrchestrator] = {}
-        self.critic_merger = CriticInsightMerger()
-        self.performance_tracker = PerformanceTracker()
-        self.workflow_engine = WorkflowEngine()
-        self._last_execution_workflow = None
+                self.enable_curiosity = bool(enable_curiosity)
+                self.enable_curiosity_routing = bool(enable_curiosity_routing)
+                self.enable_red_team = bool(enable_red_team)
+                self.red_team = RedTeamCritic(mcp_client) if self.enable_red_team else None
+                self.enable_blue_team = bool(enable_blue_team)
+                self.blue_team = (
+                    BlueTeamCritic(sensitivity=blue_team_sensitivity)
+                    if self.enable_blue_team
+                    else None
+                )
+                self.white_gate = WhiteGate()
+                self.system_monitor = SystemMonitor()
+                if self.mcp_client:
+                    self.mcp_client.monitor = self.system_monitor
+                self._initialize_knowledge_graph()
+                self.learning_history: List[Dict[str, Any]] = []
+                self.sub_orchestrators: Dict[str, MultiAgentOrchestrator] = {}
+                self.critic_merger = CriticInsightMerger()
+                self.performance_tracker = PerformanceTracker()
 
-    def log_event(self, event: str, payload: Any):
-        """Log an event."""
-        logger.info(f"Event '{event}': {payload}")
+                self.workflow_engine = WorkflowEngine()
+                self._last_execution_workflow = None
+                if self.enable_curiosity_routing:
+                    self.curiosity_router = CuriosityRouter()
+
+            def log_event(self, event: str, payload: Any):
+                """Log an event."""
+                logger.info(f"Event '{event}': {payload}")
 
     def _initialize_knowledge_graph(self):
-        # Placeholder for KG initialization
+        """Connect to a persistent knowledge graph backend.
+
+        Attempts to create a :class:`Neo4jGraph` using environment variables
+        (``NEO4J_URI``, ``NEO4J_USER``, ``NEO4J_PASSWORD``). If the connection
+        fails or the dependencies are unavailable, it falls back to the
+        in-memory :class:`KnowledgeGraph` implementation.
+        """
+
+        try:
+            from jarvis.world_model.neo4j_graph import Neo4jGraph
+
+            if os.getenv("NEO4J_URI"):
+                self.knowledge_graph = Neo4jGraph()
+                return
+        except Exception as exc:  # pragma: no cover - optional dependency
+            logger.warning("Neo4j backend unavailable: %s", exc)
+
         self.knowledge_graph = KnowledgeGraph()
 
     def manage_directive(self, directive_text: str, context: Dict[str, Any], session_id: str | None = None) -> Dict[str, Any]:
@@ -249,14 +275,23 @@ class ExecutiveAgent(AIAgent):
         """
         After a mission, check if there's an opportunity for curiosity-driven exploration.
         """
-        # TODO: Update hypergraph with mission results to inform curiosity.
-        # This is a placeholder for a more sophisticated integration.
+        if not self.enable_curiosity:
+            logger.debug("Curiosity is disabled; skipping curiosity routing.")
+            return
+
+        if not (self.enable_curiosity_routing and self.curiosity_router):
+            logger.debug("Curiosity routing disabled; no directive generated.")
+            return
+
         question = self.curiosity_agent.generate_question()
-        if question:
-            logger.info(f"Curiosity agent generated a new question: {question}")
-            # To prevent potential loops, we'll just log the question for now.
-            # A full implementation might queue this as a lower-priority mission.
-            self.log_event("curiosity_triggered", {"question": question})
+        if not question:
+            logger.debug("Curiosity agent produced no question.")
+            return
+
+        directive = self.curiosity_router.route(question)
+        logger.info("Curiosity agent generated directive: %s", directive)
+        self.log_event("curiosity_triggered", {"question": question, "directive": directive})
+        asyncio.create_task(self.execute_mission(directive, {}))
 
     async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute meta-level coordination tasks with optional risk critique."""
@@ -443,6 +478,18 @@ class ExecutiveAgent(AIAgent):
         return orchestrator
 
     async def _handle_mission_step(self, step: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a single planned mission step.
+
+        The step outcome is persisted to both the project memory and the
+        knowledge graph for later retrieval.
+
+        Args:
+            step: Definition of the mission step including ``step_id`` and
+                ``request``.
+
+        Returns:
+            A dictionary containing the step result and critique information.
+        """
         step_id = step.get("step_id", uuid.uuid4().hex[:8])
         orchestrator = self.sub_orchestrators.get(step_id)
         if not orchestrator:
@@ -460,6 +507,15 @@ class ExecutiveAgent(AIAgent):
         result = await orchestrator.coordinate_specialists(
             step.get("request", ""), step.get("code"), step.get("user_context"),
         )
+        try:
+            self.memory.add("mission", step_id, json.dumps(result))
+        except Exception as exc:  # pragma: no cover - safety net
+            logger.warning("Memory persistence failed for step %s: %s", step_id, exc)
+        try:
+            self.knowledge_graph.add_fact(step_id, "result", json.dumps(result))
+        except Exception as exc:  # pragma: no cover - safety net
+            logger.warning("KG persistence failed for step %s: %s", step_id, exc)
+
         return {"success": True, "result": result, "step_id": step_id, "critique": critique}
 
     def _record_strategy_from_trace(self, trace: List[str], confidence: float = 1.0) -> str:
