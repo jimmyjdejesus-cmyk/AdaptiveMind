@@ -174,3 +174,13 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 - Removed sys.path manipulations from tests and core modules, switching to package-based imports.
 - Simplified app.main and jarvis/__init__ to avoid heavy jarvis imports during tests.
 - Executed `pip install -e .` and `pytest tests` (import errors remain in several test modules).
+## 2025-08-30
+- Added backend test coverage for specialist coordination including success and failure paths.
+- Verified specialist IDs, synthesized response content, and error propagation.
+- Ran `pytest tests/test_backend.py` to confirm behavior.
+- Removed `sys.path` manipulations from tests and switched to package imports.
+- Installed package in editable mode and ran `pytest tests`; collection failed with 10 errors (TypeError in test_api/test_auth, etc.).
+* [2025-08-30] Updated FastAPI Path params in app/main.py and app/test_harness.py to use "pattern" instead of deprecated "regex". Ran pytest -q but collection failed due to missing "jose" module and other import errors.
+## 2025-08-30
+- Replaced deprecated FastAPI `Path` `regex` parameter with `pattern` in `app/main.py` and `app/test_harness.py`, ensuring compatibility with Pydantic v2.
+- Executed `pytest -q` to confirm no warnings or regressions.

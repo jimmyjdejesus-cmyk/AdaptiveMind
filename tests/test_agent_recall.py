@@ -11,3 +11,4 @@ def test_agent_plan_recall(tmp_path):
     log_content = bus.read_log()
     assert "push" in log_content
     assert "recall" in log_content
+
