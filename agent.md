@@ -107,3 +107,7 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 * [2025-08-27] Added docs, database, security, and localization specialists with modular prompt loading and dynamic registry; updated orchestrator and tests.
 * [2025-08-27] Refactored `SpecialistAgent` for backward compatibility and updated auction orchestrator test stubs.
 * [2025-08-27] Consolidated legacy specialists into dynamic registry and extended factory tests.
+
+## 2025-08-28
+- Starting authentication integration with OAuth2 and role-based permissions.
+- Implemented JWT-based auth with role checks and added tests for token flow (failing due to upstream import issue).

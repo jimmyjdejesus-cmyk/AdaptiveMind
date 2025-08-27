@@ -5,9 +5,10 @@ FastAPI + WebSockets + Real Multi-Agent Orchestration
 Complete integration with Jarvis orchestration system
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Set
 import asyncio
@@ -32,6 +33,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Authentication utilities
+from app.auth import authenticate_user, create_access_token, role_required
 
 # Try to import Jarvis orchestration system
 try:
@@ -378,6 +382,16 @@ async def health_check():
         "version": "2.0.0"
     }
 
+
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Authenticate user and return an access token."""
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    token = create_access_token({"sub": user["username"], "roles": user["roles"]})
+    return {"access_token": token, "token_type": "bearer"}
+
 # Workflow endpoints
 @app.get("/api/workflow/{session_id}")
 async def get_workflow(session_id: str):
@@ -531,9 +545,9 @@ async def get_workflow_status(workflow_id: str):
     return status
 
 # Logs endpoints
-@app.get("/api/logs")
+@app.get("/api/logs", dependencies=[Depends(role_required("admin"))])
 async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(100)):
-    """Get logs with optional filters"""
+    """Get logs with optional filters. Requires admin role."""
     sample_logs = [
         {
             "id": str(uuid.uuid4()),
