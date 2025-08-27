@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Tool registry with RBAC and HITL enforcement.
 
 The registry stores callable tools along with security metadata such as
@@ -8,11 +6,12 @@ Human-in-the-Loop (HITL) approval step prior to execution. All activity is
 logged and persisted via an encrypted audit log handler.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, get_type_hints
 
-# These imports are required by the main branch's implementation
 from pydantic import BaseModel, create_model
 
 from agent.hitl.policy import ApprovalCallback, HITLPolicy
@@ -39,6 +38,10 @@ class Tool:
     def json_schema(self) -> Dict[str, Any]:
         """Return the JSON schema for the tool's arguments."""
         return self.args_schema.schema() if self.args_schema else {}
+
+
+# Backwards compatibility alias so older imports of ToolMeta continue to work.
+ToolMeta = Tool
 
 
 class ToolsRegistry:
@@ -110,7 +113,6 @@ class ToolsRegistry:
         tool = self.get(name)
         role = security._get_user_role(user)  # RBAC lookup
         if tool.required_role and role != tool.required_role:
-            # Log and block when user lacks the required role.
             logger.warning("RBACDenied", extra={"user": user, "tool": name})
             raise PermissionError("Insufficient role")
 
@@ -130,4 +132,4 @@ class ToolsRegistry:
 
 registry = ToolsRegistry()
 
-__all__ = ["ToolsRegistry", "Tool", "registry"]
+__all__ = ["ToolsRegistry", "Tool", "ToolMeta", "registry"]
