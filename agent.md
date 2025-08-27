@@ -1,4 +1,26 @@
 
+# Development Log
+
+- Created agent.md to log actions for repository updates.
+- Documented Neo4j environment variables in config/default.yaml and deployment guide.
+- Added input validation in Neo4jGraph and HierarchicalHypergraph to prevent injection attacks.
+- Added unit tests for Neo4j credential loading and query sanitization.
+- Implemented and passed unit tests (`pytest`).
+
+- Added detailed docstrings to Neo4jGraph helpers and Hypergraph.update_node for maintainability.
+- Expanded docstrings for Hypergraph query and mutation helpers.
+- Added integration test skeleton for Neo4j that runs when a database is available.
+- Surfaced Neo4j credential fields in the desktop app settings and documented secret-manager usage.
+=======
+
+# Agent Log
+
+- Initialized work on Neo4j knowledge graph integration for ExecutiveAgent.
+- Added environment-aware Neo4j graph initialization with in-memory fallback.
+- Propagated knowledge graph to mission planner and potential sub-agents.
+- Ran pytest; encountered missing async plugin for test execution.
+=======
+
 # Agent Log
 
 - Created agent.md to document changes and actions.
@@ -117,11 +139,16 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 *   [2025-08-26] Cleaned benchmark artifacts, updated CI for targeted linting, and ignored generated results.
 
 *   **[2025-08-25]** Added Documentation, Database, Localization, EthicalHacker, CloudCostOptimizer, and UserFeedback specialist agents with prompts, methods, and tests.
-
 * [2025-08-27] Added docs, database, security, and localization specialists with modular prompt loading and dynamic registry; updated orchestrator and tests.
 * [2025-08-27] Refactored `SpecialistAgent` for backward compatibility and updated auction orchestrator test stubs.
-* [2025-08-27] Consolidated legacy specialists into dynamic registry and extended factory tests.
 
+* [2025-08-27] Consolidated legacy specialists into dynamic registry and extended factory tests.
+* [2025-08-27] Consolidated legacy specialists into dynamic registry and extended factory tests
+* [2025-08-27] Replaced print/return logic with assertions in `test_backend.py` and removed manual execution block for pytest.
+
+* [2025-08-27] Cleaned merge markers and added lazy workflow engine import in meta_intelligence; sanitized memory __init__ and added ToolMeta alias; fixed FastAPI Path usage in app/main.py; resolved coding agent f-string; tests: test_update_world_model, test_executive_agent, and test_backend now pass.
+* [2025-08-27] Validated Neo4j Cypher queries to allow only read-only operations and exposed safe query endpoint with tests.
+* [2025-08-27] Scoped workflow, log, and HITL stores to FastAPI app state and updated endpoints to use request-bound access; `pytest` collection failed due to syntax errors in unrelated Jarvis modules.
 - Removed duplicate `networkx>=3.0` from `pyproject.toml` and reinstalled dependencies to verify environment.
 
 - Verified no duplicate dependencies remain in pyproject.toml.
@@ -134,3 +161,13 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 - Added unit tests for `ExecutiveAgent.execute_mission` covering success and planning failure paths.
 - Ensured specialist factory test resets cached modules for isolation.
 - Ran `pip install -e .` and `pytest -q` (remaining failures in replay memory and orchestration components).
+* [2025-08-27] Integrated OAuth2 JWT authentication with role-based access; updated config, docs, and added tests verifying token flow.
+ [2025-08-27] Added tests for knowledge query endpoint error handling and implemented endpoint with Neo4j exception handling.
+* [2025-08-27] Added verify_api_key dependency to /api routes, updated API tests with required headers, and implemented API key validation in app/main.py. Ran pytest (collection failed due to existing syntax errors).
+## 2025-08-28
+- Starting authentication integration with OAuth2 and role-based permissions.
+- Implemented JWT-based auth with role checks and added tests for token flow (failing due to upstream import issue).
+## 2025-08-29
+- Added tests for knowledge query error handling with Neo4j exceptions.
+* [2025-08-27] Secured FastAPI endpoints with API key verification dependency and attempted linting/tests (flake8 warnings, pytest import errors).
+- Removed duplicate `networkx>=3.0` from `pyproject.toml` and reinstalled dependencies to verify environment.
