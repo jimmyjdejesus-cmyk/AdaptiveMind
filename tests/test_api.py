@@ -1,35 +1,24 @@
-import sys
-import pathlib
 import random
 import os
-from collections import deque
+import random
+import os
+import json
+
 from dataclasses import dataclass
-from typing import List, Any
+from typing import Any, List
+from dataclasses import dataclass
+from typing import Any, List
+
 import pytest
 import unittest
 from unittest.mock import patch
-from pathlib import Path
 from fastapi.testclient import TestClient
 from app.main import app
 
-# Ensure repository root on path for `jarvis` package
-root = Path(__file__).resolve().parents[1]
-sys.path.append(str(root / "jarvis"))
-
-# Import ProjectMemory without executing the full jarvis package
-import importlib.util
-
-project_memory_spec = importlib.util.spec_from_file_location(
-    "project_memory",
-    pathlib.Path(__file__).resolve().parents[1] / "jarvis" / "memory" / "project_memory.py",
-)
-project_memory = importlib.util.module_from_spec(project_memory_spec)
-sys.modules["project_memory"] = project_memory
-project_memory_spec.loader.exec_module(project_memory)
-ProjectMemory = project_memory.ProjectMemory
-
-from memory.memory_bus import MemoryBus
-from memory.replay_memory import ReplayMemory
+import jarvis.memory.project_memory as project_memory
+from jarvis.memory.memory_bus import MemoryBus
+from jarvis.memory.project_memory import ProjectMemory
+from jarvis.memory.replay_memory import ReplayMemory
 
 
 @dataclass
@@ -162,6 +151,65 @@ def test_push_and_recall(tmp_path):
     log_content = bus.read_log()
     assert "push" in log_content
     assert "recall" in log_content
+
+
+def test_mission_history_endpoint(tmp_path):
+    os.environ["JARVIS_API_KEY"] = "test-key"
+    mission_id = "mission1"
+
+    class DummySessionManager:
+        def __init__(self, base_dir: str) -> None:
+            self.base = Path(base_dir)
+
+        def read_runs(self, mission_id: str):
+            log = self.base / mission_id / "log.jsonl"
+            if not log.exists():
+                return []
+            lines = log.read_text().splitlines()
+            return [json.loads(line) for line in lines if line.strip()]
+
+    sm = DummySessionManager(str(tmp_path))
+    sess_dir = Path(tmp_path) / mission_id
+    sess_dir.mkdir()
+    entries = [
+        {"step": "start", "ts": 1},
+        {"step": "end", "ts": 2},
+    ]
+    log_file = sess_dir / "log.jsonl"
+    log_file.write_text("\n".join(json.dumps(e) for e in entries))
+
+    import app.main as main_module
+    main_module.session_manager = sm
+    client = TestClient(app)
+    headers = {"X-API-Key": "test-key"}
+    response = client.get(f"/missions/{mission_id}/history", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["mission_id"] == mission_id
+    assert [e["ts"] for e in data["events"]] == [1, 2]
+
+
+def test_mission_history_not_found(tmp_path):
+    os.environ["JARVIS_API_KEY"] = "test-key"
+
+    class DummySessionManager:
+        def __init__(self, base_dir: str) -> None:
+            self.base = Path(base_dir)
+
+        def read_runs(self, mission_id: str):
+            log = self.base / mission_id / "log.jsonl"
+            if not log.exists():
+                return []
+            lines = log.read_text().splitlines()
+            return [json.loads(line) for line in lines if line.strip()]
+
+    sm = DummySessionManager(str(tmp_path))
+    import app.main as main_module
+    main_module.session_manager = sm
+    client = TestClient(app)
+    headers = {"X-API-Key": "test-key"}
+    response = client.get("/missions/unknown/history", headers=headers)
+    assert response.status_code == 404
 
 if __name__ == '__main__':
     unittest.main()
