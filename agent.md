@@ -2461,3 +2461,888 @@ Inserted experience into replay buffer.
 }
 ```
 ---
+
+- Extended mission planning to persist DAG nodes/edges to KnowledgeGraph,
+  log execution results, and expose retrieval API with tests.## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.463147
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.463240
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.463299
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.463341
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464011
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464080
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464126
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464164
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464200
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 4,
+  "action": 4,
+  "reward": 4.0,
+  "next_state": 5,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464799
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464855
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464894
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.464950
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:35:47.465041
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 4,
+  "action": 4,
+  "reward": 4.0,
+  "next_state": 5,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.851173
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.851293
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.851364
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.851445
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.852140
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.852206
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.852251
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.852289
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.852326
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 4,
+  "action": 4,
+  "reward": 4.0,
+  "next_state": 5,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.852899
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.852958
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.852997
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.853078
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:38:01.853118
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 4,
+  "action": 4,
+  "reward": 4.0,
+  "next_state": 5,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.939930
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.940019
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.940070
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.940143
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.940789
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.940855
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.940937
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.940978
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.941017
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 4,
+  "action": 4,
+  "reward": 4.0,
+  "next_state": 5,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.941568
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 0,
+  "action": 0,
+  "reward": 0.0,
+  "next_state": 1,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.941666
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 1,
+  "action": 1,
+  "reward": 1.0,
+  "next_state": 2,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.941723
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 2,
+  "action": 2,
+  "reward": 2.0,
+  "next_state": 3,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.941785
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 3,
+  "action": 3,
+  "reward": 3.0,
+  "next_state": 4,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-27T22:39:40.941850
+**Agent ID:** replay_memory
+**Team:** memory
+**Action/Message:**
+```
+Inserted experience into replay buffer.
+```
+**Associated Data:**
+```json
+{
+  "state": 4,
+  "action": 4,
+  "reward": 4.0,
+  "next_state": 5,
+  "done": false,
+  "priority": 1.0
+}
+```
+---
+
+- Improved specialist discovery and added code review node; handled optional imports to run tests.

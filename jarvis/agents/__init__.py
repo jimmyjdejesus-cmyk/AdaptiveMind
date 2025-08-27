@@ -26,21 +26,37 @@ except Exception:  # pragma: no cover
     def get_coding_agent(*_args, **_kwargs):  # type: ignore
         raise ImportError("CodingAgent not available")
 
-from .base_specialist import BaseSpecialist
-from .simulation_agent import SimulationAgent
-from .monte_carlo_explorer import MonteCarloExplorer
-from .benchmark_agent import BenchmarkRewardAgent
-from .decentralized_actor import DecentralizedActor
+from .base_specialist import BaseSpecialist  # noqa: F401
+
+try:  # pragma: no cover - optional dependencies
+    from .simulation_agent import SimulationAgent  # noqa: F401
+except Exception:  # pragma: no cover
+    SimulationAgent = None  # type: ignore
+
+try:  # pragma: no cover - optional dependencies
+    from .monte_carlo_explorer import MonteCarloExplorer  # noqa: F401
+except Exception:  # pragma: no cover
+    MonteCarloExplorer = None  # type: ignore
+
+try:  # pragma: no cover - optional dependencies
+    from .benchmark_agent import BenchmarkRewardAgent  # noqa: F401
+except Exception:  # pragma: no cover
+    BenchmarkRewardAgent = None  # type: ignore
+
+try:  # pragma: no cover - optional dependencies
+    from .decentralized_actor import DecentralizedActor  # noqa: F401
+except Exception:  # pragma: no cover
+    DecentralizedActor = None  # type: ignore
 
 try:
-    from .live_test_agent import LiveTestAgent
+    from .live_test_agent import LiveTestAgent  # noqa: F401
 except Exception:  # pragma: no cover
     LiveTestAgent = None
 
 # New specialist agents
 try:
-    from .specialist import SpecialistAgent
-    from .specialists import (
+    from .specialist import SpecialistAgent  # noqa: F401
+    from .specialists import (  # noqa: F401
         CodeReviewAgent,
         ArchitectureAgent,
         TestingAgent,
@@ -48,8 +64,8 @@ try:
         CloudCostOptimizerAgent,
         UserFeedbackAgent,
     )
-    from .critics import RedTeamCritic
-    
+    from .critics import RedTeamCritic  # noqa: F401
+
     # Add specialist agents to exports
     __all__ = [
         'CodingAgent',
@@ -71,7 +87,7 @@ try:
         'RedTeamCritic',
         'DecentralizedActor'
     ]
-    
+
 except Exception:  # pragma: no cover
     # Fallback if specialist agents not available
     __all__ = [
