@@ -37,7 +37,7 @@ try:  # pragma: no cover - optional dependencies
     from .monte_carlo_explorer import MonteCarloExplorer
     from .benchmark_agent import BenchmarkRewardAgent
     from .decentralized_actor import DecentralizedActor
-except Exception:  # pragma: no cover
+except (ImportError, SyntaxError):  # pragma: no cover
     SimulationAgent = None  # type: ignore
     MonteCarloExplorer = None  # type: ignore
     BenchmarkRewardAgent = None  # type: ignore
