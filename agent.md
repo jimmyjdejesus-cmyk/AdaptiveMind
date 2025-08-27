@@ -2461,3 +2461,24 @@ Inserted experience into replay buffer.
 }
 ```
 ---
+
+## Agent Interaction
+**Timestamp:** 2025-02-14T00:00:00Z
+**Agent ID:** system
+**Team:** core
+**Action/Message:**
+```
+Added CuriosityRouter and integrated curiosity routing with configuration flag.
+```
+**Associated Data:**
+```json
+{
+  "files": [
+    "jarvis/agents/curiosity_router.py",
+    "jarvis/ecosystem/meta_intelligence.py",
+    "config/default.yaml",
+    "tests/test_curiosity_router.py"
+  ]
+}
+```
+---

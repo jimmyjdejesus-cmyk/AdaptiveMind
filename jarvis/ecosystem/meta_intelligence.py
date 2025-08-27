@@ -35,6 +35,7 @@ from jarvis.agents.critics import (
     WhiteGate,
 )
 from jarvis.agents.curiosity_agent import CuriosityAgent
+from jarvis.agents.curiosity_router import CuriosityRouter
 from jarvis.agents.mission_planner import MissionPlanner
 from jarvis.agents.specialist import SpecialistAgent
 from jarvis.memory.project_memory import MemoryManager, ProjectMemory
@@ -66,6 +67,7 @@ class ExecutiveAgent(AIAgent):
         enable_blue_team: bool | None = None,
         blue_team_sensitivity: float = 0.5,
         enable_curiosity: bool | None = None,
+        enable_curiosity_router: bool | None = None,
     ):
         super().__init__(agent_id, [
             AgentCapability.REASONING,
@@ -83,8 +85,14 @@ class ExecutiveAgent(AIAgent):
         self.evolution_plans: List[SystemEvolutionPlan] = []
         self.hypergraph = HierarchicalHypergraph()
         self.curiosity_agent = CuriosityAgent(self.hypergraph)
+        self.curiosity_router: CuriosityRouter | None = None
 
-        if enable_red_team is None or enable_blue_team is None or enable_curiosity is None:
+        if (
+            enable_red_team is None
+            or enable_blue_team is None
+            or enable_curiosity is None
+            or enable_curiosity_router is None
+        ):
             try:
                 from config.config_loader import load_config
                 cfg = load_config()
@@ -96,8 +104,11 @@ class ExecutiveAgent(AIAgent):
                 enable_blue_team = cfg.get("ENABLE_BLUE_TEAM", True)
             if enable_curiosity is None:
                 enable_curiosity = cfg.get("ENABLE_CURIOSITY", True)
+            if enable_curiosity_router is None:
+                enable_curiosity_router = cfg.get("ENABLE_CURIOSITY_ROUTING", True)
 
         self.enable_curiosity = bool(enable_curiosity)
+        self.enable_curiosity_router = bool(enable_curiosity_router)
         self.enable_red_team = bool(enable_red_team)
         self.red_team = RedTeamCritic(mcp_client) if self.enable_red_team else None
         self.enable_blue_team = bool(enable_blue_team)
@@ -115,6 +126,8 @@ class ExecutiveAgent(AIAgent):
         self.sub_orchestrators: Dict[str, MultiAgentOrchestrator] = {}
         self.critic_merger = CriticInsightMerger()
         self.performance_tracker = PerformanceTracker()
+        if self.enable_curiosity_router:
+            self.curiosity_router = CuriosityRouter()
 
     def log_event(self, event: str, payload: Any):
         """Log an event."""
@@ -212,8 +225,8 @@ class ExecutiveAgent(AIAgent):
         question = self.curiosity_agent.generate_question()
         if question:
             logger.info(f"Curiosity agent generated a new question: {question}")
-            # To prevent potential loops, we'll just log the question for now.
-            # A full implementation might queue this as a lower-priority mission.
+            if self.curiosity_router and self.enable_curiosity_router:
+                self.curiosity_router.route(question)
             self.log_event("curiosity_triggered", {"question": question})
 
     async def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:

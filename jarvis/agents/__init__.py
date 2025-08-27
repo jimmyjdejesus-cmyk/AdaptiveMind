@@ -17,6 +17,11 @@ try:  # pragma: no cover - optional dependencies
 except Exception:  # pragma: no cover
     CuriosityAgent = None  # type: ignore
 
+try:  # pragma: no cover - optional dependencies
+    from .curiosity_router import CuriosityRouter
+except Exception:  # pragma: no cover
+    CuriosityRouter = None  # type: ignore
+
 # Optional specialist agents – failure to import simply leaves them as ``None``
 try:  # pragma: no cover
     from .coding_agent import CodingAgent, get_coding_agent
@@ -59,6 +64,7 @@ try:
         'SimulationAgent',
         'MonteCarloExplorer',
         'CuriosityAgent',
+        'CuriosityRouter',
         'BenchmarkRewardAgent',
         'LiveTestAgent',
         'SpecialistAgent',
@@ -81,6 +87,7 @@ except Exception:  # pragma: no cover
         'SimulationAgent',
         'MonteCarloExplorer',
         'CuriosityAgent',
+        'CuriosityRouter',
         'BenchmarkRewardAgent',
         'LiveTestAgent',
         'DecentralizedActor',
