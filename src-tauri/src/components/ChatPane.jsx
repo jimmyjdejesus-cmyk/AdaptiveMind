@@ -39,4 +39,48 @@ const saveSettings = (settings) => {
 };
 
 const ChatPane = () => {
-// ... (the rest of the file continues) ...
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [settings, setSettings] = useState(loadSettings);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [sessionId] = useState('default-session');
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Apply settings to the chat pane
+  const applySettings = useCallback((newSettings) => {
+    setSettings(newSettings);
+    saveSettings(newSettings);
+    
+    // Apply CSS custom properties for dynamic styling
+    const chatPane = document.querySelector('.chat-pane');
+    if (chatPane) {
+      chatPane.style.setProperty('--chat-font-size', `${newSettings.fontSize}px`);
+      chatPane.classList.toggle('theme-light', newSettings.theme === 'light');
+      chatPane.classList.toggle('theme-dark', newSettings.theme === 'dark');
+      chatPane.classList.toggle('compact-mode', newSettings.compactMode);
+    }
+  }, []);
+
+  // Initialize settings on mount
+  useEffect(() => {
+    applySettings(settings);
+  }, [settings, applySettings]);
+
+  // WebSocket connection management
+  useEffect(() => {
+    const onConnect = () => {
+      setIsConnected(true);
+      const systemMessage = {
+        // (rest of the component code)
+      };
+    };
+    // ... (rest of useEffect)
+  }, []);
+
+  // ... (rest of the component)
+};
+
+export default ChatPane;

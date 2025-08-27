@@ -7,6 +7,7 @@ import os
 from fastapi.testclient import TestClient
 from app.main import app
 from jarvis.security.secret_manager import get_secret, set_secret
+
 from jarvis.world_model.neo4j_graph import Neo4jGraph
 
 
@@ -14,6 +15,7 @@ def test_credentials_loaded_from_keyring():
     keyring.set_password("jarvis", "NEO4J_URI", "bolt://neo4j.test")
     keyring.set_password("jarvis", "NEO4J_USER", "user")
     keyring.set_password("jarvis", "NEO4J_PASSWORD", "secret")
+
     # Patch target updated to match the new direct import path
     with patch("jarvis.world_model.neo4j_graph.GraphDatabase.driver") as mock_driver:
         Neo4jGraph()
