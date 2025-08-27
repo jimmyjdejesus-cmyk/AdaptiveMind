@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { http } from '@tauri-apps/api';
-<<<<<<< HEAD
-
-// DEV-COMMENT: This component displays the development logs from the agent.md file.
-// It fetches the content from the backend and provides a simple way to view it.
-// A manual refresh button is included to allow the user to fetch the latest logs.
-=======
 import { socket } from '../socket';
 
 /**
@@ -14,108 +8,137 @@ import { socket } from '../socket';
  * validating incoming payloads to guard against malformed or malicious
  * messages and surfaces a badge for pending human-in-the-loop actions.
  */
-// The log viewer now exposes a connection status indicator, simple
-// text filtering for log lines, and a badge showing pending
-// human-in-the-loop (HITL) actions. These additions aim to make the
-// debugging experience more transparent without requiring additional
-// backend support.
-
-// DEV-COMMENT: This component displays run-scoped logs produced by the
-// `ScopedLogWriter`.  It queries the backend for the latest run transcript
-// and provides a manual refresh button.
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
 
 const LogViewerPane = () => {
   const [logs, setLogs] = useState('');
   const [error, setError] = useState(null);
-<<<<<<< HEAD
-=======
   const [filter, setFilter] = useState('');
   const [connected, setConnected] = useState(false);
   const [hitlCount, setHitlCount] = useState(0);
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
+  const [loading, setLoading] = useState(true);
 
-  // DEV-COMMENT: The 'useCallback' hook is used here to memoize the fetch function.
-  // This prevents it from being recreated on every render, which is a good practice,
-  // especially if this component were to become more complex.
+  // Fetch logs from the backend
   const fetchLogs = useCallback(async () => {
     try {
-<<<<<<< HEAD
-      const response = await http.fetch('http://127.0.0.1:8000/api/logs');
-=======
-      const response = await http.fetch('http://127.0.0.1:8000/logs/latest', {
-        method: 'GET',
-        responseType: http.ResponseType.Text,
-      });
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
+      setLoading(true);
+      setError(null);
+      
+      // Try the enhanced logs endpoint first, fallback to basic if needed
+      let response;
+      try {
+        response = await http.fetch('http://127.0.0.1:8000/api/logs', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (e) {
+        // Fallback to basic logs endpoint
+        response = await http.fetch('http://127.0.0.1:8000/logs/latest', {
+          method: 'GET',
+          responseType: http.ResponseType.Text,
+        });
+      }
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      // The response for logs is expected to be plain text.
-      setLogs(response.data);
-      setError(null);
+      
+      // Handle different response formats
+      if (typeof response.data === 'string') {
+        setLogs(response.data);
+      } else if (Array.isArray(response.data)) {
+        // If we get an array of log entries, format them
+        const formattedLogs = response.data
+          .map(entry => `[${entry.timestamp}] ${entry.level.toUpperCase()}: ${entry.message}`)
+          .join('\n');
+        setLogs(formattedLogs);
+      } else {
+        setLogs('No logs available');
+      }
+      
     } catch (e) {
       console.error("Failed to fetch logs:", e);
-      setError("Failed to load agent logs.");
+      setError("Failed to load agent logs. Make sure the backend server is running.");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  // DEV-COMMENT: The useEffect hook calls fetchLogs when the component mounts
-  // to load the initial log data. The dependency array includes fetchLogs
-  // to ensure that if the function ever changed, it would be re-run.
+  // Initial log fetch
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
-<<<<<<< HEAD
-  return (
-    <div className="pane">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>agent.md Log</h2>
-        <button onClick={fetchLogs}>Refresh</button>
-      </div>
-      <div className="pane-content log-viewer">
-        {error ? (
-          <p>{error}</p>
-        ) : (
-          <pre>{logs || 'Loading logs...'}</pre>
-        )}
-=======
-  // DEV-COMMENT: Subscribe to live log updates via WebSocket.
+  // Subscribe to live log updates via WebSocket
   useEffect(() => {
-    const handler = (entry) => {
-      if (typeof entry === 'string') {
-        setLogs((prev) => `${prev}\n${entry}`.trim());
+    const handleLogUpdate = (entry) => {
+      try {
+        if (typeof entry === 'string') {
+          setLogs((prev) => `${prev}\n${entry}`.trim());
+        } else if (entry && entry.message) {
+          const formattedEntry = `[${entry.timestamp || new Date().toISOString()}] ${(entry.level || 'INFO').toUpperCase()}: ${entry.message}`;
+          setLogs((prev) => `${prev}\n${formattedEntry}`.trim());
+        }
+      } catch (e) {
+        console.error('Error processing log update:', e);
       }
     };
-    socket.on('log_update', handler);
-    return () => socket.off('log_update', handler);
+
+    socket.on('log_added', handleLogUpdate);
+    socket.on('log_update', handleLogUpdate);
+    
+    return () => {
+      socket.off('log_added', handleLogUpdate);
+      socket.off('log_update', handleLogUpdate);
+    };
   }, []);
 
-  // Track Socket.IO connection state so that a small status indicator can
-  // communicate whether live updates are flowing.
+  // Track Socket.IO connection state
   useEffect(() => {
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
+    
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
+    
+    // Check initial connection status
+    setConnected(socket.connected);
+    
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
     };
   }, []);
 
-  // Listen for HITL updates to display a badge when human action is pending.
+  // Listen for HITL updates to display a badge when human action is pending
   useEffect(() => {
-    const handler = (data) => {
-      if (Array.isArray(data)) {
-        setHitlCount(data.length);
+    const handleHitlUpdate = (data) => {
+      try {
+        if (Array.isArray(data)) {
+          setHitlCount(data.length);
+        } else if (data && typeof data.count === 'number') {
+          setHitlCount(data.count);
+        }
+      } catch (e) {
+        console.error('Error processing HITL update:', e);
       }
     };
-    socket.on('hitl_update', handler);
-    return () => socket.off('hitl_update', handler);
+
+    socket.on('hitl_request', () => setHitlCount(prev => prev + 1));
+    socket.on('hitl_approved', () => setHitlCount(prev => Math.max(0, prev - 1)));
+    socket.on('hitl_denied', () => setHitlCount(prev => Math.max(0, prev - 1)));
+    socket.on('hitl_update', handleHitlUpdate);
+    
+    return () => {
+      socket.off('hitl_request');
+      socket.off('hitl_approved');
+      socket.off('hitl_denied');
+      socket.off('hitl_update', handleHitlUpdate);
+    };
   }, []);
 
+  // Filter logs based on search term
   const displayedLogs = logs
     .split('\n')
     .filter((line) => line.toLowerCase().includes(filter.toLowerCase()))
@@ -124,32 +147,51 @@ const LogViewerPane = () => {
   return (
     <div className="pane">
       <div className="pane-header">
-        <h2>Run Log</h2>
+        <h2>📋 System Logs</h2>
         <div className="log-tools">
           <input
             type="text"
-            placeholder="Filter"
+            placeholder="Filter logs..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
+            className="log-filter"
           />
-          <button onClick={fetchLogs}>Refresh</button>
+          <button onClick={fetchLogs} disabled={loading} className="btn-refresh">
+            {loading ? '⟳' : '🔄'} Refresh
+          </button>
           <span
             className={`status-indicator ${connected ? 'connected' : 'disconnected'}`}
-            title={connected ? 'Connected' : 'Disconnected'}
+            title={connected ? 'Connected to real-time updates' : 'Disconnected from real-time updates'}
           />
-          {hitlCount > 0 && <span className="hitl-badge">{hitlCount}</span>}
+          {hitlCount > 0 && (
+            <span className="hitl-badge" title={`${hitlCount} pending HITL request${hitlCount !== 1 ? 's' : ''}`}>
+              {hitlCount}
+            </span>
+          )}
         </div>
       </div>
       <div className="pane-content log-viewer">
-        {error ? <p>{error}</p> : <pre>{displayedLogs || 'Loading logs...'}</pre>}
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
+        {error ? (
+          <div className="error-message">
+            <span className="error-icon">⚠️</span>
+            <span>{error}</span>
+            <button onClick={fetchLogs} className="btn-retry">
+              Try Again
+            </button>
+          </div>
+        ) : loading && !logs ? (
+          <div className="loading-message">
+            <span className="loading-spinner">⟳</span>
+            <span>Loading logs...</span>
+          </div>
+        ) : (
+          <pre className="log-content">
+            {displayedLogs || 'No logs available. Logs will appear here as the system runs.'}
+          </pre>
+        )}
       </div>
     </div>
   );
 };
 
-<<<<<<< HEAD
 export default LogViewerPane;
-=======
-export default LogViewerPane;
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6

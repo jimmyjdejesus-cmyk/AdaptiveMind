@@ -13,8 +13,6 @@ orch:
   prune_check_interval: 2
   min_active_teams: 2
   policy: balanced
-<<<<<<< HEAD
-=======
 
 hitl:
   destructive_ops:
@@ -24,4 +22,29 @@ hitl:
     - external_post
     - state_prune
 
->>>>>>> 90775caae0ee1f419403e60a66426822b7ba0ef6
+# Enhanced UI Configuration
+ui:
+  theme: dark
+  real_time_updates: true
+  websocket_enabled: true
+  galaxy_view: true
+  dead_end_shelf: true
+  performance_metrics: true
+
+# Backend Configuration
+backend:
+  host: "127.0.0.1"
+  port: 8000
+  cors_origins:
+    - "http://localhost:1420"
+    - "http://localhost:5173"
+    - "http://127.0.0.1:1420"
+    - "tauri://localhost"
+  redis_enabled: false
+  redis_url: "redis://localhost:6379"
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  real_time_streaming: true
