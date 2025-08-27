@@ -1,23 +1,17 @@
-"""Integration tests for Neo4jGraph using a live database.
+"""Integration tests for ``Neo4jGraph`` using a live database.
 
 These tests require a running Neo4j instance configured via the
 ``NEO4J_URI``, ``NEO4J_USER`` and ``NEO4J_PASSWORD`` environment variables.
-If the database is unavailable the tests are skipped.
+They are skipped when these credentials are missing.
 """
 
 from __future__ import annotations
-
-import sys
-from pathlib import Path
 
 import keyring
 import pytest
 from neo4j.exceptions import ServiceUnavailable
 
-sys.path.insert(
-    0, str(Path(__file__).resolve().parents[1] / "jarvis" / "world_model")
-)
-from neo4j_graph import Neo4jGraph  # noqa: E402
+from jarvis.world_model.neo4j_graph import Neo4jGraph
 
 
 @pytest.mark.integration
@@ -28,7 +22,7 @@ def test_round_trip_node_creation() -> None:
     user = keyring.get_password("jarvis", "NEO4J_USER")
     password = keyring.get_password("jarvis", "NEO4J_PASSWORD")
     if not uri or not user or not password:
-        pytest.skip("Neo4j credentials not configured")
+        pytest.skip("Neo4j credentials not configured in keyring")
 
     graph = Neo4jGraph(uri=uri, user=user, password=password)
     try:
@@ -39,7 +33,5 @@ def test_round_trip_node_creation() -> None:
                 id="integration_test",
             )
             assert result.single()["foo"] == "bar"
-    except ServiceUnavailable:
-        pytest.skip("Neo4j service not available")
     finally:
         graph.close()

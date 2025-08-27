@@ -1,13 +1,12 @@
 """Test configuration to ensure package imports and keyring isolation."""
 
-import sys
-from pathlib import Path
-
 import pytest
 import keyring
 from keyring.backend import KeyringBackend
 import importlib.util
 import types
+from pathlib import Path
+import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
