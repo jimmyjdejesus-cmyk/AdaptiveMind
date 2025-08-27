@@ -17,6 +17,7 @@ import logging
 from enum import Enum
 import redis.asyncio as redis
 from contextlib import asynccontextmanager
+import uvicorn
 
 # Configure logging
 logging.basicConfig(
