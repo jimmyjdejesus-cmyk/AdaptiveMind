@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { socket } from '../socket';
-
-import Neo4jConfigForm from './Neo4jConfigForm';
 import API_CONFIG, { getApiUrl } from '../config';
+import Neo4jConfigForm from './Neo4jConfigForm';
 
 // Chat customization settings with defaults
 const DEFAULT_SETTINGS = {
@@ -20,10 +19,9 @@ const DEFAULT_SETTINGS = {
 const loadSettings = () => {
   try {
     const saved = localStorage.getItem('jarvis-chat-settings');
-    if (!saved) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(saved);
-
-    return { ...DEFAULT_SETTINGS, ...parsed };
+    const loaded = saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    loaded.neo4jPassword = '';
+    return loaded;
   } catch (e) {
     console.error('Failed to load chat settings:', e);
     return DEFAULT_SETTINGS;
@@ -32,4 +30,13 @@ const loadSettings = () => {
 
 // Save settings to localStorage without Neo4j credentials
 const saveSettings = (settings) => {
+  try {
+    const { neo4jPassword, ...persistable } = settings;
+    localStorage.setItem('jarvis-chat-settings', JSON.stringify(persistable));
+  } catch (e) {
+    console.error('Failed to save chat settings:', e);
+  }
+};
+
+const ChatPane = () => {
 // ... (the rest of the file continues) ...

@@ -31,3 +31,24 @@ def get_secret(name: str, default: Optional[str] = None) -> Optional[str]:
     except NoKeyringError:
         value = None
     return value if value is not None else default
+
+
+def set_secret(name: str, value: str) -> None:
+    """Store ``name`` in the keyring.
+
+    Parameters
+    ----------
+    name:
+        Identifier of the secret to store.
+    value:
+        Secret value to persist in the keyring.
+
+    Notes
+    -----
+    Missing keyring backends are silently ignored to avoid
+    crashing client applications on unsupported platforms.
+    """
+    try:
+        keyring.set_password(SERVICE_NAME, name, value)
+    except NoKeyringError:
+        pass
