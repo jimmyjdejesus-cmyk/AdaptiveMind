@@ -6,21 +6,26 @@ sys.modules.setdefault("psutil", types.SimpleNamespace())
 sys.modules.setdefault("networkx", types.SimpleNamespace())
 dummy_neo4j = types.SimpleNamespace(GraphDatabase=object, Driver=object)
 sys.modules.setdefault("neo4j", dummy_neo4j)
-sys.modules.setdefault("jarvis.agents", types.SimpleNamespace())
+agents_pkg = types.ModuleType("jarvis.agents")
+sys.modules["jarvis.agents"] = agents_pkg
+
 
 class _Dummy:
     def __init__(self, *args, **kwargs):
         pass
 
-sys.modules.setdefault(
-    "jarvis.agents.specialists",
-    types.SimpleNamespace(
-        CodeReviewAgent=_Dummy,
-        SecurityAgent=_Dummy,
-        ArchitectureAgent=_Dummy,
-        TestingAgent=_Dummy,
-        DevOpsAgent=_Dummy,
-    ),
+
+sys.modules["jarvis.agents.specialists"] = types.SimpleNamespace(
+    CodeReviewAgent=_Dummy,
+    SecurityAgent=_Dummy,
+    ArchitectureAgent=_Dummy,
+    TestingAgent=_Dummy,
+    DevOpsAgent=_Dummy,
+)
+
+sys.modules["jarvis.agents.specialist_registry"] = types.SimpleNamespace(
+    SPECIALIST_REGISTRY={},
+    create_specialist=lambda name, mcp_client, **_: _Dummy(),
 )
 sys.path.append(".")
 
