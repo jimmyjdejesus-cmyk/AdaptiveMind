@@ -1,14 +1,17 @@
+"""Command-line interface for executing Jarvis missions."""
+
 import argparse
 import asyncio
 import json
 from typing import Optional, Dict, Any
 
+from jarvis.ecosystem import ExecutiveAgent
+
 def _run_command(args, mcp_client) -> None:
     """Execute a mission using the ExecutiveAgent."""
-    from jarvis.ecosystem import ExecutiveAgent
     code_context = None
     if args.code:
-        with args.code as f:
+        with open(args.code) as f:
             code_context = f.read()
 
     agent = ExecutiveAgent("cli", mcp_client=mcp_client)
@@ -25,6 +28,17 @@ def _run_command(args, mcp_client) -> None:
     asyncio.run(run_agent())
 
 def main(mcp_client: Optional[object] = None) -> None:
+    """Run the Jarvis CLI.
+
+    Parameters
+    ----------
+    mcp_client : optional
+        Pre-initialized MCP client primarily used for testing.
+
+    Returns
+    -------
+    None
+    """
     if mcp_client is None:
         from jarvis.mcp.client import McpClient
         mcp_client = McpClient()
@@ -34,7 +48,7 @@ def main(mcp_client: Optional[object] = None) -> None:
 
     run_parser = subparsers.add_parser("run", help="Execute a mission objective")
     run_parser.add_argument("objective", type=str, help="The main objective for the AI")
-    run_parser.add_argument("--code", type=str, help="Path to a code file to be used as context")
+    run_parser.add_argument("--code", type=argparse.FileType("r"), help="Path to a code file to be used as context")
     run_parser.add_argument("--context", type=str, help="Additional context for the objective")
     run_parser.set_defaults(func=_run_command)
 
@@ -43,6 +57,3 @@ def main(mcp_client: Optional[object] = None) -> None:
         parser.print_help()
         return
     args.func(args, mcp_client)
-
-if __name__ == "__main__":
-    main()

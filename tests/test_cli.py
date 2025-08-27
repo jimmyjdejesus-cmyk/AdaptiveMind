@@ -2,12 +2,21 @@ import os
 import sys
 import types
 from pathlib import Path
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 root = Path(__file__).resolve().parents[1]
 sys.path.append(str(root / "jarvis"))
+
+jarvis_stub = types.ModuleType("jarvis")
+ecosystem_stub = types.ModuleType("jarvis.ecosystem")
+jarvis_stub.ecosystem = ecosystem_stub
+ecosystem_stub.ExecutiveAgent = MagicMock()
+sys.modules.setdefault("jarvis", jarvis_stub)
+sys.modules.setdefault("jarvis.ecosystem", ecosystem_stub)
+
 from jarvis_ai import cli  # noqa: E402
 
 
@@ -21,33 +30,52 @@ def mock_agent():
 def test_cli_with_objective(mock_agent):
     fake_module = types.SimpleNamespace(ExecutiveAgent=MagicMock(return_value=mock_agent))
     with patch.dict(sys.modules, {"jarvis.ecosystem": fake_module}):
-        with patch("sys.argv", ["jarvis", "run", "test objective"]):
-            cli.main(mcp_client=MagicMock())
-            mock_agent.execute_mission.assert_awaited_with("test objective", {})
+        cli._run_command(
+            types.SimpleNamespace(objective="test objective", code=None, context=None),
+            None,
+        )
 
+    mock_agent.execute_mission.assert_called_once_with("test objective", {})
 
-def test_cli_with_code_and_context(mock_agent):
+def test_cli_with_code(mock_agent, tmp_path):
+    code_file = tmp_path / "code.py"
+    code_file.write_text("print('hello world')")
+
     fake_module = types.SimpleNamespace(ExecutiveAgent=MagicMock(return_value=mock_agent))
     with patch.dict(sys.modules, {"jarvis.ecosystem": fake_module}):
-        with open("test_code.py", "w") as f:
-            f.write("print('hello')")
+        cli._run_command(
+            types.SimpleNamespace(objective="test objective", code=open(code_file), context=None),
+            None,
+        )
 
-        with patch(
-            "sys.argv",
-            [
-                "jarvis",
-                "run",
-                "test objective",
-                "--code",
-                "test_code.py",
-                "--context",
-                "test context",
-            ],
-        ):
-            cli.main(mcp_client=MagicMock())
-            mock_agent.execute_mission.assert_awaited_with(
-                "test objective",
-                {"code": "print('hello')", "user_context": "test context"},
-            )
+    mock_agent.execute_mission.assert_called_once_with(
+        "test objective", {"code": "print('hello world')"}
+    )
 
-        os.remove("test_code.py")
+def test_cli_with_context(mock_agent):
+    fake_module = types.SimpleNamespace(ExecutiveAgent=MagicMock(return_value=mock_agent))
+    with patch.dict(sys.modules, {"jarvis.ecosystem": fake_module}):
+        cli._run_command(
+            types.SimpleNamespace(
+                objective="test objective", code=None, context="user context"
+            ),
+            None,
+        )
+
+    mock_agent.execute_mission.assert_called_once_with(
+        "test objective", {"user_context": "user context"}
+    )
+
+def test_cli_main_with_run_command(monkeypatch, capsys):
+    test_args = ["run", "test objective"]
+    monkeypatch.setattr(sys, "argv", ["jarvis", *test_args])
+
+    def mock_run_command(args, mcp_client):
+        assert args.objective == "test objective"
+        print("Mock run command executed")
+
+    with patch("jarvis_ai.cli._run_command", new=mock_run_command):
+        cli.main()
+    
+    captured = capsys.readouterr()
+    assert "Mock run command executed" in captured.out
