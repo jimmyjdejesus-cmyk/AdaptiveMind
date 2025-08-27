@@ -139,9 +139,9 @@ def main(mcp_client: McpClient | None = None) -> MissionResult | None:
 
         print("Mission Results:")
         print(json.dumps(result, indent=2))
-        if plan.get("graph"):
+        if graph := plan.get("graph"):
             print("Execution Graph:")
-            print(json.dumps(plan["graph"], indent=2))
+            print(json.dumps(graph, indent=2))
 
         return result
 
