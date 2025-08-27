@@ -195,6 +195,8 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 - Installed Node dependencies and ran `npm test` in `src-tauri`; LogViewerPane tests passed.
 - Reviewed component tests for placeholder and title alignment; no changes required elsewhere.
 - Added error-state retry test for LogViewerPane and re-ran `npm test`.
+- Confirmed component tests remain synchronized with UI text; added explicit assertion that error banner clears after retry in LogViewerPane test.
+- Root agent log growing large; consider splitting logs by module in future.
 - Scoped workflow/log/HITL stores to app.state and updated endpoints to use request-scoped access.
 - Added test ensuring per-instance isolation for workflow state.
 - Attempted flake8 and pytest; flake8 raised pre-existing style errors and pytest failed importing app.main due to Path clash.
