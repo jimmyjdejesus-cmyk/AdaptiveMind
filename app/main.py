@@ -5,7 +5,18 @@ FastAPI + WebSockets + Real Multi-Agent Orchestration
 Complete integration with Jarvis orchestration system
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body, Depends
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+    Query,
+    Body,
+    Path,
+    Depends,
+    Header,
+    APIRouter,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -42,11 +53,19 @@ try:
     from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
     from jarvis.agents.base_specialist import BaseSpecialist
     from jarvis.core.mcp_agent import MCPJarvisAgent
+    from jarvis.world_model import Neo4jGraph
+    from jarvis.workflows.engine import workflow_engine
     JARVIS_AVAILABLE = True
     logger.info("✅ Jarvis orchestration system loaded successfully")
 except ImportError as e:
     logger.warning(f"⚠️ Jarvis orchestration not available: {e}")
     JARVIS_AVAILABLE = False
+    class Neo4jGraph:
+        def __init__(self): pass
+        def is_alive(self): return False
+        def get_mission_history(self, mission_id): return None
+    class workflow_engine:
+        def get_workflow_status(self, workflow_id): return None
 
 # Create FastAPI app
 app = FastAPI(
@@ -58,21 +77,43 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:1420", 
-        "http://localhost:5173", 
+        "http://localhost:1420",
+        "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:5175",
         "http://localhost:5176",
         "http://localhost:5177",
         "http://localhost:5178",
         "http://localhost:5179",
-        "http://127.0.0.1:1420", 
+        "http://127.0.0.1:1420",
         "tauri://localhost"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API key verification
+def verify_api_key(api_key: str = Header(..., alias="X-API-Key")) -> str:
+    """Verify request API key against the expected environment value.
+
+    Args:
+        api_key: API key provided via the ``X-API-Key`` header.
+
+    Returns:
+        The validated API key.
+
+    Raises:
+        HTTPException: If the key is missing or invalid.
+    """
+    expected_key = os.getenv("JARVIS_API_KEY")
+    if not expected_key or api_key != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid or missing API Key")
+    return api_key
+
+
+# Router with global API key dependency
+api_router = APIRouter(prefix="/api", dependencies=[Depends(verify_api_key)])
 
 # Enums
 class TaskStatus(str, Enum):
@@ -193,6 +234,8 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+neo4j_graph = Neo4jGraph()
+
 # Initialize Cerebro (Real Multi-Agent Orchestrator)
 cerebro_orchestrator = None
 active_orchestrators = {}
@@ -207,7 +250,7 @@ class MockMCPClient:
     async def generate_response_batch(self, server: str, model: str, prompts: List[str]) -> List[str]:
         return [f"Mock batch response {i+1}" for i in range(len(prompts))]
 
-class MockSpecialist(BaseSpecialist if JARVIS_AVAILABLE else object):
+class MockSpecialist:
     """Mock specialist agent for demonstration"""
     def __init__(self, name: str, role: str):
         self.name = name
@@ -266,7 +309,7 @@ async def initialize_cerebro():
         # Create mock specialists
         specialist_agents = {
             "security": MockSpecialist("security", "Security"),
-            "architecture": MockSpecialist("architecture", "Architecture"), 
+            "architecture": MockSpecialist("architecture", "Architecture"),
             "code_review": MockSpecialist("code_review", "Code Review"),
             "testing": MockSpecialist("testing", "Testing"),
             "devops": MockSpecialist("devops", "DevOps"),
@@ -367,7 +410,7 @@ async def startup_event():
 @app.get("/")
 async def root():
     return {
-        "message": "Enhanced Jarvis AI - Cerebro Galaxy Backend", 
+        "message": "Enhanced Jarvis AI - Cerebro Galaxy Backend",
         "status": "online",
         "cerebro_active": cerebro_orchestrator is not None,
         "jarvis_integration": JARVIS_AVAILABLE,
@@ -379,7 +422,8 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "version": "2.0.0"
+        "version": "2.0.0",
+        "neo4j_active": neo4j_graph.is_alive(),
     }
 
 
@@ -393,7 +437,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": token, "token_type": "bearer"}
 
 # Workflow endpoints
-@app.get("/api/workflow/{session_id}")
+@api_router.get("/workflow/{session_id}")
 async def get_workflow(session_id: str):
     """Get current workflow state for a session with real Cerebro data"""
     if not cerebro_orchestrator:
@@ -410,7 +454,7 @@ async def get_workflow(session_id: str):
     # Cerebro node (central meta-agent)
     cerebro_node = {
         "id": "cerebro",
-        "type": "cerebro", 
+        "type": "cerebro",
         "position": {"x": 0, "y": 0},
         "data": {
             "label": "CEREBRO",
@@ -428,7 +472,7 @@ async def get_workflow(session_id: str):
     # Add orchestrator nodes (dynamically spawned systems)
     orchestrator_positions = [
         {"x": 300, "y": -200},
-        {"x": 300, "y": 200}, 
+        {"x": 300, "y": 200},
         {"x": -300, "y": 0}
     ]
     
@@ -534,9 +578,8 @@ async def get_workflow(session_id: str):
     }
     return workflow
 
-from jarvis.workflows.engine import workflow_engine
 
-@app.get("/api/workflow/status/{workflow_id}")
+@api_router.get("/workflow/status/{workflow_id}")
 async def get_workflow_status(workflow_id: str):
     """Get the status of a specific workflow."""
     status = workflow_engine.get_workflow_status(workflow_id)
@@ -558,7 +601,7 @@ async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(1
         },
         {
             "id": str(uuid.uuid4()),
-            "session_id": session_id or "default-session", 
+            "session_id": session_id or "default-session",
             "level": "info",
             "message": "Backend connected and ready for real-time updates",
             "timestamp": datetime.now().isoformat()
@@ -567,10 +610,30 @@ async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(1
     return sample_logs
 
 # HITL endpoints
-@app.get("/api/hitl/pending")
+@api_router.get("/hitl/pending")
 async def get_pending_hitl_requests(session_id: Optional[str] = Query(None)):
     """Get pending HITL requests"""
     return []  # No pending requests for demo
+
+# Mission history endpoint
+@app.get("/missions/{mission_id}/history", dependencies=[Depends(verify_api_key)])
+async def get_mission_history(mission_id: str = Path(..., regex=r"^[\w-]+$")):
+    """Return mission history including steps and discovered facts."""
+
+    try:
+        history = neo4j_graph.get_mission_history(mission_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid mission id")
+
+    if not history:
+        raise HTTPException(status_code=404, detail="Mission not found")
+
+    return history
+
+
+# Include API router
+app.include_router(api_router)
+
 
 # WebSocket endpoint with real Cerebro integration
 @app.websocket("/ws/{client_id}")
@@ -698,7 +761,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, session_id: O
                         # Fallback response
                         await manager.broadcast_to_session(
                             json.dumps({
-                                "type": "chat_response", 
+                                "type": "chat_response",
                                 "data": {
                                     "message": "Cerebro is initializing. Please try again in a moment.",
                                     "source": "system",
