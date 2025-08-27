@@ -138,22 +138,38 @@ def start_backend_windows():
         print("❌ Backend directory 'app' not found!")
         return None
     
+    # Check if main.py exists
+    main_file = backend_path / "main.py"
+    if not main_file.exists():
+        print("❌ main.py not found in app directory!")
+        return None
+    
     try:
-        # Start the backend server
+        # Start the backend server in a new console window
+        print("🚀 Starting FastAPI server on http://localhost:8000...")
         process = subprocess.Popen(
             [sys.executable, "main.py"],
             cwd=backend_path,
             shell=True,
-            creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == 'nt' else 0
+            creationflags=subprocess.CREATE_NEW_CONSOLE
         )
         
         # Give it a moment to start
-        time.sleep(3)
+        time.sleep(4)
         
         if process.poll() is None:
             print("✅ Backend server started successfully")
             print("📡 API available at: http://localhost:8000")
             print("📚 API docs available at: http://localhost:8000/docs")
+            
+            # Test the connection
+            try:
+                import urllib.request
+                urllib.request.urlopen("http://localhost:8000/health", timeout=5)
+                print("✅ Backend health check passed")
+            except:
+                print("⚠️ Backend starting up, health check will retry...")
+            
             return process
         else:
             print("❌ Backend failed to start")

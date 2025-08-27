@@ -1,1 +1,0 @@
-# Auth module for advanced authentication features

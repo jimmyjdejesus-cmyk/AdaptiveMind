@@ -103,30 +103,61 @@ def start_backend():
         print("❌ Backend directory 'app' not found!")
         return None
     
+    # Check if main.py exists
+    main_file = backend_path / "main.py"
+    if not main_file.exists():
+        print("❌ main.py not found in app directory!")
+        return None
+    
     try:
-        # Start the backend server
-        process = subprocess.Popen(
-            [sys.executable, "main.py"],
-            cwd=backend_path,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+        # Install Python dependencies first
+        print("📦 Installing Python dependencies...")
+        subprocess.run([
+            sys.executable, "-m", "pip", "install", 
+            "fastapi", "uvicorn", "websockets", "redis", "pydantic"
+        ], check=True, capture_output=True)
+        print("✅ Python dependencies ready")
+        
+        # Start the backend server with proper output handling
+        print("🚀 Starting FastAPI server on http://localhost:8000...")
+        
+        if os.name == 'nt':  # Windows
+            # On Windows, create a new console window for the backend
+            process = subprocess.Popen(
+                [sys.executable, "main.py"],
+                cwd=backend_path,
+                creationflags=subprocess.CREATE_NEW_CONSOLE
+            )
+        else:  # Unix/Linux/macOS
+            process = subprocess.Popen(
+                [sys.executable, "main.py"],
+                cwd=backend_path
+            )
         
         # Give it a moment to start
-        time.sleep(2)
+        time.sleep(3)
         
         if process.poll() is None:
             print("✅ Backend server started successfully")
             print("📡 API available at: http://localhost:8000")
             print("📚 API docs available at: http://localhost:8000/docs")
+            
+            # Test the connection
+            try:
+                import urllib.request
+                urllib.request.urlopen("http://localhost:8000/health", timeout=5)
+                print("✅ Backend health check passed")
+            except:
+                print("⚠️ Backend starting up, health check will retry...")
+            
             return process
         else:
-            stdout, stderr = process.communicate()
-            print(f"❌ Backend failed to start:")
-            print(f"STDOUT: {stdout.decode()}")
-            print(f"STDERR: {stderr.decode()}")
+            print("❌ Backend failed to start")
             return None
             
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Failed to install dependencies: {e}")
+        return None
     except Exception as e:
         print(f"❌ Error starting backend: {e}")
         return None

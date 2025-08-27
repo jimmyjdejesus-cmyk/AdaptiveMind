@@ -1,2 +1,0 @@
-FROM deepseek-r1-0528-qwen3-8b
-PARAMETER draft_model gemma3:1b
