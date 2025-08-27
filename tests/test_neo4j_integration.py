@@ -8,12 +8,10 @@ They are skipped when these credentials are missing.
 from __future__ import annotations
 
 import os
-import sys
-from pathlib import Path
-
 import pytest
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "jarvis" / "world_model"))
-from neo4j_graph import Neo4jGraph
+from neo4j.exceptions import ServiceUnavailable
+
+from jarvis.world_model.neo4j_graph import Neo4jGraph
 
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
@@ -34,9 +32,9 @@ def test_round_trip_node_creation() -> None:
         graph.add_node("integration_test", "Test", {"foo": "bar"})
         with graph.driver.session() as session:
             result = session.run(
-                "MATCH (n:Node {id: $id}) RETURN n.foo AS foo", id="integration_test"
+                "MATCH (n:Node {id: $id}) RETURN n.foo AS foo",
+                id="integration_test",
             )
             assert result.single()["foo"] == "bar"
     finally:
         graph.close()
-
