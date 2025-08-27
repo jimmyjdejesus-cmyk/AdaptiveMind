@@ -1,21 +1,25 @@
-import os
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import keyring
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "jarvis" / "world_model"))
-from neo4j_graph import Neo4jGraph
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[1] / "jarvis" / "world_model")
+)
+from neo4j_graph import Neo4jGraph  # noqa: E402
 
 
-def test_credentials_loaded_from_env(monkeypatch):
-    monkeypatch.setenv("NEO4J_URI", "bolt://neo4j.test")
-    monkeypatch.setenv("NEO4J_USER", "user")
-    monkeypatch.setenv("NEO4J_PASSWORD", "secret")
+def test_credentials_loaded_from_keyring():
+    keyring.set_password("jarvis", "NEO4J_URI", "bolt://neo4j.test")
+    keyring.set_password("jarvis", "NEO4J_USER", "user")
+    keyring.set_password("jarvis", "NEO4J_PASSWORD", "secret")
     with patch("neo4j_graph.GraphDatabase.driver") as mock_driver:
         Neo4jGraph()
-        mock_driver.assert_called_once_with("bolt://neo4j.test", auth=("user", "secret"))
+        mock_driver.assert_called_once_with(
+            "bolt://neo4j.test", auth=("user", "secret")
+        )
 
 
 def test_add_edge_rejects_invalid_relationship():
