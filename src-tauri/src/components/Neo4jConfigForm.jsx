@@ -71,4 +71,3 @@ const Neo4jConfigForm = () => {
 };
 
 export default Neo4jConfigForm;
-
