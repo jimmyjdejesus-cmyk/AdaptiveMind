@@ -10,9 +10,13 @@
     "test": "jest"
   },
   "dependencies": {
+    "@reactflow/controls": "^11.2.14",
+    "@reactflow/core": "^11.11.4",
+    "@reactflow/minimap": "^11.7.14",
     "@tauri-apps/api": "^1.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "reactflow": "^11.11.4",
     "socket.io-client": "^4.7.4",
     "vis-network-react": "^1.2.0"
   },
