@@ -176,3 +176,10 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 - Replaced deprecated FastAPI `Path` `regex` parameter with `pattern` in `app/main.py` and `app/test_harness.py`, ensuring compatibility with Pydantic v2.
 - Executed `pytest -q` to confirm no warnings or regressions.
 
+
+- Scoped workflow/log/HITL stores to app.state and updated endpoints to use request-scoped access.
+- Added test ensuring per-instance isolation for workflow state.
+- Attempted flake8 and pytest; flake8 raised pre-existing style errors and pytest failed importing app.main due to Path clash.
+- Resolved Path import clash in app/main.py by aliasing FastAPI's Path to FastAPIPath and updating mission history route.
+- Trimmed unused imports and restored required auth dependencies; flake8 still reports numerous pre-existing E501 violations.
+- Verified workflow state isolation with pytest; test passes despite deprecation warnings.

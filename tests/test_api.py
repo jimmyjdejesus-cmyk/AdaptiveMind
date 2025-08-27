@@ -163,5 +163,23 @@ def test_push_and_recall(tmp_path):
     assert "push" in log_content
     assert "recall" in log_content
 
+
+def test_workflow_state_is_per_instance(monkeypatch):
+    """Ensure workflow data is isolated per FastAPI app instance."""
+    os.environ["JARVIS_API_KEY"] = "test-key"
+    import app.main as main_module
+    dummy = type("Dummy", (), {"child_orchestrators": []})()
+    monkeypatch.setattr(main_module, "cerebro_orchestrator", dummy)
+    monkeypatch.setattr(main_module, "specialist_agents", {})
+    monkeypatch.setattr(main_module, "active_orchestrators", {})
+    session_id = "session-test"
+    headers = {"X-API-Key": "test-key"}
+    with TestClient(main_module.app) as client1:
+        resp = client1.get(f"/api/workflow/{session_id}", headers=headers)
+        assert resp.status_code == 200
+        assert session_id in client1.app.state.workflows_db
+    with TestClient(main_module.app) as client2:
+        assert session_id not in client2.app.state.workflows_db
+
 if __name__ == '__main__':
     unittest.main()

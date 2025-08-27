@@ -11,15 +11,13 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     Query,
-    Body,
-    Path,
     Depends,
     Header,
     APIRouter,
     Request,
+    Path as FastAPIPath,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Set
@@ -36,6 +34,9 @@ import os
 from pathlib import Path
 from neo4j.exceptions import ServiceUnavailable, TransientError
 
+# Authentication utilities
+from app.auth import login_for_access_token, Token, get_current_user, role_required
+
 # Add jarvis to Python path
 jarvis_path = Path(__file__).parent.parent / "jarvis"
 if jarvis_path.exists():
@@ -48,14 +49,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Authentication utilities
-from app.auth import authenticate_user, create_access_token, role_required, login_for_access_token, get_current_user, Token
-
 # Try to import Jarvis orchestration system
 try:
     from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
     from jarvis.agents.base_specialist import BaseSpecialist
-    from jarvis.core.mcp_agent import MCPJarvisAgent
     from jarvis.world_model.neo4j_graph import Neo4jGraph
     from jarvis.workflows.engine import workflow_engine
     JARVIS_AVAILABLE = True
@@ -228,12 +225,6 @@ class CypherQuery(BaseModel):
     """Request body for Neo4j Cypher queries."""
 
     query: str = Field(..., description="Read-only Cypher statement")
-
-
-# In-memory storage
-workflows_db: Dict[str, Workflow] = {}
-logs_db: List[LogEntry] = []
-hitl_requests_db: Dict[str, HITLRequest] = {}
 
 
 # WebSocket connection manager
@@ -640,7 +631,7 @@ async def get_workflow(request: Request, session_id: str):
             } for i, name in enumerate(orchestrator_names)
         ]
     }
-    workflows_db[session_id] = workflow
+    request.app.state.workflows_db[session_id] = workflow
     return workflow
 
 
@@ -712,7 +703,7 @@ async def get_pending_hitl_requests(request: Request, session_id: Optional[str] 
 
 # Mission history endpoint
 @app.get("/missions/{mission_id}/history", dependencies=[Depends(verify_api_key)])
-async def get_mission_history(mission_id: str = Path(..., pattern=r"^[\w-]+$")):
+async def get_mission_history(mission_id: str = FastAPIPath(..., pattern=r"^[\w-]+$")):
     """Return mission history including steps and discovered facts."""
     try:
         history = neo4j_graph.get_mission_history(mission_id)
