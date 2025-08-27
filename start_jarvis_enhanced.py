@@ -124,10 +124,86 @@ def start_frontend():
         print(f"❌ Error starting frontend: {e}")
         return None
 
+def build_tauri_executable():
+    """Build Tauri desktop executable"""
+    print("🔨 Building Tauri Desktop Executable...")
+    frontend_path = Path("src-tauri")
+    
+    if not frontend_path.exists():
+        print("❌ Frontend directory 'src-tauri' not found!")
+        return False
+    
+    try:
+        # Install Tauri CLI if not present
+        print("📦 Installing Tauri CLI...")
+        subprocess.run(["npm", "install", "@tauri-apps/cli"], cwd=frontend_path)
+        
+        # Build the executable
+        print("🔨 Building executable (this may take several minutes)...")
+        result = subprocess.run(
+            ["npm", "run", "tauri:build"],
+            cwd=frontend_path,
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode == 0:
+            print("✅ Tauri executable built successfully!")
+            print("📁 Executable location:")
+            
+            # Find the built executable
+            target_dir = frontend_path / "src-tauri" / "target" / "release"
+            if target_dir.exists():
+                for file in target_dir.iterdir():
+                    if file.suffix in ['.exe', '.app', ''] and 'jarvis' in file.name.lower():
+                        print(f"   • {file}")
+            
+            return True
+        else:
+            print(f"❌ Build failed:")
+            print(f"STDOUT: {result.stdout}")
+            print(f"STDERR: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error building executable: {e}")
+        return False
+
 def main():
     """Main startup function"""
     print("🤖 Enhanced Jarvis AI Startup Script")
     print("=" * 50)
+    
+    # Check for command line arguments
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--build" or sys.argv[1] == "-b":
+            print("🔨 Building Tauri Desktop Executable...")
+            if not check_dependencies():
+                print("❌ Dependency check failed. Please install missing dependencies.")
+                return
+            
+            if build_tauri_executable():
+                print("\n🎉 Build completed successfully!")
+                print("📋 You can now distribute the executable file.")
+            else:
+                print("\n❌ Build failed. Check the error messages above.")
+            return
+        
+        elif sys.argv[1] == "--help" or sys.argv[1] == "-h":
+            print("🤖 Enhanced Jarvis AI Startup Script")
+            print("\nUsage:")
+            print("  python start_jarvis_enhanced.py          # Start development servers")
+            print("  python start_jarvis_enhanced.py --build  # Build desktop executable")
+            print("  python start_jarvis_enhanced.py --help   # Show this help")
+            print("\nDevelopment Mode:")
+            print("  • Starts FastAPI backend server")
+            print("  • Starts React frontend development server")
+            print("  • Opens browser automatically")
+            print("\nBuild Mode:")
+            print("  • Creates standalone desktop executable")
+            print("  • Includes all dependencies")
+            print("  • Ready for distribution")
+            return
     
     # Check dependencies
     if not check_dependencies():
@@ -163,6 +239,10 @@ def main():
     print("   • 🤖 Multi-Agent Orchestration - Real-time coordination")
     print("   • ⚡ Real-time Updates - WebSocket communication")
     print("   • 📊 Performance Metrics - Live system monitoring")
+    
+    print("\n💡 Build Options:")
+    print("   • Run 'python start_jarvis_enhanced.py --build' to create desktop executable")
+    print("   • Run 'python start_jarvis_enhanced.py --help' for more options")
     
     print("\n⌨️  Press Ctrl+C to stop all servers")
     

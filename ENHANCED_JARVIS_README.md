@@ -58,7 +58,25 @@ This script will:
 - 🌐 Open your browser automatically
 - 📊 Display system status and URLs
 
-### Option 2: Manual Startup
+### Option 2: Build Desktop Executable (Recommended for Distribution)
+
+```bash
+# Build standalone desktop application
+python start_jarvis_enhanced.py --build
+```
+
+This will:
+- ✅ Install Tauri CLI and dependencies automatically
+- 🔨 Build a standalone desktop executable
+- 📦 Create distributable application file
+- 🎯 No need for separate backend/frontend servers
+
+**Built executable locations:**
+- **Windows**: `src-tauri/src-tauri/target/release/J.A.R.V.I.S..exe`
+- **macOS**: `src-tauri/src-tauri/target/release/bundle/macos/J.A.R.V.I.S..app`
+- **Linux**: `src-tauri/src-tauri/target/release/j-a-r-v-i-s`
+
+### Option 3: Manual Startup
 
 #### Prerequisites
 ```bash
@@ -84,6 +102,12 @@ cd src-tauri
 npm run dev
 ```
 - 🌐 UI: http://localhost:5173
+
+#### Build Tauri Desktop App Manually
+```bash
+cd src-tauri
+npm run tauri:build
+```
 
 ## 🎯 Usage Guide
 
