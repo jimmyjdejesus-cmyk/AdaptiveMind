@@ -11,7 +11,9 @@ from app.main import app
 class TestAPI(unittest.TestCase):
 
     def setUp(self):
+        os.environ["JARVIS_API_KEY"] = "test-key"
         self.client = TestClient(app)
+        self.headers = {"X-API-Key": "test-key"}
 
     @patch('app.main.workflow_engine')
     def test_get_workflow_status_found(self, mock_workflow_engine):
@@ -21,7 +23,7 @@ class TestAPI(unittest.TestCase):
             "status": "completed",
         }
 
-        response = self.client.get("/api/workflow/status/test_id")
+        response = self.client.get("/api/workflow/status/test_id", headers=self.headers)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "completed")
         mock_workflow_engine.get_workflow_status.assert_called_once_with("test_id")
@@ -30,10 +32,13 @@ class TestAPI(unittest.TestCase):
     def test_get_workflow_status_not_found(self, mock_workflow_engine):
         # Mock the get_workflow_status method to return None
         mock_workflow_engine.get_workflow_status.return_value = None
-
-        response = self.client.get("/api/workflow/status/not_found_id")
+        response = self.client.get("/api/workflow/status/not_found_id", headers=self.headers)
         self.assertEqual(response.status_code, 404)
         mock_workflow_engine.get_workflow_status.assert_called_once_with("not_found_id")
+
+    def test_api_key_required(self):
+        response = self.client.get("/api/workflow/status/test_id")
+        self.assertEqual(response.status_code, 401)
 
 if __name__ == '__main__':
     unittest.main()

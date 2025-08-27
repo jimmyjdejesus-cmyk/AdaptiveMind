@@ -5,9 +5,16 @@ FastAPI + WebSockets + Real Multi-Agent Orchestration
 Complete integration with Jarvis orchestration system
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+    Query,
+    Depends,
+    Header,
+)
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Set
 import asyncio
@@ -37,12 +44,30 @@ logger = logging.getLogger(__name__)
 try:
     from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
     from jarvis.agents.base_specialist import BaseSpecialist
-    from jarvis.core.mcp_agent import MCPJarvisAgent
     JARVIS_AVAILABLE = True
     logger.info("✅ Jarvis orchestration system loaded successfully")
 except ImportError as e:
     logger.warning(f"⚠️ Jarvis orchestration not available: {e}")
     JARVIS_AVAILABLE = False
+
+
+# Security
+async def verify_api_key(x_api_key: str = Header(...)) -> str:
+    """Validate the ``X-API-Key`` header against the expected key.
+
+    Args:
+        x_api_key: API key provided by the client.
+
+    Raises:
+        HTTPException: If the key is missing or does not match the expected value.
+
+    Returns:
+        The validated API key.
+    """
+    expected_key = os.getenv("JARVIS_API_KEY")
+    if not expected_key or x_api_key != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return x_api_key
 
 # Create FastAPI app
 app = FastAPI(
@@ -380,7 +405,7 @@ async def health_check():
 
 # Workflow endpoints
 @app.get("/api/workflow/{session_id}")
-async def get_workflow(session_id: str):
+async def get_workflow(session_id: str, api_key: str = Depends(verify_api_key)):
     """Get current workflow state for a session with real Cerebro data"""
     if not cerebro_orchestrator:
         raise HTTPException(status_code=503, detail="Cerebro orchestrator not initialized")
@@ -523,7 +548,7 @@ async def get_workflow(session_id: str):
 from jarvis.workflows.engine import workflow_engine
 
 @app.get("/api/workflow/status/{workflow_id}")
-async def get_workflow_status(workflow_id: str):
+async def get_workflow_status(workflow_id: str, api_key: str = Depends(verify_api_key)):
     """Get the status of a specific workflow."""
     status = workflow_engine.get_workflow_status(workflow_id)
     if not status:
@@ -532,7 +557,11 @@ async def get_workflow_status(workflow_id: str):
 
 # Logs endpoints
 @app.get("/api/logs")
-async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(100)):
+async def get_logs(
+    session_id: Optional[str] = Query(None),
+    limit: int = Query(100),
+    api_key: str = Depends(verify_api_key),
+):
     """Get logs with optional filters"""
     sample_logs = [
         {
@@ -554,7 +583,10 @@ async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(1
 
 # HITL endpoints
 @app.get("/api/hitl/pending")
-async def get_pending_hitl_requests(session_id: Optional[str] = Query(None)):
+async def get_pending_hitl_requests(
+    session_id: Optional[str] = Query(None),
+    api_key: str = Depends(verify_api_key),
+):
     """Get pending HITL requests"""
     return []  # No pending requests for demo
 
