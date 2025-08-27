@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import API_CONFIG, { getApiUrl } from '../config';
+import { getApiKey } from '../apiKeyStore';
+import './formStyles.css';
 
 /**
  * Form for configuring Neo4j connection credentials.
@@ -18,7 +20,7 @@ const Neo4jConfigForm = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': localStorage.getItem('jarvis-api-key') || '',
+          'X-API-Key': getApiKey(),
         },
         body: JSON.stringify({ uri, user, password }),
       });
@@ -69,4 +71,3 @@ const Neo4jConfigForm = () => {
 };
 
 export default Neo4jConfigForm;
-
