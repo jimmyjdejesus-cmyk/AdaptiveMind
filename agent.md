@@ -1,3 +1,25 @@
+
+# Agent Log
+
+- Initialized work on Neo4j knowledge graph integration for ExecutiveAgent.
+- Added environment-aware Neo4j graph initialization with in-memory fallback.
+- Propagated knowledge graph to mission planner and potential sub-agents.
+- Ran pytest; encountered missing async plugin for test execution.
+=======
+
+# Agent Log
+
+- Created agent.md to document changes and actions.
+- Added `get_mission_history` method to `jarvis/world_model/neo4j_graph.py` with sanitization.
+- Created FastAPI endpoint `/missions/{mission_id}/history` in `app/main.py`.
+- Implemented frontend `MissionHistoryView` and integrated into `App.jsx`.
+- Added unit tests for mission history retrieval.
+- Added configurable backend URL with status indicators in MissionHistoryView.
+- Extended /health endpoint to report Neo4j connectivity.
+- Added Neo4jGraph.is_alive method and accompanying tests.
+- Introduced lightweight FastAPI test harness (`app/test_harness.py`) to avoid heavy imports in endpoint tests.
+- Added `tests/test_api.py` using the harness to verify mission history and health endpoints without side effects.
+
 # Development Log
 
 - Initialized agent log.
@@ -108,5 +130,11 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 * [2025-08-27] Refactored `SpecialistAgent` for backward compatibility and updated auction orchestrator test stubs.
 * [2025-08-27] Consolidated legacy specialists into dynamic registry and extended factory tests.
 
+
 ## 2025-08-29
 - Added tests for knowledge query error handling with Neo4j exceptions.
+
+* [2025-08-27] Secured FastAPI endpoints with API key verification dependency and attempted linting/tests (flake8 warnings, pytest import errors).
+
+
+- Removed duplicate `networkx>=3.0` from `pyproject.toml` and reinstalled dependencies to verify environment.
