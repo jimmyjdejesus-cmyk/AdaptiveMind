@@ -1,27 +1,18 @@
-"""Replay memory utilities with prioritized experience replay."""
+"""Replay memory utilities for storing agent experiences."""
 
 from __future__ import annotations
 
+from collections import deque
+from dataclasses import dataclass, asdict
+from typing import Any, Deque, Iterable, List, Tuple
 import random
-from dataclasses import asdict, dataclass
-from typing import Any
 
 from .memory_bus import MemoryBus
 
 
 @dataclass
 class Experience:
-    """Container for a single agent-environment interaction.
-
-    Attributes:
-        state: Observation from the environment.
-        action: Action taken by the agent.
-        reward: Reward received after the action.
-        next_state: Observation after taking the action.
-        done: Flag indicating whether the episode terminated.
-        priority: Sampling priority; larger values increase sampling chance.
-    """
-
+    """Container for a single agent-environment interaction."""
     state: Any
     action: Any
     reward: float
@@ -31,10 +22,10 @@ class Experience:
 
 
 class ReplayMemory:
-    """Ring-buffer replay memory with prioritized sampling."""
+    """Ring-buffer replay memory with prioritized sampling and logging."""
 
     def __init__(
-        self, capacity: int, alpha: float = 0.6, log_dir: str = "."
+        self, capacity: int = 1000, alpha: float = 0.6, log_dir: str = "."
     ) -> None:
         """Create a replay memory.
 
@@ -83,6 +74,21 @@ class ReplayMemory:
             range(len(self._storage)), weights=scaled, k=batch_size
         )
         return [self._storage[i] for i in indices]
+
+    def recall(self, state: Any, top_k: int = 1) -> List[Experience]:
+        """Retrieve experiences with matching state and log the recall."""
+        matches = [
+            exp for exp in reversed(self._storage) if exp.state == state
+        ][:top_k]
+        if self._bus:
+            for exp in matches:
+                self._bus.log_interaction(
+                    agent_id="replay_memory",
+                    team="memory",
+                    message="Recall experience from replay buffer.",
+                    data=asdict(exp),
+                )
+        return matches
 
     def __len__(self) -> int:
         """Return the number of stored experiences."""
