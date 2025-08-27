@@ -33,11 +33,12 @@ from enum import Enum
 import uvicorn
 import sys
 import os
-from pathlib import Path
+# Use a distinct name for filesystem paths to avoid shadowing FastAPI's Path
+from pathlib import Path as FilePath
 from neo4j.exceptions import ServiceUnavailable, TransientError
 
 # Add jarvis to Python path
-jarvis_path = Path(__file__).parent.parent / "jarvis"
+jarvis_path = FilePath(__file__).parent.parent / "jarvis"
 if jarvis_path.exists():
     sys.path.insert(0, str(jarvis_path.parent))
 

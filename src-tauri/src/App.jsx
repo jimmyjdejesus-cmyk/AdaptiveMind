@@ -6,6 +6,7 @@ import LogViewerPane from './components/LogViewerPane';
 import HitlOraclePane from './components/HitlOraclePane';
 import DeadEndShelf from './components/DeadEndShelf';
 import MissionHistoryView from './components/MissionHistoryView';
+import SettingsView from './components/SettingsView';
 import './styles.css';
 
 // Enhanced App component with dynamic pane management and view switching
@@ -177,6 +178,17 @@ function App() {
           </div>
         );
 
+      case 'settings':
+        return (
+          <div className="main-content settings-view">
+            <div className="view-header">
+              <h1>⚙️ Settings</h1>
+              <p>Configure backend API and credentials</p>
+            </div>
+            <SettingsView />
+          </div>
+        );
+
       default:
         return (
           <div className="main-content">
@@ -242,6 +254,12 @@ function App() {
                   onClick={() => handleViewChange('history')}
                 >
                   📜 History
+                </button>
+                <button
+                  className={`nav-btn ${activeView === 'settings' ? 'active' : ''}`}
+                  onClick={() => handleViewChange('settings')}
+                >
+                  ⚙️ Settings
                 </button>
               </nav>
             </div>
