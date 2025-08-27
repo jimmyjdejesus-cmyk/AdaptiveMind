@@ -261,6 +261,18 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 
 - Added secure Neo4j credential configuration via API call and in-memory storage. Updated ChatPane to send credentials without persisting them to localStorage and backend to accept runtime configuration. Added test for new endpoint.
 
+## 2025-08-30
+- Added tests for mission execution graph updates and API endpoints.
+- Introduced mock Neo4jGraph fixture for tests.
+- Documented Neo4j environment variables in README.
+- Aliased pathlib.Path in app/main.py to avoid FastAPI Path conflicts.
+## 2025-08-30
+- Added SettingsView with fields for backend URL, API key, and Neo4j credentials.
+- Extended config.js with API key persistence, helper fetch, and WebSocket query support.
+- Integrated Settings view into App navigation and updated MissionHistoryView to use API-authenticated requests.
+- Added Jest tests for SettingsView and updated LogViewerPane tests for revised placeholders.
+- Ran `npm install --prefix src-tauri` and `npm test --prefix src-tauri` (tests passed).
+- Attempted `pytest tests/test_endpoints.py -q` after installing dependencies; fails due to missing `python-multipart` package.
 - Refactored ChatPane to delegate Neo4j credential inputs to new Neo4jConfigForm component and expanded config API tests for invalid URI and auth failures.
 - Centralized form styling into `components/formStyles.css` and imported in ChatPane and Neo4jConfigForm.
 - Introduced in-memory `apiKeyStore` and updated Neo4jConfigForm to avoid localStorage for API key retrieval.
