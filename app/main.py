@@ -5,9 +5,10 @@ FastAPI + WebSockets + Real Multi-Agent Orchestration
 Complete integration with Jarvis orchestration system
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Set
 import asyncio
@@ -20,6 +21,8 @@ import uvicorn
 import sys
 import os
 from pathlib import Path
+
+from .auth import Token, get_current_user, login_for_access_token, role_required
 
 # Add jarvis to Python path
 jarvis_path = Path(__file__).parent.parent / "jarvis"
@@ -40,7 +43,7 @@ try:
     from jarvis.core.mcp_agent import MCPJarvisAgent
     JARVIS_AVAILABLE = True
     logger.info("✅ Jarvis orchestration system loaded successfully")
-except ImportError as e:
+except Exception as e:
     logger.warning(f"⚠️ Jarvis orchestration not available: {e}")
     JARVIS_AVAILABLE = False
 
@@ -360,6 +363,11 @@ async def startup_event():
     await initialize_cerebro()
 
 # API Endpoints
+@app.post("/token", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Authenticate user and return JWT access token."""
+    return await login_for_access_token(form_data)
+
 @app.get("/")
 async def root():
     return {
@@ -379,7 +387,7 @@ async def health_check():
     }
 
 # Workflow endpoints
-@app.get("/api/workflow/{session_id}")
+@app.get("/api/workflow/{session_id}", dependencies=[Depends(get_current_user)])
 async def get_workflow(session_id: str):
     """Get current workflow state for a session with real Cerebro data"""
     if not cerebro_orchestrator:
@@ -520,7 +528,17 @@ async def get_workflow(session_id: str):
     }
     return workflow
 
-from jarvis.workflows.engine import workflow_engine
+# Import workflow engine with graceful fallback
+try:
+    from jarvis.workflows.engine import workflow_engine
+except Exception as e:
+    logger.warning(f"⚠️ Workflow engine not available: {e}")
+
+    class DummyWorkflowEngine:
+        def get_workflow_status(self, workflow_id: str):
+            return None
+
+    workflow_engine = DummyWorkflowEngine()
 
 @app.get("/api/workflow/status/{workflow_id}")
 async def get_workflow_status(workflow_id: str):
@@ -531,7 +549,7 @@ async def get_workflow_status(workflow_id: str):
     return status
 
 # Logs endpoints
-@app.get("/api/logs")
+@app.get("/api/logs", dependencies=[Depends(role_required("admin"))])
 async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(100)):
     """Get logs with optional filters"""
     sample_logs = [
