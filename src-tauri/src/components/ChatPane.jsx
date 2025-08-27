@@ -181,12 +181,20 @@ const ChatPane = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
 
-    // Send message with context about chat mode
+    // Send message with context about chat mode and trigger Cerebro
     socket.emit('chat_message', {
       message: input.trim(),
       mode: settings.chatMode,
       session_id: sessionId,
-      timestamp: userMessage.timestamp
+      timestamp: userMessage.timestamp,
+      trigger_cerebro: true // This tells the galaxy to activate Cerebro
+    });
+
+    // Also send directly to galaxy visualization for immediate feedback
+    socket.emit('cerebro_input', {
+      message: input.trim(),
+      timestamp: userMessage.timestamp,
+      mode: settings.chatMode
     });
 
     setInput('');
