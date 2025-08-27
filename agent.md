@@ -2474,7 +2474,6 @@ Updated jarvis_ai/cli.py to use ExecutiveAgent and added run subcommand. Adjuste
 Files: jarvis_ai/cli.py, tests/test_cli.py, docs/run-jarvis-in-5-minutes.md, docs/DEPLOYMENT_GUIDE.md, scripts/installers/install-windows.bat, scripts/installers/install-unix.sh
 ```
 ---
-
 ## Development Log
 - 2024-05-29: Integrated WorkflowEngine into meta_intelligence.execute_mission, added execution graph retrieval. File is very long; consider archiving.
 
@@ -2486,6 +2485,7 @@ Files: jarvis_ai/cli.py, tests/test_cli.py, docs/run-jarvis-in-5-minutes.md, doc
 Cleaned duplicate orchestrator methods, centralized test stubs, and added retry success coverage. Root log is large; consider archiving.
 ```
 ---
+
 ## Agent Log 2025-08-31
 - Updated CLI to use ExecutiveAgent.execute_mission and handle mission planning/graph output.
 - Added unit tests for multi-step mission execution.
@@ -2498,7 +2498,6 @@ Note: root agent.md is extremely long; consider archiving old logs.
 - Added CuriosityRouter and wired curiosity routing with configuration flags. Noting: root agent.md is very long; consider archiving older entries.
 - [2025-08-27T20:19:04+00:00] Enhanced curiosity routing with sanitization and debug logging.
 \n## Task Log - Extend mission DAG persistence\n- Modified world_model/neo4j_graph.py with MissionDAG write/read.\n- Updated orchestration/mission.py to persist to Neo4j and added retrieval.\n- Added tests for round-trip between file and Neo4j.\n(Note: agent.md file is very long.)\n
-
 ## Agent Interaction
 **Timestamp:** 2025-01-14T00:00:00
 **Agent ID:** meta_update
@@ -2524,3 +2523,4 @@ Note: root agent.md file is large; consider archival for future entries.
 ```json
 {}
 ```
+

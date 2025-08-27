@@ -17,7 +17,7 @@ ecosystem_stub.ExecutiveAgent = MagicMock()
 sys.modules.setdefault("jarvis", jarvis_stub)
 sys.modules.setdefault("jarvis.ecosystem", ecosystem_stub)
 
-from jarvis_ai import cli  # noqa: E402
+from jarvis_ai import cli # noqa: E402
 
 
 @pytest.fixture

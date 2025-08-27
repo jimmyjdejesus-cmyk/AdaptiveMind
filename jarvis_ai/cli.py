@@ -3,11 +3,17 @@
 import argparse
 import asyncio
 import json
-from typing import Optional, Dict, Any
+import os
+import sys
+from typing import Any, Dict, Optional, TypeAlias
 
 from jarvis.ecosystem import ExecutiveAgent
+from jarvis.mcp.client import McpClient
+from jarvis.mcp.protocol import MissionResult
 
-def _run_command(args, mcp_client) -> None:
+Context: TypeAlias = Dict[str, Any]
+
+def _run_command(args: argparse.Namespace, mcp_client: McpClient) -> None:
     """Execute a mission using the ExecutiveAgent."""
     code_context = None
     if args.code:
@@ -15,7 +21,7 @@ def _run_command(args, mcp_client) -> None:
             code_context = f.read()
 
     agent = ExecutiveAgent("cli", mcp_client=mcp_client)
-    context: Dict[str, Any] = {}
+    context: Context = {}
     if code_context:
         context["code"] = code_context
     if args.context:
@@ -27,12 +33,12 @@ def _run_command(args, mcp_client) -> None:
 
     asyncio.run(run_agent())
 
-def main(mcp_client: Optional[object] = None) -> None:
+def main(mcp_client: Optional[McpClient] = None) -> None:
     """Run the Jarvis CLI.
 
     Parameters
     ----------
-    mcp_client : optional
+    mcp_client : Optional[McpClient], optional
         Pre-initialized MCP client primarily used for testing.
 
     Returns
@@ -40,7 +46,6 @@ def main(mcp_client: Optional[object] = None) -> None:
     None
     """
     if mcp_client is None:
-        from jarvis.mcp.client import McpClient
         mcp_client = McpClient()
 
     parser = argparse.ArgumentParser(description="Jarvis AI command line interface")
@@ -48,7 +53,7 @@ def main(mcp_client: Optional[object] = None) -> None:
 
     run_parser = subparsers.add_parser("run", help="Execute a mission objective")
     run_parser.add_argument("objective", type=str, help="The main objective for the AI")
-    run_parser.add_argument("--code", type=argparse.FileType("r"), help="Path to a code file to be used as context")
+    run_parser.add_argument("--code", type=str, help="Path to a code file to be used as context")
     run_parser.add_argument("--context", type=str, help="Additional context for the objective")
     run_parser.set_defaults(func=_run_command)
 
