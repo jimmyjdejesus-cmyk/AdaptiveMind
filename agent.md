@@ -143,7 +143,7 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 * [2025-08-27] Added docs, database, security, and localization specialists with modular prompt loading and dynamic registry; updated orchestrator and tests.
 * [2025-08-27] Refactored `SpecialistAgent` for backward compatibility and updated auction orchestrator test stubs.
 * [2025-08-27] Consolidated legacy specialists into dynamic registry and extended factory tests.
-
+* [2025-08-27] Scoped workflow, log, and HITL stores to FastAPI app state and updated endpoints to use request-bound access; `pytest` collection failed due to syntax errors in unrelated Jarvis modules.
 - Removed duplicate `networkx>=3.0` from `pyproject.toml` and reinstalled dependencies to verify environment.
 
 - Verified no duplicate dependencies remain in pyproject.toml.
@@ -162,4 +162,3 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 
 * [2025-08-27] Secured FastAPI endpoints with API key verification dependency and attempted linting/tests (flake8 warnings, pytest import errors).
 - Removed duplicate `networkx>=3.0` from `pyproject.toml` and reinstalled dependencies to verify environment.
-

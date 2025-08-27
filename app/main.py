@@ -16,12 +16,14 @@ from fastapi import (
     Depends,
     Header,
     APIRouter,
+    Request,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Set
+from contextlib import asynccontextmanager
 import asyncio
 import json
 import uuid
@@ -79,6 +81,14 @@ except Exception as e:
         def get_workflow_status(self, workflow_id):
             return None
 
+# Lifespan context to initialize application state
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Configure per-instance in-memory databases."""
+    app.state.workflows_db = {}
+    app.state.logs_db = []
+    app.state.hitl_requests_db = {}
+    yield
 
 # Security
 async def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")) -> str:
@@ -101,7 +111,8 @@ async def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")) -> str
 # Create FastAPI app
 app = FastAPI(
     title="Jarvis AI Orchestrator Backend",
-    version="2.0.0"
+    version="2.0.0",
+    lifespan=lifespan,
 )
 
 # Configure CORS
@@ -124,8 +135,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Router with global API key dependency
+# Router for API key-protected routes
 api_router = APIRouter(prefix="/api", dependencies=[Depends(verify_api_key)])
+
 
 # Enums
 class TaskStatus(str, Enum):
@@ -136,6 +148,7 @@ class TaskStatus(str, Enum):
     DEAD_END = "dead_end"
     HITL_REQUIRED = "hitl_required"
 
+
 class LogLevel(str, Enum):
     DEBUG = "debug"
     INFO = "info"
@@ -143,12 +156,14 @@ class LogLevel(str, Enum):
     ERROR = "error"
     CRITICAL = "critical"
 
+
 class AgentRole(str, Enum):
     RESEARCHER = "researcher"
     ANALYST = "analyst"
     EXECUTOR = "executor"
     VALIDATOR = "validator"
     COORDINATOR = "coordinator"
+
 
 # Data Models
 class WorkflowNode(BaseModel):
@@ -161,6 +176,7 @@ class WorkflowNode(BaseModel):
     tool_outputs: Optional[List[Dict[str, Any]]] = None
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
+
 class WorkflowEdge(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     source: str
@@ -168,6 +184,7 @@ class WorkflowEdge(BaseModel):
     type: str = "default"
     animated: bool = False
     label: Optional[str] = None
+
 
 class Workflow(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -180,6 +197,7 @@ class Workflow(BaseModel):
     updated_at: str = Field(default_factory=lambda: datetime.now().isoformat())
     metadata: Dict[str, Any] = {}
 
+
 class LogEntry(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     session_id: str
@@ -188,6 +206,7 @@ class LogEntry(BaseModel):
     message: str
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
     metadata: Dict[str, Any] = {}
+
 
 class HITLRequest(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -201,10 +220,6 @@ class HITLRequest(BaseModel):
     response: Optional[Any] = None
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
-# In-memory storage
-workflows_db: Dict[str, Workflow] = {}
-logs_db: List[LogEntry] = []
-hitl_requests_db: Dict[str, HITLRequest] = {}
 
 # WebSocket connection manager
 class ConnectionManager:
@@ -244,6 +259,7 @@ class ConnectionManager:
         for client_id, connection in self.active_connections.items():
             await connection.send_text(message)
 
+
 manager = ConnectionManager()
 neo4j_graph = Neo4jGraph()
 
@@ -252,8 +268,10 @@ cerebro_orchestrator = None
 active_orchestrators = {}
 specialist_agents = {}
 
+
 class MockMCPClient:
     """Mock MCP client for demonstration"""
+
     async def generate_response(self, server: str, model: str, prompt: str) -> str:
         # Simple mock response for demonstration
         return f"Mock response from {model}: Analyzing request..."
@@ -261,8 +279,10 @@ class MockMCPClient:
     async def generate_response_batch(self, server: str, model: str, prompts: List[str]) -> List[str]:
         return [f"Mock batch response {i + 1}" for i in range(len(prompts))]
 
+
 class MockSpecialist(BaseSpecialist if JARVIS_AVAILABLE else object):
     """Mock specialist agent for demonstration"""
+
     def __init__(self, name: str, role: str):
         self.name = name
         self.role = role
@@ -310,6 +330,7 @@ class MockSpecialist(BaseSpecialist if JARVIS_AVAILABLE else object):
             "capabilities": [f"{self.role} analysis", f"{self.role} recommendations"],
             "models": self.preferred_models
         }
+
 
 async def initialize_cerebro():
     """Initialize the Cerebro orchestrator with specialist agents"""
@@ -435,6 +456,7 @@ async def root():
         "specialists_available": len(specialist_agents)
     }
 
+
 @app.get("/health")
 async def health_check():
     return {
@@ -446,14 +468,22 @@ async def health_check():
 
 
 # Workflow endpoints
-@api_router.get("/workflow/{session_id}")
-async def get_workflow(session_id: str, current_user: Any = Depends(get_current_user)):
-    """Get current workflow state for a session with real Cerebro data"""
+@app.get("/api/workflow/{session_id}")
+async def get_workflow(request: Request, session_id: str):
+    """Get current workflow state for a session with real Cerebro data."""
     if not cerebro_orchestrator:
         raise HTTPException(status_code=503, detail="Cerebro orchestrator not initialized")
 
+    workflows_db = request.app.state.workflows_db
+    if session_id in workflows_db:
+        return workflows_db[session_id]
+
     # Get real orchestrator status
-    orchestrator_count = len(cerebro_orchestrator.child_orchestrators) if hasattr(cerebro_orchestrator, 'child_orchestrators') else 3
+    orchestrator_count = (
+        len(cerebro_orchestrator.child_orchestrators)
+        if hasattr(cerebro_orchestrator, "child_orchestrators")
+        else 3
+    )
     specialist_count = len(specialist_agents)
 
     # Build galaxy structure with real data
@@ -472,9 +502,9 @@ async def get_workflow(session_id: str, current_user: Any = Depends(get_current_
             "totalAgents": specialist_count,
             "activeConversations": len(active_orchestrators),
             "lastMessage": "",
-            "level": "cerebro"
+            "level": "cerebro",
         },
-        "status": "running"
+        "status": "running",
     }
     nodes.append(cerebro_node)
 
@@ -490,7 +520,7 @@ async def get_workflow(session_id: str, current_user: Any = Depends(get_current_
         orchestrator_id = f"orchestrator-{i+1}"
 
         # Get agents for this orchestrator
-        agents_for_orchestrator = list(specialist_agents.keys())[i*2:(i+1)*2] if i*2 < len(specialist_agents) else []
+        agents_for_orchestrator = list(specialist_agents.keys())[i * 2:(i + 1) * 2] if i * 2 < len(specialist_agents) else []
 
         orchestrator_node = {
             "id": orchestrator_id,
@@ -499,7 +529,9 @@ async def get_workflow(session_id: str, current_user: Any = Depends(get_current_
             "data": {
                 "label": name,
                 "purpose": f"Specialized {name.split()[0].lower()} coordination",
-                "status": "active" if orchestrator_id in active_orchestrators else "idle",
+                "status": "active"
+                if f"orchestrator-{i+1}" in active_orchestrators
+                else "idle",
                 "spawnTime": "2 min ago",
                 "activeTasks": len(agents_for_orchestrator),
                 "agents": [
@@ -509,9 +541,9 @@ async def get_workflow(session_id: str, current_user: Any = Depends(get_current_
                         "status": "active"
                     } for agent_name in agents_for_orchestrator
                 ],
-                "level": "orchestrator"
+                "level": "orchestrator",
             },
-            "status": "running"
+            "status": "running",
         }
         nodes.append(orchestrator_node)
 
@@ -535,7 +567,7 @@ async def get_workflow(session_id: str, current_user: Any = Depends(get_current_
                 "type": "agent",
                 "position": {
                     "x": pos["x"] + agent_radius * (1 if j % 2 == 0 else -1),
-                    "y": pos["y"] + agent_radius * (0.5 if j < len(agents_for_orchestrator)/2 else -0.5)
+                    "y": pos["y"] + agent_radius * (0.5 if j < len(agents_for_orchestrator) / 2 else -0.5)
                 },
                 "data": {
                     "label": specialist_agents[agent_name].role if agent_name in specialist_agents else agent_name,
@@ -551,9 +583,9 @@ async def get_workflow(session_id: str, current_user: Any = Depends(get_current_
                             "confidence": 0.85
                         }
                     ],
-                    "level": "agent"
+                    "level": "agent",
                 },
-                "status": "running"
+                "status": "running",
             }
             nodes.append(agent_node)
 
@@ -585,6 +617,7 @@ async def get_workflow(session_id: str, current_user: Any = Depends(get_current_
             } for i, name in enumerate(orchestrator_names)
         ]
     }
+    workflows_db[session_id] = workflow
     return workflow
 
 # Import workflow engine with graceful fallback
@@ -599,41 +632,39 @@ except Exception as e:
 
     workflow_engine = DummyWorkflowEngine()
 
-@app.get("/api/workflow/status/{workflow_id}")
-async def get_workflow_status(workflow_id: str, current_user: Any = Depends(get_current_user)):
+
+@app.get("/api/workflow/status/{workflow_id}", dependencies=[Depends(get_current_user)])
+async def get_workflow_status(workflow_id: str):
     """Get the status of a specific workflow."""
     status = workflow_engine.get_workflow_status(workflow_id)
     if not status:
         raise HTTPException(status_code=404, detail="Workflow not found")
     return status
 
+
 # Logs endpoints
 @app.get("/api/logs", dependencies=[Depends(role_required("admin"))])
-async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(100)):
+async def get_logs(request: Request, session_id: Optional[str] = Query(None), limit: int = Query(100)):
     """Get logs with optional filters. Requires admin role."""
-    sample_logs = [
-        {
-            "id": str(uuid.uuid4()),
-            "session_id": session_id or "default-session",
-            "level": "info",
-            "message": "Cerebro galaxy initialized successfully",
-            "timestamp": datetime.now().isoformat()
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "session_id": session_id or "default-session",
-            "level": "info",
-            "message": "Backend connected and ready for real-time updates",
-            "timestamp": datetime.now().isoformat()
-        }
+    logs_db = request.app.state.logs_db
+    logs = [
+        log
+        for log in logs_db
+        if session_id is None or log.session_id == session_id
     ]
-    return sample_logs
+    return [log.dict() for log in logs[:limit]]
+
 
 # HITL endpoints
-@api_router.get("/hitl/pending")
-async def get_pending_hitl_requests(session_id: Optional[str] = Query(None)):
-    """Get pending HITL requests"""
-    return []  # No pending requests for demo
+@app.get("/api/hitl/pending", dependencies=[Depends(get_current_user)])
+async def get_pending_hitl_requests(request: Request, session_id: Optional[str] = Query(None)):
+    """Get pending HITL requests."""
+    hitl_db = request.app.state.hitl_requests_db
+    requests = list(hitl_db.values())
+    if session_id is not None:
+        requests = [r for r in requests if r.session_id == session_id]
+    return [r.dict() for r in requests]
+
 
 # Mission history endpoint
 @app.get("/missions/{mission_id}/history", dependencies=[Depends(verify_api_key)])
@@ -646,6 +677,23 @@ async def get_mission_history(mission_id: str = Path(..., regex=r"^[\w-]+$")):
     if not history:
         raise HTTPException(status_code=404, detail="Mission not found")
     return history
+
+
+@app.post("/knowledge/query")
+async def knowledge_query(payload: Dict[str, Any], current_user: Any = Depends(get_current_user)) -> Dict[str, Any]:
+    """Query the Neo4j graph and handle connection errors. Requires authentication."""
+    query = payload.get("query", "")
+    if not query:
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+    try:
+        return {"results": neo4j_graph.query(query)}
+    except ServiceUnavailable as exc:
+        raise HTTPException(status_code=500, detail="Neo4j service unavailable") from exc
+    except TransientError as exc:
+        raise HTTPException(status_code=500, detail="Neo4j transient error") from exc
+    except Exception as exc:
+        logger.error(f"Failed to execute knowledge query: {exc}")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
 
 
 # Include API router
@@ -817,35 +865,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, session_id: O
         manager.disconnect(client_id)
 
 
-# Mission history endpoint
-@app.get("/missions/{mission_id}/history", dependencies=[Depends(verify_api_key)])
-async def get_mission_history(mission_id: str = Path(..., regex=r"^[\w-]+$")):
-    """Return mission history including steps and discovered facts."""
-    try:
-        history = neo4j_graph.get_mission_history(mission_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid mission id")
-    if not history:
-        raise HTTPException(status_code=404, detail="Mission not found")
-    return history
-
-
-@app.post("/knowledge/query")
-async def knowledge_query(payload: Dict[str, Any], current_user: Any = Depends(get_current_user)) -> Dict[str, Any]:
-    """Query the Neo4j graph and handle connection errors. Requires authentication."""
-    query = payload.get("query", "")
-    if not query:
-        raise HTTPException(status_code=400, detail="Query cannot be empty.")
-    try:
-        return {"results": neo4j_graph.query(query)}
-    except ServiceUnavailable as exc:
-        raise HTTPException(status_code=500, detail="Neo4j service unavailable") from exc
-    except TransientError as exc:
-        raise HTTPException(status_code=500, detail="Neo4j transient error") from exc
-    except Exception as exc:
-        logger.error(f"Failed to execute knowledge query: {exc}")
-        raise HTTPException(status_code=500, detail="Internal server error") from exc
-
 if __name__ == "__main__":
     print("🚀 Starting Enhanced Jarvis AI Backend Server")
     print("=" * 50)
@@ -853,7 +872,7 @@ if __name__ == "__main__":
     print("📚 API Docs: http://localhost:8000/docs")
     print("🔌 WebSocket: ws://localhost:8000/ws/{client_id}")
     print("=" * 50)
-    
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
