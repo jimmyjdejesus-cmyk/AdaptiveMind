@@ -171,3 +171,8 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 - Added tests for knowledge query error handling with Neo4j exceptions.
 * [2025-08-27] Secured FastAPI endpoints with API key verification dependency and attempted linting/tests (flake8 warnings, pytest import errors).
 - Removed duplicate `networkx>=3.0` from `pyproject.toml` and reinstalled dependencies to verify environment.
+
+## 2025-08-30
+- Added backend test coverage for specialist coordination including success and failure paths.
+- Verified specialist IDs, synthesized response content, and error propagation.
+- Ran `pytest tests/test_backend.py` to confirm behavior.
