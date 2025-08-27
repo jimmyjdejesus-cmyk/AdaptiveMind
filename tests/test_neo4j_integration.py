@@ -7,34 +7,31 @@ They are skipped when these credentials are missing.
 
 from __future__ import annotations
 
-import os
-
+import keyring
 import pytest
 from neo4j.exceptions import ServiceUnavailable
 
 from jarvis.world_model.neo4j_graph import Neo4jGraph
-NEO4J_URI = os.getenv("NEO4J_URI")
-NEO4J_USER = os.getenv("NEO4J_USER")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-
-pytestmark = pytest.mark.skipif(
-    not all([NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD]),
-    reason="Neo4j credentials not configured",
-)
 
 
 @pytest.mark.integration
 def test_round_trip_node_creation() -> None:
     """Ensure a node can be created and queried end-to-end."""
 
-    graph = Neo4jGraph(uri=NEO4J_URI, user=NEO4J_USER, password=NEO4J_PASSWORD)
+    uri = keyring.get_password("jarvis", "NEO4J_URI")
+    user = keyring.get_password("jarvis", "NEO4J_USER")
+    password = keyring.get_password("jarvis", "NEO4J_PASSWORD")
+    if not uri or not user or not password:
+        pytest.skip("Neo4j credentials not configured in keyring")
+
+    graph = Neo4jGraph(uri=uri, user=user, password=password)
     try:
         graph.add_node("integration_test", "Test", {"foo": "bar"})
         with graph.driver.session() as session:
             result = session.run(
-                "MATCH (n:Node {id: $id}) RETURN n.foo AS foo", id="integration_test"
+                "MATCH (n:Node {id: $id}) RETURN n.foo AS foo",
+                id="integration_test",
             )
             assert result.single()["foo"] == "bar"
     finally:
         graph.close()
-
