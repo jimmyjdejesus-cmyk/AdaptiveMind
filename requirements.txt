@@ -61,6 +61,7 @@ black>=23.0.0
 flake8>=6.0.0
 mypy>=1.4.0
 fakeredis>=2.0.0
+httpx>=0.24.0
 
 # --- Optional & Tooling ---
 # Web automation, image processing
