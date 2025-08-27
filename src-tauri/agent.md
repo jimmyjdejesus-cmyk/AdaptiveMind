@@ -1,3 +1,5 @@
-# Agent Log
+# Frontend Agent Log
 
-- Documented fix for LogViewerPane tests to align placeholder and connection titles with component.
+- Created agent log for src-tauri to document frontend test maintenance.
+- Re-reviewed component tests; no additional placeholders or title mismatches detected.
+- Enhanced LogViewerPane error-retry test to assert error message clearance after successful fetch.
