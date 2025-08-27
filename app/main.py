@@ -5,7 +5,7 @@ FastAPI + WebSockets + Real Multi-Agent Orchestration
 Complete integration with Jarvis orchestration system
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
@@ -43,6 +43,8 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Jarvis orchestration not available: {e}")
     JARVIS_AVAILABLE = False
+
+from jarvis.world_model import Neo4jGraph
 
 # Create FastAPI app
 app = FastAPI(
@@ -188,6 +190,8 @@ class ConnectionManager:
             await connection.send_text(message)
 
 manager = ConnectionManager()
+
+neo4j_graph = Neo4jGraph()
 
 # Initialize Cerebro (Real Multi-Agent Orchestrator)
 cerebro_orchestrator = None
@@ -375,7 +379,8 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "version": "2.0.0"
+        "version": "2.0.0",
+        "neo4j_active": neo4j_graph.is_alive(),
     }
 
 # Workflow endpoints
@@ -557,6 +562,21 @@ async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(1
 async def get_pending_hitl_requests(session_id: Optional[str] = Query(None)):
     """Get pending HITL requests"""
     return []  # No pending requests for demo
+
+# Mission history endpoint
+@app.get("/missions/{mission_id}/history")
+async def get_mission_history(mission_id: str = Path(..., regex=r"^[\w-]+$")):
+    """Return mission history including steps and discovered facts."""
+
+    try:
+        history = neo4j_graph.get_mission_history(mission_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid mission id")
+
+    if not history:
+        raise HTTPException(status_code=404, detail="Mission not found")
+
+    return history
 
 # WebSocket endpoint with real Cerebro integration
 @app.websocket("/ws/{client_id}")
