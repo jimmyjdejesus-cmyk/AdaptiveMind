@@ -43,7 +43,7 @@ except ImportError:
 
 try:
     from jarvis.agents.coding_agent import CodingAgent
-except ImportError:
+except Exception:
     CodingAgent = None
 
 try:
