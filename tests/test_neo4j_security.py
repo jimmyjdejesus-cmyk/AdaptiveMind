@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -8,18 +7,15 @@ import os
 from fastapi.testclient import TestClient
 from app.main import app
 from jarvis.security.secret_manager import get_secret, set_secret
-
-sys.path.insert(
-    0, str(Path(__file__).resolve().parents[1] / "jarvis" / "world_model")
-)
-from neo4j_graph import Neo4jGraph  # noqa: E402
+from jarvis.world_model.neo4j_graph import Neo4jGraph
 
 
 def test_credentials_loaded_from_keyring():
     keyring.set_password("jarvis", "NEO4J_URI", "bolt://neo4j.test")
     keyring.set_password("jarvis", "NEO4J_USER", "user")
     keyring.set_password("jarvis", "NEO4J_PASSWORD", "secret")
-    with patch("neo4j_graph.GraphDatabase.driver") as mock_driver:
+    # Patch target updated to match the new direct import path
+    with patch("jarvis.world_model.neo4j_graph.GraphDatabase.driver") as mock_driver:
         Neo4jGraph()
         mock_driver.assert_called_once_with(
             "bolt://neo4j.test", auth=("user", "secret")
