@@ -5,7 +5,17 @@ FastAPI + WebSockets + Real Multi-Agent Orchestration
 Complete integration with Jarvis orchestration system
 """
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Body
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+    Query,
+    Body,
+    Depends,
+    Header,
+    APIRouter,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
@@ -69,6 +79,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API key verification
+def verify_api_key(api_key: str = Header(..., alias="X-API-Key")) -> str:
+    """Verify request API key against the expected environment value.
+
+    Args:
+        api_key: API key provided via the ``X-API-Key`` header.
+
+    Returns:
+        The validated API key.
+
+    Raises:
+        HTTPException: If the key is missing or invalid.
+    """
+
+    expected_key = os.getenv("JARVIS_API_KEY")
+    if not expected_key or api_key != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid or missing API Key")
+    return api_key
+
+
+# Router with global API key dependency
+api_router = APIRouter(prefix="/api", dependencies=[Depends(verify_api_key)])
 
 # Enums
 class TaskStatus(str, Enum):
@@ -379,7 +412,7 @@ async def health_check():
     }
 
 # Workflow endpoints
-@app.get("/api/workflow/{session_id}")
+@api_router.get("/workflow/{session_id}")
 async def get_workflow(session_id: str):
     """Get current workflow state for a session with real Cerebro data"""
     if not cerebro_orchestrator:
@@ -522,7 +555,7 @@ async def get_workflow(session_id: str):
 
 from jarvis.workflows.engine import workflow_engine
 
-@app.get("/api/workflow/status/{workflow_id}")
+@api_router.get("/workflow/status/{workflow_id}")
 async def get_workflow_status(workflow_id: str):
     """Get the status of a specific workflow."""
     status = workflow_engine.get_workflow_status(workflow_id)
@@ -531,7 +564,7 @@ async def get_workflow_status(workflow_id: str):
     return status
 
 # Logs endpoints
-@app.get("/api/logs")
+@api_router.get("/logs")
 async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(100)):
     """Get logs with optional filters"""
     sample_logs = [
@@ -553,10 +586,14 @@ async def get_logs(session_id: Optional[str] = Query(None), limit: int = Query(1
     return sample_logs
 
 # HITL endpoints
-@app.get("/api/hitl/pending")
+@api_router.get("/hitl/pending")
 async def get_pending_hitl_requests(session_id: Optional[str] = Query(None)):
     """Get pending HITL requests"""
     return []  # No pending requests for demo
+
+
+# Include API router
+app.include_router(api_router)
 
 # WebSocket endpoint with real Cerebro integration
 @app.websocket("/ws/{client_id}")
