@@ -176,3 +176,9 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 - Replaced deprecated FastAPI `Path` `regex` parameter with `pattern` in `app/main.py` and `app/test_harness.py`, ensuring compatibility with Pydantic v2.
 - Executed `pytest -q` to confirm no warnings or regressions.
 
+
+## 2025-08-31
+- Added tests for knowledge query endpoint error handling overriding `get_graph` to raise Neo4j exceptions.
+- Patched pathlib.Path during tests to resolve FastAPI Path conflict and re-registered `/knowledge/query` for stubbing.
+- Executed `pytest tests/test_knowledge_query.py -q` (2 passed).
+
