@@ -2462,6 +2462,11 @@ Inserted experience into replay buffer.
 ```
 ---
 
+## Dev Log
+- Added CuriosityRouter and wired curiosity routing with configuration flags. Noting: root agent.md is very long; consider archiving older entries.
+
+- [2025-08-27T20:19:04+00:00] Enhanced curiosity routing with sanitization and debug logging.
+=======
 \n## Task Log - Extend mission DAG persistence\n- Modified world_model/neo4j_graph.py with MissionDAG write/read.\n- Updated orchestration/mission.py to persist to Neo4j and added retrieval.\n- Added tests for round-trip between file and Neo4j.\n(Note: agent.md file is very long.)\n
 
 
@@ -2491,4 +2496,3 @@ Note: root agent.md file is large; consider archival for future entries.
 {}
 ```
 ---
-
