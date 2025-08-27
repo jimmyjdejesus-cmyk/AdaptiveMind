@@ -171,6 +171,9 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 - Added tests for knowledge query error handling with Neo4j exceptions.
 * [2025-08-27] Secured FastAPI endpoints with API key verification dependency and attempted linting/tests (flake8 warnings, pytest import errors).
 - Removed duplicate `networkx>=3.0` from `pyproject.toml` and reinstalled dependencies to verify environment.
+## 2025-08-27
+- Updated dependencies in requirements.txt (cachetools, marshmallow, neo4j, platformdirs, posthog, pydantic-core, pyright, ruff, setuptools, typing-extensions) and pyproject.toml.
+- Installed updated packages and ran pytest suite.
 - Removed sys.path manipulations from tests and core modules, switching to package-based imports.
 - Simplified app.main and jarvis/__init__ to avoid heavy jarvis imports during tests.
 - Executed `pip install -e .` and `pytest tests` (import errors remain in several test modules).
