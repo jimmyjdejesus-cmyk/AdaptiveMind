@@ -54,8 +54,30 @@ try:
     from jarvis.world_model.neo4j_graph import Neo4jGraph
     from jarvis.world_model.knowledge_graph import KnowledgeGraph
     from jarvis.workflows.engine import workflow_engine
+    from jarvis.persistence.session import SessionManager
     JARVIS_AVAILABLE = True
     logger.info("✅ Jarvis orchestration system loaded successfully")
 except Exception as e:
     logger.warning(f"⚠️ Jarvis orchestration not available: {e}")
     JARVIS_AVAILABLE = False
+
+    class Neo4jGraph:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def is_alive(self):
+            return False
+        
+        def get_mission_history(self, mission_id):
+            return None
+
+        def query(self, query):
+            raise ServiceUnavailable("Mock Neo4j is not available")
+
+    class workflow_engine:
+        def get_workflow_status(self, workflow_id):
+            return None
+
+    class SessionManager:
+        def read_runs(self, mission_id):
+            return []
