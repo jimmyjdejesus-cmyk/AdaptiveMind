@@ -15,7 +15,8 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
+# Standard library Path for filesystem operations
+from pathlib import Path as FilePath
 from typing import Any, Dict, List, Optional, Set
 
 # Third-party imports
@@ -29,7 +30,7 @@ from pydantic import BaseModel, Field
 
 # --- Add Jarvis to Python Path ---
 # This allows for importing the local jarvis module
-jarvis_path = Path(__file__).parent.parent / "jarvis"
+jarvis_path = FilePath(__file__).parent.parent / "jarvis"
 if jarvis_path.exists():
     sys.path.insert(0, str(jarvis_path.parent))
 
@@ -201,6 +202,15 @@ class HITLRequest(BaseModel):
     status: str = "pending"
     response: Optional[Any] = None
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+
+
+class MissionCreate(BaseModel):
+    """Input model for creating missions."""
+
+    title: str
+    goal: str
+    inputs: Dict[str, Any] = Field(default_factory=dict)
+    risk_level: str = "low"
 
 class CypherQuery(BaseModel):
     """Pydantic model for receiving Cypher queries."""
@@ -452,6 +462,40 @@ async def run_cypher_query(query: CypherQuery, current_user: Any = Depends(get_c
     except Exception as exc:
         logger.error(f"Failed to execute Cypher query: {exc}")
         raise HTTPException(status_code=500, detail="Internal server error during query execution.")
+
+
+@api_router.post("/missions", status_code=201)
+async def create_mission(mission: MissionCreate) -> Dict[str, str]:
+    """Create a new mission and persist it to the graph."""
+
+    mission_id = uuid.uuid4().hex
+    dag = MissionDAG(mission_id=mission_id)
+    new_mission = Mission(
+        id=mission_id,
+        title=mission.title,
+        goal=mission.goal,
+        inputs=mission.inputs,
+        risk_level=mission.risk_level,
+        dag=dag,
+    )
+
+    if not neo4j_graph or not neo4j_graph.is_alive():
+        raise HTTPException(status_code=503, detail="Neo4j graph unavailable")
+    try:
+        neo4j_graph.add_node(
+            new_mission.id,
+            "mission",
+            {
+                "title": new_mission.title,
+                "goal": new_mission.goal,
+                "status": WorkflowStatus.PENDING.value,
+            },
+        )
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.error(f"Failed to persist mission: {exc}")
+        raise HTTPException(status_code=500, detail="Failed to persist mission")
+
+    return {"mission_id": new_mission.id, "status": WorkflowStatus.PENDING.value}
 
 @api_router.get("/missions/{mission_id}/history")
 async def get_mission_history(mission_id: str = Path(..., regex=r"^[\w-]+$")):
