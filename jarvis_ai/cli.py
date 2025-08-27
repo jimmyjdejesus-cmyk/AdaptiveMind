@@ -119,7 +119,7 @@ def main(mcp_client: McpClient | None = None) -> MissionResult | None:
             print(f"Mission planning failed: {exc}")
             return
 
-        if not plan.get("success", True):
+        if not plan.get("success", False):
             print("Mission planning failed:")
             print(plan.get("error", "Unknown error"))
             return
