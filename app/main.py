@@ -58,30 +58,3 @@ except ImportError as e:
     class Neo4jGraph:
         def __init__(self, *args, **kwargs):
             pass
-        def is_alive(self):
-            return False
-        def get_mission_history(self, mission_id):
-            return None
-        def query(self, query):
-            raise ServiceUnavailable("Mock Neo4j is not available")
-
-    class workflow_engine:
-        def get_workflow_status(self, workflow_id):
-            return None
-
-    class BaseSpecialist:
-        pass # Base class for mock specialist
-
-# --- Executive Agent Implementation ---
-class ExecutiveAgent:
-    """High-level orchestrator that records mission progress in Neo4j."""
-
-    def __init__(self, agent_id: str) -> None:
-        self.agent_id = agent_id
-        self.mission_planner = MissionPlanner()
-        self.neo4j_graph: Optional[Neo4jGraph] = None
-
-    def manage_directive(
-        self, directive: str, context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """Plan a directive into tasks and a mission graph.

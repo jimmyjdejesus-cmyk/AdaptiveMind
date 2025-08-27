@@ -1,5 +1,8 @@
 import os
 from fastapi.testclient import TestClient
+
+from neo4j.exceptions import ServiceUnavailable
+
 from app.main import app
 
 
@@ -28,3 +31,43 @@ def test_set_neo4j_config(monkeypatch):
     assert captured["uri"] == "bolt://test"
     assert captured["user"] == "u"
     assert captured["password"] == "p"
+
+
+def test_set_neo4j_config_invalid_uri(monkeypatch):
+    os.environ["JARVIS_API_KEY"] = "test-key"
+
+    class DummyNeo4j:
+        def __init__(self, uri, user, password):
+            raise ValueError("bad uri")
+
+    monkeypatch.setattr("app.main.Neo4jGraph", DummyNeo4j)
+    import app.main as main
+    monkeypatch.setattr(main, "neo4j_graph", None)
+    client = TestClient(app)
+    resp = client.post(
+        "/api/neo4j/config",
+        headers={"X-API-Key": "test-key"},
+        json={"uri": "not-a-url", "user": "u", "password": "p"},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["detail"] == "Failed to initialize Neo4j driver"
+
+
+def test_set_neo4j_config_auth_error(monkeypatch):
+    os.environ["JARVIS_API_KEY"] = "test-key"
+
+    class DummyNeo4j:
+        def __init__(self, uri, user, password):
+            raise ServiceUnavailable("auth failed")
+
+    monkeypatch.setattr("app.main.Neo4jGraph", DummyNeo4j)
+    import app.main as main
+    monkeypatch.setattr(main, "neo4j_graph", None)
+    client = TestClient(app)
+    resp = client.post(
+        "/api/neo4j/config",
+        headers={"X-API-Key": "test-key"},
+        json={"uri": "bolt://bad", "user": "u", "password": "p"},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["detail"] == "Failed to initialize Neo4j driver"
