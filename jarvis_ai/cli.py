@@ -6,11 +6,10 @@ from typing import Optional, Dict, Any
 def _run_command(args, mcp_client) -> None:
     """Execute a mission using the ExecutiveAgent."""
     from jarvis.ecosystem import ExecutiveAgent
+    code_context = None
     if args.code:
-        with open(args.code, "r") as f:
+        with args.code as f:
             code_context = f.read()
-    else:
-        code_context = None
 
     agent = ExecutiveAgent("cli", mcp_client=mcp_client)
     context: Dict[str, Any] = {}
