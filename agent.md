@@ -176,3 +176,8 @@ This file documents the development process for the J.A.R.V.I.S. desktop applica
 - Replaced deprecated FastAPI `Path` `regex` parameter with `pattern` in `app/main.py` and `app/test_harness.py`, ensuring compatibility with Pydantic v2.
 - Executed `pytest -q` to confirm no warnings or regressions.
 
+## 2025-08-30
+- Verified `CloudCostOptimizerAgent` exports in `jarvis/agents/specialists.py` and `jarvis/agents/__init__.py`.
+- Added dedicated unit test `test_cloud_cost_agent` to ensure the specialist loads without heavy dependencies.
+- Executed `pytest tests/test_specialist_factory.py::test_cloud_cost_agent -q` (pass).
+
