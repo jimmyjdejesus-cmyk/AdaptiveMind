@@ -37,7 +37,7 @@ def create_mission(
     payload: MissionCreate, x_api_key: str = Header(...)
 ) -> Dict[str, str]:
     """Create a new mission and persist its DAG."""
-    if x_api_key != os.environ.get("JARVIS_API_KEY"):
+    if not secrets.compare_digest(x_api_key, os.environ.get("JARVIS_API_KEY", "")):
         raise HTTPException(status_code=401, detail="Invalid API key")
     dag = planner.plan(goal=payload.goal, context={"title": payload.title})
     mission = Mission(
