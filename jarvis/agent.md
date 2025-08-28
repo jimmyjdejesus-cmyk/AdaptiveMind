@@ -15,3 +15,4 @@ Dev Log
 [2025-08-27T20:19:23+00:00] Refined curiosity routing (sanitization and debug logs).
 
 - Integrated BlackTeamOrchestrator export and spawn hook in team agent.
+\n## Agent Log 2025-09-06\n- Wired WhiteGate into multi-team orchestration to merge red/blue critic verdicts.\n
