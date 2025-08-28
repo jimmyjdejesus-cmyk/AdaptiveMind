@@ -1,3 +1,8 @@
+## Agent Log 2025-09-10
+- Moved WhiteGate stubs into dedicated fixtures module.
+- Propagated critic notes through orchestrator merge for easier debugging.
+- Added tests covering note propagation and extreme risk values.
+- Ran flake8 and pytest for verification.
 ## Agent Log
 - Added unit tests for `CriticInsightMerger` covering weighted scoring and argument synthesis.
 - Added edge-case tests for missing credibility and unknown severity values.

@@ -1,6 +1,5 @@
 # flake8: noqa
 """Shared pytest fixtures for the test suite."""
-
 import sys
 import types
 import enum
@@ -29,8 +28,47 @@ sys.modules.setdefault("neo4j.exceptions", neo4j_exceptions)
 
 langgraph_module = types.ModuleType("langgraph")
 graph_submodule = types.ModuleType("langgraph.graph")
-graph_submodule.StateGraph = object
-graph_submodule.END = None
+
+
+class StateGraph:
+    """Minimal StateGraph stub supporting linear workflows."""
+
+    def __init__(self, _state_type):
+        self.nodes = {}
+        self.edges: dict[str, list[str]] = {}
+        self.entry: str | None = None
+
+    def add_node(self, name: str, func: "Callable"):
+        self.nodes[name] = func
+
+    def add_edge(self, src: str, dst: str):
+        self.edges.setdefault(src, []).append(dst)
+
+    def set_entry_point(self, name: str):
+        self.entry = name
+
+    def compile(self):
+        nodes = self.nodes
+        edges = self.edges
+        entry = self.entry
+        end = END
+
+        class Graph:
+            def stream(self_inner, state):
+                node = entry
+                while node is not end:
+                    state = nodes[node](state)
+                    yield {node: state}
+                    next_nodes = edges.get(node, [end])
+                    node = next_nodes[0]
+
+        return Graph()
+
+
+END = object()
+
+graph_submodule.StateGraph = StateGraph
+graph_submodule.END = END
 sys.modules.setdefault("langgraph", langgraph_module)
 sys.modules.setdefault("langgraph.graph", graph_submodule)
 
@@ -308,6 +346,32 @@ class DiGraph:
 nx_module.DiGraph = DiGraph
 sys.modules.setdefault("networkx", nx_module)
 
+team_agents_module = types.ModuleType("jarvis.orchestration.team_agents")
+
+
+class OrchestratorAgent:  # pragma: no cover - stub
+    pass
+
+
+class TeamMemberAgent:  # pragma: no cover - stub
+    pass
+
+
+team_agents_module.OrchestratorAgent = OrchestratorAgent
+team_agents_module.TeamMemberAgent = TeamMemberAgent
+sys.modules.setdefault("jarvis.orchestration.team_agents", team_agents_module)
+
+pruning_module = types.ModuleType("jarvis.orchestration.pruning")
+
+
+class PruningEvaluator:  # pragma: no cover - stub
+    def should_prune(self, team: str) -> bool:
+        return False
+
+
+pruning_module.PruningEvaluator = PruningEvaluator
+sys.modules.setdefault("jarvis.orchestration.pruning", pruning_module)
+
 # Additional stubs
 requests_module = types.ModuleType("requests")
 sys.modules.setdefault("requests", requests_module)
@@ -423,10 +487,8 @@ if str(ROOT) not in sys.path:
 
 # Lightweight workflows package to avoid circular imports
 spec = importlib.util.spec_from_file_location(
-spec = importlib.util.spec_from_file_location(
     "jarvis.workflows.engine",
     ROOT / "jarvis/workflows/engine.py",
-)
 )
 engine_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(engine_module)
@@ -443,12 +505,31 @@ def mock_neo4j_graph(monkeypatch):
     mock_graph = MagicMock()
     mock_graph.connect = MagicMock()
     mock_graph.close = MagicMock()
-    mock_graph.run = MagicMock(return_value=MagicMock(data=MagicMock(return_value=[])))
+    mock_graph.run = MagicMock(
+        return_value=MagicMock(data=MagicMock(return_value=[])))
     monkeypatch.setattr(
         "jarvis.world_model.neo4j_graph.Neo4jGraph",
         MagicMock(return_value=mock_graph),
     )
     yield mock_graph
+
+
+class AIAgent:
+    """Minimal base agent stub used for tests."""
+
+
+class ExecutiveAgent(AIAgent):
+    """Stub executive agent to satisfy imports during testing."""
+
+
+eco_pkg = types.ModuleType("jarvis.ecosystem")
+meta_module = types.ModuleType("jarvis.ecosystem.meta_intelligence")
+meta_module.AIAgent = AIAgent
+meta_module.ExecutiveAgent = ExecutiveAgent
+eco_pkg.ExecutiveAgent = ExecutiveAgent
+eco_pkg.meta_intelligence = meta_module
+sys.modules.setdefault("jarvis.ecosystem", eco_pkg)
+sys.modules.setdefault("jarvis.ecosystem.meta_intelligence", meta_module)
 
 
 def load_graph_module(monkeypatch):

@@ -13,13 +13,6 @@ from jarvis.orchestration.context_utils import filter_context, filter_team_outpu
 from jarvis.critics import WhiteGate, CriticVerdict
 from jarvis.critics import RedTeamCritic, BlueTeamCritic
 
-# Team name constants
-COMPETITIVE_PAIR_TEAM = "competitive_pair"
-ADVERSARY_PAIR_TEAM = "adversary_pair"
-INNOVATORS_DISRUPTORS_TEAM = "innovators_disruptors"
-SECURITY_QUALITY_TEAM = "security_quality"
-
-
 # Team name constants to avoid hardcoded strings
 ADVERSARY_PAIR_TEAM = "adversary_pair"
 COMPETITIVE_PAIR_TEAM = "competitive_pair"
@@ -27,16 +20,7 @@ SECURITY_QUALITY_TEAM = "security_quality"
 INNOVATORS_DISRUPTORS_TEAM = "innovators_disruptors"
 
 
-# Team identifiers used throughout the orchestration graph
-ADVERSARY_PAIR_TEAM = "adversary_pair"
-COMPETITIVE_PAIR_TEAM = "competitive_pair"
-SECURITY_QUALITY_TEAM = "security_quality"
-INNOVATORS_DISRUPTORS_TEAM = "innovators_disruptors"
-
-
 # Define the state for our graph
-
-
 class TeamWorkflowState(TypedDict, total=False):
     objective: str
     context: Dict[str, Any]
@@ -44,7 +28,6 @@ class TeamWorkflowState(TypedDict, total=False):
     critics: Dict[str, Any]
     next_team: str
     halt: bool
-
 
 
 class MultiTeamOrchestrator:
@@ -156,7 +139,7 @@ class MultiTeamOrchestrator:
             return {"status": "merged"}
         return await asyncio.to_thread(self._run_team, team, state)
 
-def _run_adversary_pair(
+    def _run_adversary_pair(
         self, state: TeamWorkflowState
     ) -> TeamWorkflowState:
         """Run Red and Blue teams and merge critic verdicts via WhiteGate."""
@@ -179,15 +162,25 @@ def _run_adversary_pair(
         red_output, blue_output = asyncio.run(run_pair())
 
         def _to_verdict(output: Any) -> CriticVerdict:
+            """Convert arbitrary critic output to a CriticVerdict."""
+
             if isinstance(output, CriticVerdict):
                 return output
             if isinstance(output, dict):
-                return CriticVerdict(
-                    approved=bool(output.get("approved")),
-                    fixes=list(output.get("fixes", [])),
-                    risk=float(output.get("risk", 0.0)),
-                    notes=str(output.get("notes", "")),
-                )
+                try:
+                    return CriticVerdict(
+                        approved=bool(output.get("approved")),
+                        fixes=list(output.get("fixes", [])),
+                        risk=float(output.get("risk", 0.0)),
+                        notes=str(output.get("notes", "")),
+                    )
+                except (TypeError, ValueError):
+                    return CriticVerdict(
+                        False,
+                        [],
+                        1.0,
+                        "Malformed verdict structure",
+                    )
             return CriticVerdict(
                 False,
                 [],
@@ -198,6 +191,9 @@ def _run_adversary_pair(
         red_verdict = _to_verdict(red_output)
         blue_verdict = _to_verdict(blue_output)
         merged = self.white_gate.merge(red_verdict, blue_verdict)
+        extra = [v.notes for v in (red_verdict, blue_verdict) if v.notes]
+        if extra:
+            merged.notes = "; ".join(filter(None, [merged.notes] + extra))
 
         state.setdefault("critics", {})["white_gate"] = merged.to_dict()
         state["team_outputs"][ADVERSARY_PAIR_TEAM] = [
@@ -287,22 +283,21 @@ def _run_adversary_pair(
         state["team_outputs"][SECURITY_QUALITY_TEAM] = white_output
         return state
 
-def _run_innovators_disruptors(
-    self, state: TeamWorkflowState
-) -> TeamWorkflowState:
-    """Run the Black team in isolation from White team feedback."""
-    # Start from the shared context but drop keys derived from White team
-    # outputs so disruptive exploration isn't biased by security data.
-    black_agent = self.orchestrator.teams[INNOVATORS_DISRUPTORS_TEAM]
-    filtered_context = filter_team_outputs(
-        state["context"], state["team_outputs"], SECURITY_QUALITY_TEAM
-    )
-    temp_state = dict(state)
-    temp_state["context"] = filtered_context
+    def _run_innovators_disruptors(
+        self, state: TeamWorkflowState
+    ) -> TeamWorkflowState:
+        """Run the Black team in isolation from White team feedback."""
+        # Start from the shared context but drop keys derived from White team
+        # outputs so disruptive exploration isn't biased by security data.
+        black_agent = self.orchestrator.teams[INNOVATORS_DISRUPTORS_TEAM]
+        filtered_context = filter_team_outputs(
+            state["context"], state["team_outputs"], SECURITY_QUALITY_TEAM
+        )
+        temp_state = dict(state)
+        temp_state["context"] = filtered_context
 
-    black_output = self._run_team(black_agent, temp_state)
-    state["team_outputs"][INNOVATORS_DISRUPTORS_TEAM] = black_output
-    return state
+        black_output = self._run_team(black_agent, temp_state)
+        state["team_outputs"][INNOVATORS_DISRUPTORS_TEAM] = black_output
         return state
 
     def _broadcast_findings(
@@ -331,10 +326,15 @@ def _run_innovators_disruptors(
         }
 
         # The `stream` method will execute the graph step-by-step
+        final_state: TeamWorkflowState | None = None
         for step in self.graph.stream(initial_state):
             node, state = next(iter(step.items()))
             self.orchestrator.log(f"Completed step: {node}", data=state)
+            final_state = state
             if state.get("halt"):
+                white_agent = self.orchestrator.teams.get("security_quality")
+                if white_agent and "security_quality" not in state["team_outputs"]:
+                    white_agent.run(state["objective"], state["context"])
                 break
 
-        return "Orchestration complete."
+        return final_state or initial_state
