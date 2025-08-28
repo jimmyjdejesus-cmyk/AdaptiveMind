@@ -62,6 +62,11 @@ class DummySpecialist:
         return {"response": "response"}
 
 
+class IncompleteSpecialist(DummySpecialist):
+    async def process_task(self, task, **kwargs):
+        return {"confidence": 0.5}
+
+
 @pytest.mark.asyncio
 async def test_orchestrator_with_critic():
     mcp_client = DummyMcpClient()
@@ -222,3 +227,49 @@ async def test_coordinate_specialists_invalid_json():
     result = await orchestrator.coordinate_specialists("simple request")
     assert result["type"] == "simple"
     assert result["specialists_used"] == []
+
+
+@pytest.mark.asyncio
+async def test_coordinate_specialists_invalid_structure():
+    """Malformed analysis JSON should fall back to simple response."""
+
+    class BadStructureClient(DummyMcpClient):
+        async def generate_response(self, server, model, prompt):  # noqa: D401
+            return json.dumps({"specialists_needed": "oops", "complexity": 5})
+
+    mcp_client = BadStructureClient()
+    orchestrator = MultiAgentOrchestrator(mcp_client, specialists={})
+
+    result = await orchestrator.coordinate_specialists("structure request")
+    assert result["type"] == "simple"
+    assert result["specialists_used"] == []
+
+
+@pytest.mark.asyncio
+async def test_dispatch_incomplete_response_returns_error():
+    """Specialist returning incomplete data should yield error result."""
+
+    mcp_client = DummyMcpClient()
+    specialist = IncompleteSpecialist()
+    orchestrator = MultiAgentOrchestrator(
+        mcp_client, specialists={"testspecialist": specialist}
+    )
+
+    result = await orchestrator.dispatch_specialist("testspecialist", "task")
+    assert result["type"] == "error"
+    assert result["error"] is True
+
+
+@pytest.mark.asyncio
+async def test_coordinate_specialists_incomplete_response():
+    """Coordinator handles incomplete specialist responses gracefully."""
+
+    mcp_client = DummyMcpClient()
+    specialist = IncompleteSpecialist()
+    orchestrator = MultiAgentOrchestrator(mcp_client, specialists={})
+    orchestrator.specialists = {"testing": specialist}
+
+    result = await orchestrator.coordinate_specialists("test request")
+    spec_result = result["results"]["testing"]
+    assert spec_result["error"] is True
+    assert result["synthesized_response"].startswith("Analysis failed")

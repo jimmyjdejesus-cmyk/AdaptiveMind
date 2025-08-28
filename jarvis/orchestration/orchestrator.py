@@ -370,6 +370,13 @@ JSON Response:
                     result = await asyncio.wait_for(
                         specialist.process_task(task, **kwargs), timeout
                     )
+                    if not isinstance(result, dict) or "response" not in result:
+                        logger.error(
+                            "Specialist %s returned incomplete result", specialist_type
+                        )
+                        return self._create_specialist_error(
+                            specialist_type, "Invalid or incomplete response"
+                        )
                     self.semantic_cache.add(cache_key, result)
                     return result
                 except Exception as e:
@@ -702,12 +709,13 @@ JSON Response:
 
     def _create_specialist_error(self, specialist_type: str, error_msg: str) -> Dict[str, Any]:
         return {
-            "specialist": specialist_type, 
+            "specialist": specialist_type,
             "response": f"Analysis failed: {error_msg}",
-            "confidence": 0.0, 
-            "suggestions": [], 
-            "priority_issues": [], 
-            "error": True
+            "confidence": 0.0,
+            "suggestions": [],
+            "priority_issues": [],
+            "error": True,
+            "type": "error",
         }
 
     def get_specialist_status(self) -> Dict[str, Any]:
