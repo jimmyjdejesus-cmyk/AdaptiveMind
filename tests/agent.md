@@ -142,6 +142,8 @@ Added integration test verifying memory and knowledge graph persistence across m
 **Associated Data:**
 ```json
 {"files": ["test_mission_step_persistence.py"]}
+## Agent Log 2025-08-28
+- Added tests for SelfRAGGate logging and policy optimizer integration.
 ## Agent Log
 - Added API mission creation test and team assignment sub-DAG test.
 {"files": ["test_mission_step_persistence.py"]}- Added tests for BlackTeamOrchestrator context filtering.
