@@ -3,7 +3,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from jarvis.workflows.engine import WorkflowStatus
+
 import jarvis.models.client as model_client
+import jarvis.agents.mission_planner as agent_mp
 import app.main as main_app
 
 
@@ -21,7 +23,7 @@ def client(monkeypatch):
 
     # Avoid external LLM calls
     monkeypatch.setattr(
-        model_client.model_client,
+        agent_mp.model_client,
         "generate_response",
         lambda model, prompt: '{"tasks": ["test step"]}',
     )
