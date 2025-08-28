@@ -95,6 +95,15 @@ except ImportError as e:
             self.risk_level = risk_level
             self.dag = dag
 
+    class WorkflowStatus(Enum):
+        """Workflow execution status for mock environments."""
+        PENDING = "pending"
+        RUNNING = "running"
+        COMPLETED = "completed"
+        FAILED = "failed"
+        CANCELLED = "cancelled"
+        PAUSED = "paused"
+
 # --- Security and API Key Verification ---
 async def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")) -> str:
     """
