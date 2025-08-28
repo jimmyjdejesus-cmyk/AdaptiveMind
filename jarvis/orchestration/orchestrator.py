@@ -315,6 +315,12 @@ JSON Response:
         novelty_boost: float = 0.0,
     ) -> Dict[str, Any]:
         """Coordinate multiple specialists to handle complex request."""
+        if self.mcp_client is None:
+            logger.info(
+                "MCP client not provided; using simple coordination fallback"
+            )
+            return self._create_simple_response(request)
+
         analysis = await self._analyze_request_complexity(request, code)
         analysis["coordination_type"] = self._determine_coordination_type(
             analysis.get("specialists_needed", []),
