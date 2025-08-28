@@ -137,11 +137,19 @@ class MultiTeamOrchestrator:
     ) -> TeamWorkflowState:
         """Run Red and Blue teams and merge critic verdicts via WhiteGate."""
         red_agent, blue_agent = self.orchestrator.teams["adversary_pair"]
+        # Strip White team findings so Red and Blue operate without bias.
+        filtered_context = filter_team_outputs(
+            state["context"], state.get("team_outputs"), "security_quality"
+        )
+        base_state = dict(state)
+        base_state["context"] = filtered_context
 
         async def run_pair():
+            red_state = dict(base_state)
+            blue_state = dict(base_state)
             return await asyncio.gather(
-                self._run_team_async(red_agent, state),
-                self._run_team_async(blue_agent, state),
+                self._run_team_async(red_agent, red_state),
+                self._run_team_async(blue_agent, blue_state),
             )
 
         red_output, blue_output = asyncio.run(run_pair())
@@ -189,11 +197,19 @@ class MultiTeamOrchestrator:
     ) -> TeamWorkflowState:
         """Run Yellow and Green teams in parallel."""
         yellow_agent, green_agent = self.orchestrator.teams["competitive_pair"]
+        # Early teams shouldn't see White team findings from prior runs.
+        filtered_context = filter_team_outputs(
+            state["context"], state.get("team_outputs"), "security_quality"
+        )
+        base_state = dict(state)
+        base_state["context"] = filtered_context
 
         async def run_pair():
+            yellow_state = dict(base_state)
+            green_state = dict(base_state)
             return await asyncio.gather(
-                self._run_team_async(yellow_agent, state),
-                self._run_team_async(green_agent, state),
+                self._run_team_async(yellow_agent, yellow_state),
+                self._run_team_async(green_agent, green_state),
             )
 
         yellow_output, green_output = asyncio.run(run_pair())

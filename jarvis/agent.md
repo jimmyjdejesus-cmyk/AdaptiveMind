@@ -40,3 +40,5 @@ Files: orchestration/graph.py
 - Introduced `context_utils.filter_context` and wired graph to use it.
 - Logged security rationale and added test for White/Black context isolation.
 
+## Agent Log 2025-09-07
+- Extended context filtering to additional orchestration stages and documented White-team isolation.

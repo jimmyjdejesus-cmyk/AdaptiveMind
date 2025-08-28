@@ -191,3 +191,5 @@ File: tests/test_knowledge_query_get.py
 ## Agent Log 2025-09-07
 - Parameterized non-dict White output test and added parallel execution coverage for the competitive pair.
 
+## Agent Log 2025-09-07
+- Added concurrency and missing-team tests for `filter_team_outputs` helper.

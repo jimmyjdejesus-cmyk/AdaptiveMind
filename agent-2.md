@@ -62,3 +62,7 @@ File: tests/test_knowledge_query_get.py
 ## Agent Log 2025-09-07
 - Centralized team context filtering via new helper and expanded tests for parallel executions.
 
+## Agent Log 2025-09-07
+- Applied `filter_team_outputs` across adversary and competitive pairs for consistent White-team isolation.
+- Hardened helper to accept missing team outputs and added concurrent and missing-team tests.
+- Ran flake8 and pytest on updated modules.

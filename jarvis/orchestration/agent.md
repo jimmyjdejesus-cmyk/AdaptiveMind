@@ -50,3 +50,6 @@ File: graph.py
 ## Agent Log 2025-09-07
 - Added `filter_team_outputs` utility and applied it in `graph._run_innovators_disruptors` to centralize team context filtering.
 
+## Agent Log 2025-09-07
+- Filtered White team outputs before adversary and competitive pair runs.
+- Made `filter_team_outputs` resilient to missing data.
