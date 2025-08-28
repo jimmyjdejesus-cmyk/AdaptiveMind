@@ -20,3 +20,34 @@
 - Implemented ExecutiveAgent planning and dynamic sub-orchestrator spawning.
 - Added SubOrchestrator DAG execution support.
 - Created unit tests for ExecutiveAgent.plan and SubOrchestrator specialist filtering.
+## Agent Log 2025-09-07
+- Expanded CriticInsightMerger with weighted scoring and argument synthesis; added tests.
+
+## Agent Log 2025-09-08
+- Moved default credibility and unknown severity weight for critic insights into configuration.
+- Parameterized merger unit tests to exercise alternative severity mappings.
+- Ran flake8 and pytest for updated modules.
+
+## Agent Log 2025-09-09
+- Added configurable default severity for critic insights.
+- Expanded merger tests to vary default credibility and fallback severity weight.
+- Ran flake8 and pytest.
+
+## Agent Log 2025-09-10
+- Made example count in critic insight summaries configurable.
+- Added integration tests verifying default severity from config files and env overrides.
+- Ran flake8 and pytest.
+
+## Agent Log 2025-09-11
+- Documented `max_examples` setting and expanded tests to ensure config-driven limits on synthesized examples.
+- Reviewed merger for additional hardcoded limits; none required configuration.
+
+## Agent Log 2025-09-12
+- Added configuration hook `max_summary_groups` to bound severity groups in summaries.
+- Extended tests to validate custom severity weights with example limits and summary group truncation.
+- Introduced summary score threshold to filter low-scoring severity groups and expanded tests with varied credibility.
+
+## Agent Log 2025-09-13
+- Added dynamic `summary_score_ratio` for pruning low-scoring severity groups relative to the top score.
+- Broadened tests to exercise `summary_score_threshold` overrides and ratio-based filtering.
+
