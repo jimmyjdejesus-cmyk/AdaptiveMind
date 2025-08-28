@@ -146,3 +146,8 @@ Added integration test verifying memory and knowledge graph persistence across m
 - Added test_adversary_pair_critics to verify critic verdict storage and asynchronous review. File is long; consider splitting.
 - Added tests for ExecutiveAgent sub-orchestrator spawning and SubOrchestrator specialist filtering.
 
+## Agent Log 2025-09-07
+- Replaced blanket stubs in `conftest.py` with a conditional `langgraph` shim and a keyring patch.
+- Converted `test_curiosity_routing` to use real `networkx` and `neo4j` libraries.
+- Added `test_knowledge_graph_networkx.py` to exercise `networkx.DiGraph` through `KnowledgeGraph`.
+- Retained a minimal `memory_service` stub in `test_curiosity_routing` to avoid requiring a running Qdrant instance.

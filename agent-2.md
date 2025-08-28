@@ -20,3 +20,8 @@
 - Implemented ExecutiveAgent planning and dynamic sub-orchestrator spawning.
 - Added SubOrchestrator DAG execution support.
 - Created unit tests for ExecutiveAgent.plan and SubOrchestrator specialist filtering.
+
+## Agent Log 2025-09-07
+- Audited test suite stubs: simplified `tests/conftest.py` to rely on real libs and patch keyring.
+- Enabled integration with `networkx` by removing mock graph and adding `test_knowledge_graph_networkx.py`.
+- Updated curiosity routing test to use actual dependencies.
