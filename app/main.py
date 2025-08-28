@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import secrets
 import os
 from typing import Dict
 
 from fastapi import FastAPI, Header, HTTPException
+
 from pydantic import BaseModel, Field
 
 from jarvis.orchestration.mission import Mission, save_mission, load_mission
@@ -37,7 +39,8 @@ def create_mission(
     payload: MissionCreate, x_api_key: str = Header(...)
 ) -> Dict[str, str]:
     """Create a new mission and persist its DAG."""
-    if not secrets.compare_digest(x_api_key, os.environ.get("JARVIS_API_KEY", "")):
+
+    if not (api_key := os.environ.get("JARVIS_API_KEY")) or not secrets.compare_digest(x_api_key, api_key):
         raise HTTPException(status_code=401, detail="Invalid API key")
     dag = planner.plan(goal=payload.goal, context={"title": payload.title})
     mission = Mission(
@@ -61,46 +64,3 @@ def create_mission(
         "mission_id": mission.id,
         "status": WorkflowStatus.PENDING.value,
     }
-
-
-@app.post("/api/credentials", status_code=200)
-def set_credential(
-    payload: CredentialUpdate, x_api_key: str = Header(...)
-) -> Dict[str, str]:
-    """Store a credential in the backend environment.
-
-    The credential is identified by ``payload.service`` which maps directly to
-    an environment variable name. Only a limited whitelist of variables is
-    accepted to avoid arbitrary environment mutation.
-    """
-
-    if x_api_key != os.environ.get("JARVIS_API_KEY"):
-        raise HTTPException(status_code=401, detail="Invalid API key")
-
-    allowed = {
-        "OPENAI_API_KEY",
-        "ANTHROPIC_API_KEY",
-        "GOOGLE_API_KEY",
-        "QDRANT_API_KEY",
-    }
-    if payload.service not in allowed:
-        raise HTTPException(status_code=400, detail="Unsupported credential")
-
-    os.environ[payload.service] = payload.value
-    return {"status": "stored"}
-
-
-@app.get("/api/missions/{mission_id}")
-def get_mission(
-    mission_id: str, x_api_key: str = Header(...)
-) -> Dict[str, Any]:
-    """Retrieve a previously created mission."""
-    if x_api_key != os.environ.get("JARVIS_API_KEY"):
-        raise HTTPException(status_code=401, detail="Invalid API key")
-    try:
-        mission = load_mission(mission_id)
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404, detail="Mission not found"
-        ) from None
-    return mission.to_dict()
