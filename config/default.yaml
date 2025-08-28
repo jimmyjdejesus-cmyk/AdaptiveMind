@@ -79,6 +79,14 @@ monitoring:
   default_severity: low
   default_credibility: 1.0
   unknown_severity_weight: 1
+  # Maximum number of feedback examples retained per severity group
+  max_examples: 2
+  # Maximum number of severity groups included in synthesized summaries
+  max_summary_groups: null
+  # Minimum total score required for a severity group to appear in summaries
+  summary_score_threshold: null
+  # Minimum fraction of the highest group score required for inclusion
+  summary_score_ratio: null
   severity_weights:
     low: 1
     medium: 2

@@ -274,6 +274,9 @@ Files: tests/test_orchestrator_flow.py
 ## Agent Log 2025-09-08
 - Added edge case tests for MultiTeamOrchestrator white gate behavior.
 
+
+## Note
+File is very long; starting new logs in agent-2.md.
 ## Agent Log 2025-09-09
 - Centralized WhiteGate test setup via fixture and documented edge-case intent.
 - Added tests for missing critic fields and malformed verdict structures.
