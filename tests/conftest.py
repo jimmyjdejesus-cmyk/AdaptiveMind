@@ -1,3 +1,4 @@
+# flake8: noqa
 """Shared pytest fixtures for the test suite."""
 
 import sys
@@ -53,7 +54,10 @@ chromadb_embedding.EmbeddingFunction = EmbeddingFunction
 chromadb_utils.embedding_functions = chromadb_embedding
 sys.modules.setdefault("chromadb", chromadb_module)
 sys.modules.setdefault("chromadb.utils", chromadb_utils)
-sys.modules.setdefault("chromadb.utils.embedding_functions", chromadb_embedding)
+sys.modules.setdefault(
+    "chromadb.utils.embedding_functions",
+    chromadb_embedding,
+)
 
 nx_module = types.ModuleType("networkx")
 class DiGraph:
@@ -144,7 +148,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # Lightweight workflows package to avoid circular imports
-spec = importlib.util.spec_from_file_location("jarvis.workflows.engine", ROOT / "jarvis/workflows/engine.py")
+spec = importlib.util.spec_from_file_location(
+    "jarvis.workflows.engine",
+    ROOT / "jarvis/workflows/engine.py",
+)
 engine_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(engine_module)
 workflows_pkg = types.ModuleType("jarvis.workflows")
