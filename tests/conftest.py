@@ -1,3 +1,4 @@
+# flake8: noqa
 """Shared pytest fixtures for the test suite."""
 
 import sys
@@ -15,6 +16,16 @@ neo4j_module = types.ModuleType("neo4j")
 neo4j_module.GraphDatabase = object
 neo4j_module.Driver = object
 sys.modules.setdefault("neo4j", neo4j_module)
+neo4j_exceptions = types.ModuleType("neo4j.exceptions")
+class ServiceUnavailable(Exception):
+    pass
+
+
+class TransientError(Exception):
+    pass
+neo4j_exceptions.ServiceUnavailable = ServiceUnavailable
+neo4j_exceptions.TransientError = TransientError
+sys.modules.setdefault("neo4j.exceptions", neo4j_exceptions)
 
 langgraph_module = types.ModuleType("langgraph")
 graph_submodule = types.ModuleType("langgraph.graph")
@@ -412,7 +423,10 @@ if str(ROOT) not in sys.path:
 
 # Lightweight workflows package to avoid circular imports
 spec = importlib.util.spec_from_file_location(
-    "jarvis.workflows.engine", ROOT / "jarvis/workflows/engine.py"
+spec = importlib.util.spec_from_file_location(
+    "jarvis.workflows.engine",
+    ROOT / "jarvis/workflows/engine.py",
+)
 )
 engine_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(engine_module)
