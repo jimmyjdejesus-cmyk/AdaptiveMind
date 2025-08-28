@@ -25,13 +25,13 @@ class StateGraph:
         self.edges: dict[str, list[str]] = {}
         self.entry: str | None = None
 
-    def add_node(self, name, func):
+    def add_node(self, name: str, func: "Callable"):
         self.nodes[name] = func
 
-    def add_edge(self, src, dst):
+    def add_edge(self, src: str, dst: str):
         self.edges.setdefault(src, []).append(dst)
 
-    def set_entry_point(self, name):
+    def set_entry_point(self, name: str):
         self.entry = name
 
     def compile(self):
