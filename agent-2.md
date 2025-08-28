@@ -38,13 +38,6 @@
 - Created unit tests for ExecutiveAgent.plan and SubOrchestrator specialist filtering.
 ## Agent Log 2025-08-28
 - Refactored orchestration graph for PEP8 compliance, removed unused context variable, wrapped long lines, and added WhiteGate initialization. Ran flake8 with no errors.
-## Agent Log 2025-09-07
-- Removed trailing spaces from various modules to ensure blank lines are empty.
-- Installed FastAPI and executed pytest; collection failed with import errors and syntax issues across multiple tests.
-## Agent Log 2025-09-07
-- Removed trailing spaces from various modules to ensure blank lines are empty.
-## Agent Log 2025-09-07
-- Added `networkx>=3.0` to requirements to align runtime dependencies with imports.
 ## Agent Interaction
 **Timestamp:** 2025-08-28T02:28:19+00:00
 **Agent ID:** openai-assistant
@@ -60,9 +53,9 @@ File: tests/test_knowledge_query_get.py
 ```
 ---
 ## Agent Log 2025-09-07
+- Removed trailing spaces from various modules to ensure blank lines are empty.
+- Added `networkx>=3.0` to requirements to align runtime dependencies with imports.
 - Centralized team context filtering via new helper and expanded tests for parallel executions.
-
-## Agent Log 2025-09-07
 - Applied `filter_team_outputs` across adversary and competitive pairs for consistent White-team isolation.
 - Hardened helper to accept missing team outputs and added concurrent and missing-team tests.
 - Ran flake8 and pytest on updated modules.

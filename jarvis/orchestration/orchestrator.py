@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 import sys
 import types
+import importlib.util
 
 import pytest
 

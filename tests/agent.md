@@ -184,12 +184,6 @@ File: tests/test_knowledge_query_get.py
 ## Agent Log 2025-09-07
 - Added test verifying Black team ignores White team context during graph execution.
 - File remains lengthy; consider archiving to agent-2.md soon.
-## Agent Log 2025-09-07
-- Added edge-case test for non-dict White team outputs to ensure Black team
-  context remains unchanged.
-
-## Agent Log 2025-09-07
+- Added edge-case test for non-dict White team outputs to ensure Black team context remains unchanged.
 - Parameterized non-dict White output test and added parallel execution coverage for the competitive pair.
-
-## Agent Log 2025-09-07
 - Added concurrency and missing-team tests for `filter_team_outputs` helper.

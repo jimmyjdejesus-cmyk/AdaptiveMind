@@ -1,7 +1,30 @@
 from typing import Any, Dict
 
 from jarvis.critics import CriticVerdict
-from jarvis.orchestration.graph import MultiTeamOrchestrator
+import pytest
+from tests.test_black_team_context_isolation import _import_graph_module
+from jarvis.critics import CriticVerdict as RealCriticVerdict
+
+
+@pytest.fixture
+def graph_module():
+    with _import_graph_module() as module:
+        module.CriticVerdict = RealCriticVerdict
+
+        class StubWhiteGate:  # pragma: no cover - stub
+            def merge(self, red, blue):
+                return red if not red.approved else blue
+
+        module.WhiteGate = StubWhiteGate
+
+        class DummyGraph:  # pragma: no cover - stub
+            def stream(self, *_args, **_kwargs):
+                return []
+
+        module.MultiTeamOrchestrator._build_graph = (
+            lambda self: DummyGraph()
+        )
+        yield module
 
 
 class DummyAgent:
@@ -34,7 +57,9 @@ class DummyOrchestrator:
 
 
 def build_orchestrator(
-    red_verdict: CriticVerdict, blue_verdict: CriticVerdict
+    red_verdict: CriticVerdict,
+    blue_verdict: CriticVerdict,
+    graph_module,
 ):
     red_agent = DummyAgent("Red", red_verdict)
     blue_agent = DummyAgent("Blue", blue_verdict)
@@ -50,20 +75,39 @@ def build_orchestrator(
             "innovators_disruptors": black_agent,
         }
     )
-    return MultiTeamOrchestrator(orch), black_agent
+    return graph_module.MultiTeamOrchestrator(orch), black_agent
 
 
-def test_white_gate_blocks_downstream_when_rejected():
+def test_white_gate_blocks_downstream_when_rejected(graph_module):
     red_verdict = CriticVerdict(approved=False, fixes=[], risk=0.2, notes="")
     blue_verdict = CriticVerdict(approved=True, fixes=[], risk=0.1, notes="")
-    orchestrator, black_agent = build_orchestrator(red_verdict, blue_verdict)
-    orchestrator.run("test objective")
+    orchestrator, black_agent = build_orchestrator(
+        red_verdict, blue_verdict, graph_module
+    )
+    state = {
+        "objective": "test",
+        "context": {},
+        "team_outputs": {},
+        "critics": {},
+    }
+    state = orchestrator._run_adversary_pair(state)
+    assert state["halt"]
     assert not black_agent.called
 
 
-def test_white_gate_allows_downstream_when_approved():
+def test_white_gate_allows_downstream_when_approved(graph_module):
     red_verdict = CriticVerdict(approved=True, fixes=[], risk=0.0, notes="")
     blue_verdict = CriticVerdict(approved=True, fixes=[], risk=0.1, notes="")
-    orchestrator, black_agent = build_orchestrator(red_verdict, blue_verdict)
-    orchestrator.run("test objective")
+    orchestrator, black_agent = build_orchestrator(
+        red_verdict, blue_verdict, graph_module
+    )
+    state = {
+        "objective": "test",
+        "context": {},
+        "team_outputs": {},
+        "critics": {},
+    }
+    state = orchestrator._run_adversary_pair(state)
+    assert not state["halt"]
+    orchestrator._run_innovators_disruptors(state)
     assert black_agent.called
