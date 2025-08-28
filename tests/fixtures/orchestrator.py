@@ -42,7 +42,7 @@ class DummyOrchestrator:
 
 
 @pytest.fixture
-def orchestrator_builder() -> Any:
+def build_orchestrator_with_critic_outputs() -> Any:
     """Build a MultiTeamOrchestrator with configurable critic outputs."""
 
     def _build(

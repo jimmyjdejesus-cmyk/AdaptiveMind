@@ -31,6 +31,7 @@ class MultiTeamOrchestrator:
     ) -> None:
         self.orchestrator = orchestrator_agent
         self.evaluator = evaluator
+        self.white_gate = WhiteGate()
         self.red_critic = RedTeamCritic()
         self.blue_critic = BlueTeamCritic()
         self.graph = self._build_graph()
@@ -102,7 +103,6 @@ class MultiTeamOrchestrator:
         return await asyncio.to_thread(self._run_team, team, state)
 
     def _run_adversary_pair(self, state: TeamWorkflowState) -> TeamWorkflowState:
-def _run_adversary_pair(self, state: TeamWorkflowState) -> TeamWorkflowState:
         """Runs the Red and Blue teams and merges critic verdicts via WhiteGate."""
         red_agent, blue_agent = self.orchestrator.teams["adversary_pair"]
 
@@ -115,29 +115,40 @@ def _run_adversary_pair(self, state: TeamWorkflowState) -> TeamWorkflowState:
         red_output, blue_output = asyncio.run(run_pair())
 
         def _to_verdict(output: Any) -> CriticVerdict:
+            """Convert arbitrary critic output to a CriticVerdict."""
+
             if isinstance(output, CriticVerdict):
                 return output
             if isinstance(output, dict):
-                return CriticVerdict(
-                    approved=bool(output.get("approved")),
-                    fixes=list(output.get("fixes", [])),
-                    risk=float(output.get("risk", 0.0)),
-                    notes=str(output.get("notes", "")),
-                )
-            return CriticVerdict(False, [], 1.0, f"Unsupported output type: {type(output).__name__}")
+                try:
+                    return CriticVerdict(
+                        approved=bool(output.get("approved")),
+                        fixes=list(output.get("fixes", [])),
+                        risk=float(output.get("risk", 0.0)),
+                        notes=str(output.get("notes", "")),
+                    )
+                except (TypeError, ValueError):
+                    return CriticVerdict(
+                        False,
+                        [],
+                        1.0,
+                        "Malformed verdict structure",
+                    )
+            return CriticVerdict(
+                False,
+                [],
+                1.0,
+                f"Unsupported output type: {type(output).__name__}",
+            )
 
         red_verdict = _to_verdict(red_output)
         blue_verdict = _to_verdict(blue_output)
         merged = self.white_gate.merge(red_verdict, blue_verdict)
+        extra = [v.notes for v in (red_verdict, blue_verdict) if v.notes]
+        if extra:
+            merged.notes = "; ".join(filter(None, [merged.notes] + extra))
 
         state.setdefault("critics", {})["white_gate"] = merged.to_dict()
-        state["team_outputs"]["adversary_pair"] = [red_output, blue_output]
-        state["halt"] = not merged.approved
-
-        self.orchestrator.log("WhiteGate merged verdict", data=merged.to_dict())
-        if state["halt"]:
-            self.orchestrator.log("Downstream execution halted by WhiteGate.")
-        return state
         state["team_outputs"]["adversary_pair"] = [red_output, blue_output]
         state["halt"] = not merged.approved
 
@@ -231,10 +242,15 @@ def _run_adversary_pair(self, state: TeamWorkflowState) -> TeamWorkflowState:
         }
 
         # The `stream` method will execute the graph step-by-step
+        final_state: TeamWorkflowState | None = None
         for step in self.graph.stream(initial_state):
             node, state = next(iter(step.items()))
             self.orchestrator.log(f"Completed step: {node}", data=state)
+            final_state = state
             if state.get("halt"):
+                white_agent = self.orchestrator.teams.get("security_quality")
+                if white_agent and "security_quality" not in state["team_outputs"]:
+                    white_agent.run(state["objective"], state["context"])
                 break
 
-        return "Orchestration complete."
+        return final_state or initial_state

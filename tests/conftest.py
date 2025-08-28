@@ -15,8 +15,47 @@ sys.modules.setdefault("neo4j", neo4j_module)
 
 langgraph_module = types.ModuleType("langgraph")
 graph_submodule = types.ModuleType("langgraph.graph")
-graph_submodule.StateGraph = object
-graph_submodule.END = None
+
+
+class StateGraph:
+    """Minimal StateGraph stub supporting linear workflows."""
+
+    def __init__(self, _state_type):
+        self.nodes = {}
+        self.edges: dict[str, list[str]] = {}
+        self.entry: str | None = None
+
+    def add_node(self, name, func):
+        self.nodes[name] = func
+
+    def add_edge(self, src, dst):
+        self.edges.setdefault(src, []).append(dst)
+
+    def set_entry_point(self, name):
+        self.entry = name
+
+    def compile(self):
+        nodes = self.nodes
+        edges = self.edges
+        entry = self.entry
+        end = END
+
+        class Graph:
+            def stream(self_inner, state):
+                node = entry
+                while node is not end:
+                    state = nodes[node](state)
+                    yield {node: state}
+                    next_nodes = edges.get(node, [end])
+                    node = next_nodes[0]
+
+        return Graph()
+
+
+END = object()
+
+graph_submodule.StateGraph = StateGraph
+graph_submodule.END = END
 sys.modules.setdefault("langgraph", langgraph_module)
 sys.modules.setdefault("langgraph.graph", graph_submodule)
 
@@ -98,6 +137,32 @@ class DiGraph:
 
 nx_module.DiGraph = DiGraph
 sys.modules.setdefault("networkx", nx_module)
+
+team_agents_module = types.ModuleType("jarvis.orchestration.team_agents")
+
+
+class OrchestratorAgent:  # pragma: no cover - stub
+    pass
+
+
+class TeamMemberAgent:  # pragma: no cover - stub
+    pass
+
+
+team_agents_module.OrchestratorAgent = OrchestratorAgent
+team_agents_module.TeamMemberAgent = TeamMemberAgent
+sys.modules.setdefault("jarvis.orchestration.team_agents", team_agents_module)
+
+pruning_module = types.ModuleType("jarvis.orchestration.pruning")
+
+
+class PruningEvaluator:  # pragma: no cover - stub
+    def should_prune(self, team: str) -> bool:
+        return False
+
+
+pruning_module.PruningEvaluator = PruningEvaluator
+sys.modules.setdefault("jarvis.orchestration.pruning", pruning_module)
 
 # Additional stubs
 requests_module = types.ModuleType('requests')
@@ -212,7 +277,6 @@ def mock_neo4j_graph(monkeypatch):
     return mock_graph
 
 
-# ---- Lightweight ecosystem stubs ----
 class AIAgent:
     """Minimal base agent stub used for tests."""
 
@@ -229,78 +293,3 @@ eco_pkg.ExecutiveAgent = ExecutiveAgent
 eco_pkg.meta_intelligence = meta_module
 sys.modules.setdefault("jarvis.ecosystem", eco_pkg)
 sys.modules.setdefault("jarvis.ecosystem.meta_intelligence", meta_module)
-
-
-# ---- MultiTeamOrchestrator stub ----
-from jarvis.critics import WhiteGate, CriticVerdict  # noqa: E402
-
-
-class MultiTeamOrchestrator:
-    """Minimal implementation for WhiteGate tests.
-
-    The `_to_verdict` helper normalises critic outputs and falls back to a
-    rejected verdict with ``risk=1.0`` when inputs are malformed or of an
-    unsupported type. Notes gathered during conversion are appended to the
-    merged verdict for easier debugging of failure cases.
-    """
-
-    def __init__(self, orchestrator_agent, evaluator=None):
-        self.orchestrator = orchestrator_agent
-        self.white_gate = WhiteGate()
-
-    def run(self, objective: str):
-        teams = self.orchestrator.teams
-        red_agent, blue_agent = teams["adversary_pair"]
-        red_output = red_agent.run(objective, {})
-        blue_output = blue_agent.run(objective, {})
-
-        def _to_verdict(output):
-            """Convert arbitrary critic output to a CriticVerdict.
-
-            Unknown structures default to rejection with ``risk=1.0`` so
-            downstream agents halt safely. Diagnostic notes describe the
-            failure for debugging.
-            """
-
-            if isinstance(output, CriticVerdict):
-                return output
-            if isinstance(output, dict):
-                try:
-                    return CriticVerdict(
-                        approved=bool(output.get("approved")),
-                        fixes=list(output.get("fixes", [])),
-                        risk=float(output.get("risk", 0.0)),
-                        notes=str(output.get("notes", "")),
-                    )
-                except (TypeError, ValueError):
-                    return CriticVerdict(
-                        False,
-                        [],
-                        1.0,
-                        "Malformed verdict structure",
-                    )
-            return CriticVerdict(
-                False,
-                [],
-                1.0,
-                f"Unsupported output type: {type(output).__name__}",
-            )
-
-        red_verdict = _to_verdict(red_output)
-        blue_verdict = _to_verdict(blue_output)
-        merged = self.white_gate.merge(red_verdict, blue_verdict)
-        extra = [v.notes for v in (red_verdict, blue_verdict) if v.notes]
-        if extra:
-            merged.notes = "; ".join(filter(None, [merged.notes] + extra))
-        if merged.approved:
-            teams["innovators_disruptors"].run(objective, {})
-        teams["security_quality"].run(objective, {})
-        return {
-            "halt": not merged.approved,
-            "critics": {"white_gate": merged.to_dict()},
-        }
-
-
-graph_module = types.ModuleType("jarvis.orchestration.graph")
-graph_module.MultiTeamOrchestrator = MultiTeamOrchestrator
-sys.modules.setdefault("jarvis.orchestration.graph", graph_module)
