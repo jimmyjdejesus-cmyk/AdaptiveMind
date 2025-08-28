@@ -11,3 +11,6 @@
 ## Agent Log 2025-09-06
 - Integrated RedTeamCritic and BlueTeamCritic into MultiTeamOrchestrator with asynchronous review storage.
 - Added critic verdict tracking in TeamWorkflowState and initial state.
+## Agent Log
+- Implemented `SubOrchestrator` specialist filtering and DAG execution.
+

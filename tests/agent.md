@@ -144,3 +144,4 @@ Added integration test verifying memory and knowledge graph persistence across m
 {"files": ["test_mission_step_persistence.py"]}
 ## Agent Log 2025-09-06
 - Added test_adversary_pair_critics to verify critic verdict storage and asynchronous review. File is long; consider splitting.
+- Added tests for ExecutiveAgent sub-orchestrator spawning and SubOrchestrator specialist filtering.
