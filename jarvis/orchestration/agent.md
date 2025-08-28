@@ -13,3 +13,5 @@
 - Added critic verdict tracking in TeamWorkflowState and initial state.
 ## Agent Log
 - Implemented `SubOrchestrator` specialist filtering and DAG execution.
+## Agent Log 2025-08-28
+- Refactored graph.py: wrapped long lines, removed unused filtered context, added WhiteGate instantiation, and passed flake8.
