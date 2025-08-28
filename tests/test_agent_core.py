@@ -1,3 +1,5 @@
+import pytest
+
 from agent.core import AgentCore
 
 
@@ -22,3 +24,6 @@ def test_agent_core_components() -> None:
     core.add_component("another", another)
     assert core.get_component("another") is another
     assert core.another is another
+
+    with pytest.raises(KeyError):
+        core.get_component("missing")

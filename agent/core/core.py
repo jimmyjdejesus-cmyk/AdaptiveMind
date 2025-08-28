@@ -39,8 +39,17 @@ class AgentCore:
         setattr(self, name, component)
 
     def get_component(self, name: str) -> Any:
-        """Retrieve a previously attached component by name."""
-        return self.components.get(name)
+        """Retrieve a previously attached component by name.
+
+        Raises
+        ------
+        KeyError
+            If the component has not been attached to the agent.
+        """
+        try:
+            return self.components[name]
+        except KeyError as exc:
+            raise KeyError(f"Component '{name}' is not attached") from exc
 
     def __repr__(self) -> str:
         extras = ", ".join(self.components)
