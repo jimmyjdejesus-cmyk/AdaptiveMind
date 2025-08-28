@@ -20,89 +20,28 @@ except Exception:  # pragma: no cover
 # Optional curiosity question routing
 try:  # pragma: no cover - optional dependencies
     from .curiosity_router import CuriosityRouter
-except Exception:  # pragma: no cover
+except (ImportError, SyntaxError):  # pragma: no cover
     CuriosityRouter = None  # type: ignore
 
-# Optional specialist agents – defer import to avoid heavy dependencies
-CodingAgent = None  # type: ignore
-
-
-def get_coding_agent(*_args, **_kwargs):  # type: ignore
-    raise ImportError("CodingAgent not available")
+# Optional specialist agents – failure to import simply leaves them as ``None``
+try:  # pragma: no cover
+    from .coding_agent import CodingAgent, get_coding_agent
+except (ImportError, SyntaxError):  # pragma: no cover
+    CodingAgent = None  # type: ignore
 
 from .base_specialist import BaseSpecialist
 try:  # pragma: no cover - optional dependencies
     from .simulation_agent import SimulationAgent
-except Exception:  # pragma: no cover
-    SimulationAgent = None  # type: ignore
-
-try:  # pragma: no cover - optional dependencies
     from .monte_carlo_explorer import MonteCarloExplorer
-except Exception:  # pragma: no cover
-    MonteCarloExplorer = None  # type: ignore
-
-try:  # pragma: no cover - optional dependencies
     from .benchmark_agent import BenchmarkRewardAgent
-except Exception:  # pragma: no cover
-    BenchmarkRewardAgent = None  # type: ignore
-
-try:  # pragma: no cover - optional dependencies
     from .decentralized_actor import DecentralizedActor
-except Exception:  # pragma: no cover
+except (ImportError, SyntaxError):  # pragma: no cover
+    SimulationAgent = None  # type: ignore
+    MonteCarloExplorer = None  # type: ignore
+    BenchmarkRewardAgent = None  # type: ignore
     DecentralizedActor = None  # type: ignore
 
 try:
-    from .live_test_agent import LiveTestAgent
+    from .live_test_agent import LiveTestAgent  # noqa: F401
 except Exception:  # pragma: no cover
-    LiveTestAgent = None
-
-# New specialist agents
-try:
-    from .specialist import SpecialistAgent
-    from .specialists import (
-        CodeReviewAgent,
-        ArchitectureAgent,
-        TestingAgent,
-        DevOpsAgent,
-        CloudCostOptimizerAgent,
-        UserFeedbackAgent,
-    )
-    from .critics import RedTeamCritic
-    
-    # Add specialist agents to exports
-    __all__ = [
-        'CodingAgent',
-        'get_coding_agent',
-        'MissionPlanner',
-        'BaseSpecialist',
-        'SimulationAgent',
-        'MonteCarloExplorer',
-        'CuriosityAgent',
-        'CuriosityRouter',
-        'BenchmarkRewardAgent',
-        'LiveTestAgent',
-        'SpecialistAgent',
-        'CodeReviewAgent',
-        'ArchitectureAgent',
-        'TestingAgent',
-        'DevOpsAgent',
-        'CloudCostOptimizerAgent',
-        'UserFeedbackAgent',
-        'RedTeamCritic',
-        'DecentralizedActor'
-    ]
-    
-except Exception:  # pragma: no cover
-    # Fallback if specialist agents not available
-    __all__ = [
-        'CodingAgent',
-        'get_coding_agent',
-        'MissionPlanner',
-        'SimulationAgent',
-        'MonteCarloExplorer',
-        'CuriosityAgent',
-        'CuriosityRouter',
-        'BenchmarkRewardAgent',
-        'LiveTestAgent',
-        'DecentralizedActor',
-    ]
+    LiveTestAgent = None  # type: ignore
