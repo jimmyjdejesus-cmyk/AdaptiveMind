@@ -199,9 +199,13 @@ File: tests/test_knowledge_query_get.py
 ```
 ---
 ## Agent Log 2025-09-07
+- Introduced in-memory Qdrant client and Redis stub in test configuration to remove external dependencies.
+- Ran flake8 and pytest for vector store tests.
+## Agent Log 2025-09-07
+- Added dictionary-based Redis stub and synced Qdrant test client API with upstream.
+- Expanded vector store tests with scope eviction case and reran flake8 and pytest.
 - Added unit tests for MultiTeamOrchestrator initialization and state transitions.
 - Formatted test fixtures with Black, added docstrings, and resolved flake8 warnings.
-
 ## Agent Interaction
 **Timestamp:** 2025-09-07T03:26:43+00:00
 ## Agent Log 2025-09-07

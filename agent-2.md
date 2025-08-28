@@ -170,6 +170,13 @@ Logged action in tests/agent.md.
 File: tests/test_knowledge_query_get.py
 ```
 ---
+## Agent Log 2025-09-07
+- Added qdrant-client dependency to development settings and implemented in-memory Qdrant client for tests.
+- Installed qdrant-client and verified vector store behavior with flake8 and pytest.
+
+## Agent Log 2025-09-07
+- Introduced in-memory Redis stub and aligned Qdrant test client with upstream API signatures.
+- Added scope eviction unit test and revalidated with flake8 and pytest.
 ## Agent Interaction
 **Timestamp:** $(date -Iseconds)
 **Agent ID:** openai-assistant
