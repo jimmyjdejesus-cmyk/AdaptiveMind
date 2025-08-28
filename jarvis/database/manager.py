@@ -92,7 +92,7 @@ class DatabaseManager:
                 return get_user(username)
             except:
                 pass
-        
+
         # Fallback implementation
         with self._lock:
             conn = sqlite3.connect(self.db_path)
@@ -182,7 +182,7 @@ class DatabaseManager:
                 return get_user_preferences(username)
             except:
                 pass
-        
+
         # Fallback implementation
         prefs = {}
         try:

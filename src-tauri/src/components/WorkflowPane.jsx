@@ -182,10 +182,10 @@ const WorkflowPane = () => {
         <h2>🧠 Cerebro Galaxy</h2>
         <div className="workflow-controls">
           <div className="view-mode-toggle">
-            <button 
-              className={viewMode === 'galaxy' ? 'active' : ''}
-              onClick={() => setViewMode('galaxy')}
-            >
+            <button
+                className={viewMode === 'galaxy' ? 'active' : ''}
+                onClick={() => setViewMode('galaxy')}
+              >
               🌌 Galaxy
             </button>
             <button 

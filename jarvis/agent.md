@@ -14,3 +14,5 @@ Updated package init to gracefully handle coding_agent import errors.
 Dev Log
 [2025-08-27T20:19:23+00:00] Refined curiosity routing (sanitization and debug logs).
 
+- 2025-09-07: Removed trailing spaces in core, database, workflows, and mcp modules.
+
