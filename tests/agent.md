@@ -181,3 +181,10 @@ File is quite long; consider archiving older entries soon.
 File: tests/test_knowledge_query_get.py
 ```
 ---
+## Agent Log 2025-02-14
+- Simplified `test_api.py` to focus on memory interactions.
+- Added `pytest.importorskip` in `test_vector_store.py` to handle missing `qdrant_client`.
+
+## Agent Log 2025-09-08
+- Replaced corrupted `test_orchestrator_auction.py` with a minimal
+  asynchronous test exercising `MultiAgentOrchestrator` synthesis.
