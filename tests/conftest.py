@@ -13,6 +13,16 @@ neo4j_module = types.ModuleType("neo4j")
 neo4j_module.GraphDatabase = object
 neo4j_module.Driver = object
 sys.modules.setdefault("neo4j", neo4j_module)
+neo4j_exceptions = types.ModuleType("neo4j.exceptions")
+class ServiceUnavailable(Exception):
+    pass
+
+
+class TransientError(Exception):
+    pass
+neo4j_exceptions.ServiceUnavailable = ServiceUnavailable
+neo4j_exceptions.TransientError = TransientError
+sys.modules.setdefault("neo4j.exceptions", neo4j_exceptions)
 
 langgraph_module = types.ModuleType("langgraph")
 graph_submodule = types.ModuleType("langgraph.graph")
@@ -33,15 +43,6 @@ class NoKeyringError(Exception):
 keyring_errors_module.NoKeyringError = NoKeyringError
 sys.modules.setdefault("keyring.errors", keyring_errors_module)
 
-pydantic_module = types.ModuleType("pydantic")
-class BaseModel:  # minimal stand-in
-    pass
-
-def Field(*args, **kwargs):
-    return None
-pydantic_module.BaseModel = BaseModel
-pydantic_module.Field = Field
-sys.modules.setdefault("pydantic", pydantic_module)
 
 chromadb_module = types.ModuleType("chromadb")
 chromadb_utils = types.ModuleType("chromadb.utils")
