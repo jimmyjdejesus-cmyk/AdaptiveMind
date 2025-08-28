@@ -20,6 +20,13 @@ INNOVATORS_DISRUPTORS_TEAM = "innovators_disruptors"
 SECURITY_QUALITY_TEAM = "security_quality"
 
 
+# Team name constants to avoid hardcoded strings
+ADVERSARY_PAIR_TEAM = "adversary_pair"
+COMPETITIVE_PAIR_TEAM = "competitive_pair"
+SECURITY_QUALITY_TEAM = "security_quality"
+INNOVATORS_DISRUPTORS_TEAM = "innovators_disruptors"
+
+
 # Define the state for our graph
 
 
@@ -39,12 +46,15 @@ class MultiTeamOrchestrator:
         self,
         orchestrator_agent: OrchestratorAgent,
         evaluator: PruningEvaluator | None = None,
+        red_critic: RedTeamCritic | None = None,
+        blue_critic: BlueTeamCritic | None = None,
+        white_gate: WhiteGate | None = None,
     ) -> None:
         self.orchestrator = orchestrator_agent
         self.evaluator = evaluator
-        self.red_critic = RedTeamCritic()
-        self.blue_critic = BlueTeamCritic()
-        self.white_gate = WhiteGate()
+        self.red_critic = red_critic or RedTeamCritic()
+        self.blue_critic = blue_critic or BlueTeamCritic()
+        self.white_gate = white_gate or WhiteGate()
         self.graph = self._build_graph()
 
     def _build_graph(self):

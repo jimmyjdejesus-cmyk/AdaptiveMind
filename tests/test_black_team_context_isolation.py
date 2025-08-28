@@ -7,6 +7,13 @@ import time
 
 import pytest
 
+from tests.conftest import load_graph_module
+
+
+class DummyGraph:
+    def stream(self, *_args, **_kwargs):
+        return []
+
 
 @pytest.fixture
 def mto_cls(monkeypatch):
@@ -133,7 +140,8 @@ class DummyBlackAgent:
 
 class DummyOrchestrator:
     def __init__(self):
-        self.teams = {"innovators_disruptors": DummyBlackAgent()}
+        self.teams = {"black": DummyBlackAgent()}
+        self.team_status = {}
 
     def log(self, *args, **kwargs):  # pragma: no cover - noop
         pass
@@ -155,6 +163,7 @@ class PairOrchestrator:
                 DummyAgent("Green"),
             )
         }
+        self.team_status = {}
 
     def log(self, *args, **kwargs):  # pragma: no cover - noop
         pass
@@ -169,12 +178,14 @@ def test_black_team_excludes_white_team_context(mto_cls):
     state = {
         "objective": "test",
         "context": {"foo": "bar", "leak": "secret"},
-        "team_outputs": {"security_quality": {"leak": "classified"}},
+        "team_outputs": {
+            "white": {"leak": "classified"}
+        },
     }
 
     mto._run_innovators_disruptors(state)
 
-    received = orchestrator.teams["innovators_disruptors"].received_context
+    received = orchestrator.teams["black"].received_context
     assert "leak" not in received
     assert received["foo"] == "bar"
 
@@ -186,12 +197,12 @@ def test_black_team_handles_non_dict_white_output(mto_cls, white_output):
     state = {
         "objective": "test",
         "context": {"foo": "bar", "leak": "secret"},
-        "team_outputs": {"security_quality": white_output},
+        "team_outputs": {"white": white_output},
     }
 
     mto._run_innovators_disruptors(state)
 
-    received = orchestrator.teams["innovators_disruptors"].received_context
+    received = orchestrator.teams["black"].received_context
     assert received["leak"] == "secret"
 
 
