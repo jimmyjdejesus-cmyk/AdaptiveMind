@@ -36,3 +36,7 @@ Modified meta_intelligence to persist mission step outcomes and initialize knowl
 ## Agent Log
 - Rewrote `meta_intelligence.py` with `ExecutiveAgent.plan`, dynamic sub-orchestrator spawning, mission execution, and world model updates.
 
+
+## Agent Log 2025-09-06
+- Passed allowed specialist lists when spawning child orchestrators in meta_intelligence._spawn_sub_orchestrators.
+

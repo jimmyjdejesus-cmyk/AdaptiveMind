@@ -65,15 +65,29 @@ class ExecutiveAgent(AIAgent):
         return dag
 
     def _spawn_sub_orchestrators(self, dag: MissionDAG) -> None:
-        """Create sub-orchestrators for each team scope in ``dag``."""
+        """Create sub-orchestrators for each team scope in ``dag``.
+
+        Each spawned child orchestrator is restricted to the specialists
+        referenced by mission nodes within that team scope.
+        """
+        scope_caps: Dict[str, set[str]] = {}
         for node in dag.nodes.values():
-            scope = node.team_scope
+            if node.team_scope:
+                scope_caps.setdefault(node.team_scope, set()).add(node.capability)
+
+        for scope, caps in scope_caps.items():
             if (
                 scope
                 and scope not in self.orchestrator.specialists
                 and scope not in self.orchestrator.child_orchestrators
             ):
-                self.orchestrator.create_child_orchestrator(scope, {"mission_name": scope})
+                self.orchestrator.create_child_orchestrator(
+                    scope,
+                    {
+                        "mission_name": scope,
+                        "allowed_specialists": sorted(caps),
+                    },
+                )
 
     # ------------------------------------------------------------------
     # Directive management and execution

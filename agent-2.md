@@ -20,3 +20,6 @@
 - Implemented ExecutiveAgent planning and dynamic sub-orchestrator spawning.
 - Added SubOrchestrator DAG execution support.
 - Created unit tests for ExecutiveAgent.plan and SubOrchestrator specialist filtering.
+## Agent Log 2025-09-06
+- Restricted sub-orchestrator specialist set propagation and enforcement; updated planning tests and execution guards.
+

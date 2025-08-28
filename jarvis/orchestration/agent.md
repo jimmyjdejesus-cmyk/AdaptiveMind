@@ -13,3 +13,6 @@
 - Added critic verdict tracking in TeamWorkflowState and initial state.
 ## Agent Log
 - Implemented `SubOrchestrator` specialist filtering and DAG execution.
+## Agent Log 2025-09-06
+- Enforced allowed specialist checks in SubOrchestrator.run_mission_dag.
+
