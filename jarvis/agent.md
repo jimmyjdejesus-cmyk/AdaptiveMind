@@ -34,3 +34,9 @@ Files: orchestration/graph.py
 
 ## Agent Log 2025-08-28
 - Updated orchestration graph for style compliance and removed unused context variable.
+## Agent Log 2025-08-28
+- Added context filtering for Black team to exclude White team outputs and ran flake8.
+## Agent Log 2025-09-07
+- Introduced `context_utils.filter_context` and wired graph to use it.
+- Logged security rationale and added test for White/Black context isolation.
+

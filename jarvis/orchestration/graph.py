@@ -8,6 +8,7 @@ from langgraph.graph import StateGraph, END
 # Temporarily removed to resolve import error
 from jarvis.orchestration.team_agents import OrchestratorAgent, TeamMemberAgent
 from jarvis.orchestration.pruning import PruningEvaluator
+from jarvis.orchestration.context_utils import filter_context
 
 from jarvis.critics import WhiteGate, CriticVerdict
 from jarvis.critics import RedTeamCritic, BlueTeamCritic
@@ -248,12 +249,18 @@ class MultiTeamOrchestrator:
         self, state: TeamWorkflowState
     ) -> TeamWorkflowState:
         """Run the Black team."""
-        # This is where the special visibility rule applies.
-        # The Black team's context would be filtered to exclude White team's
-        # outputs.
+        # Filter out White team's results so the Black team operates without
+        # security feedback bias. Using shared helper guards against leakage.
         black_agent = self.orchestrator.teams["innovators_disruptors"]
+        white_output = state["team_outputs"].get("security_quality", {})
+        white_keys = (
+            white_output.keys() if isinstance(white_output, dict) else []
+        )
+        filtered_context = filter_context(state["context"], white_keys)
+        temp_state = dict(state)
+        temp_state["context"] = filtered_context
 
-        black_output = self._run_team(black_agent, state)
+        black_output = self._run_team(black_agent, temp_state)
         state["team_outputs"]["innovators_disruptors"] = black_output
         return state
 
