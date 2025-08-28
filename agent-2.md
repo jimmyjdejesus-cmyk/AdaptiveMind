@@ -28,3 +28,10 @@
 - Added SubOrchestrator DAG execution support.
 - Created unit tests for ExecutiveAgent.plan and SubOrchestrator specialist filtering.
 
+## Agent Log 2025-08-28
+- Cleaned orchestrator imports and resolved line-length/trailing whitespace via black and flake8.
+- Restored tests/conftest.py and added pydantic.create_model stub; installed test deps but pytest still fails (missing streamlit).
+
+## Agent Log 2025-09-07
+- Installed bs4, PyYAML, and Redis to unblock tests; stubs added for ecosystem and team agents.
+- Introduced PerformanceTracker tests validating retry metrics.
