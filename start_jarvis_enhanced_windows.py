@@ -10,7 +10,6 @@ import os
 import time
 import webbrowser
 from pathlib import Path
-import requests
 
 def print_windows_setup_guide():
     """Print setup guide for Windows users"""
@@ -86,7 +85,7 @@ def install_dependencies_windows():
         print("Installing Python dependencies...")
         subprocess.run([
             sys.executable, "-m", "pip", "install",
-            "fastapi==0.111.0", "uvicorn", "websockets", "redis", "pydantic>=2.7,<3"
+            "fastapi==0.111.0", "uvicorn", "websockets", "redis", "requests", "pydantic>=2.7,<3"
         ], check=True, shell=False)
         print("✅ Python dependencies installed")
     except subprocess.CalledProcessError:
@@ -165,8 +164,11 @@ def start_backend_windows():
             
             # Test the connection
             try:
+                import requests
                 requests.get("http://localhost:8000/health", timeout=5)
                 print("✅ Backend health check passed")
+            except ImportError:
+                print("⚠️ 'requests' not installed; skipping backend health check")
             except Exception:
                 print("⚠️ Backend starting up, health check will retry...")
             
