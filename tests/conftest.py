@@ -1,32 +1,137 @@
 """Shared pytest fixtures for the test suite."""
 
+from __future__ import annotations
+
 import sys
 import types
+import importlib.util
+import enum
+from dataclasses import dataclass
 from pathlib import Path
 from unittest.mock import MagicMock
-import importlib.util
-
 import pytest
-import keyring
 import builtins
 import logging as _logging
 
-builtins.Path = Path
-builtins.sys = sys
-builtins.logging = _logging
+# flake8: noqa
 
-# Provide a minimal langgraph stub if the package is unavailable
-try:  # pragma: no cover - optional dependency
-    import langgraph  # noqa: F401
-except ModuleNotFoundError:  # pragma: no cover
-    langgraph = types.ModuleType("langgraph")
-    graph_mod = types.ModuleType("langgraph.graph")
-    graph_mod.StateGraph = object
-    graph_mod.END = None
-    sys.modules["langgraph"] = langgraph
-    sys.modules["langgraph.graph"] = graph_mod
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-# Minimal memory_service stub to avoid external services
+# Stub optional dependencies
+sys.modules.setdefault("neo4j", MagicMock())
+keyring_errors = types.ModuleType("keyring.errors")
+
+
+class NoKeyringError(Exception):
+    pass
+
+
+keyring_errors.NoKeyringError = NoKeyringError
+keyring_module = types.ModuleType("keyring")
+keyring_module.errors = keyring_errors
+keyring_module.get_password = lambda *args, **kwargs: None
+sys.modules.setdefault("keyring", keyring_module)
+sys.modules.setdefault("keyring.errors", keyring_errors)
+
+langgraph_graph = types.ModuleType("langgraph.graph")
+langgraph_graph.END = object()
+
+
+class StateGraph:  # pragma: no cover - minimal stub
+    pass
+
+
+langgraph_graph.StateGraph = StateGraph
+langgraph_module = types.ModuleType("langgraph")
+langgraph_module.graph = langgraph_graph
+sys.modules.setdefault("langgraph", langgraph_module)
+sys.modules.setdefault("langgraph.graph", langgraph_graph)
+
+# Additional stubs
+nx_module = types.ModuleType("networkx")
+
+
+class DiGraph:  # pragma: no cover - simple stub
+    def __init__(self, *a, **k):
+        self._nodes = {}
+        self._edges = {}
+
+    def add_node(self, node, **k):
+        self._nodes[node] = k
+
+    def add_edge(self, u, v, **k):
+        self._edges.setdefault(u, []).append((v, k))
+
+    def nodes(self, data=False):
+        return self._nodes.items() if data else self._nodes.keys()
+
+    def edges(self, data=False):
+        edges = []
+        for u, lst in self._edges.items():
+            edges.extend([(u, v, attrs) if data else (u, v) for v, attrs in lst])
+        return edges
+
+    def predecessors(self, node):
+        return [u for u, v in self._edges.items() if v[0][0] == node]
+
+    def successors(self, node):
+        return [t for t, attrs in self._edges.get(node, [])]
+
+    def has_node(self, node):
+        return node in self._nodes
+
+    def has_edge(self, u, v):
+        lst = self._edges.get(u, [])
+        return v in [t for t, attrs in lst]
+
+    def in_edges(self, node, data=False):
+        edges = []
+        for u, lst in self._edges.items():
+            for v, attrs in lst:
+                if v == node:
+                    edges.append((u, v, attrs) if data else (u, v))
+        return edges
+
+    def out_edges(self, node, data=False):
+        lst = self._edges.get(node, [])
+        return [(node, t, attrs) if data else (node, t) for t, attrs in lst]
+
+
+nx_module.DiGraph = DiGraph
+sys.modules.setdefault("networkx", nx_module)
+
+requests_module = types.ModuleType('requests')
+sys.modules.setdefault('requests', requests_module)
+critics_pkg = types.ModuleType('jarvis.agents.critics')
+const_module = types.ModuleType('jarvis.agents.critics.constitutional_critic')
+
+
+class ConstitutionalCritic:
+    def __init__(self, *a, **k):
+        pass
+
+
+const_module.ConstitutionalCritic = ConstitutionalCritic
+critics_pkg.constitutional_critic = const_module
+sys.modules.setdefault('jarvis.agents.critics', critics_pkg)
+sys.modules.setdefault('jarvis.agents.critics.constitutional_critic', const_module)
+
+
+# Internal package stubs
+homeostasis_module = types.ModuleType("jarvis.homeostasis")
+monitor_submodule = types.ModuleType("jarvis.homeostasis.monitor")
+
+
+class SystemMonitor:
+    pass
+
+
+monitor_submodule.SystemMonitor = SystemMonitor
+sys.modules.setdefault("jarvis.homeostasis", homeostasis_module)
+sys.modules.setdefault("jarvis.homeostasis.monitor", monitor_submodule)
+
 memory_service = types.ModuleType("memory_service")
 models_sub = types.ModuleType("memory_service.models")
 
@@ -78,47 +183,37 @@ memory_service.vector_store = None
 sys.modules.setdefault("memory_service", memory_service)
 sys.modules.setdefault("memory_service.models", models_sub)
 
-# Minimal ProjectMemory stub to avoid chromadb dependency
-project_memory = types.ModuleType("jarvis.memory.project_memory")
+# Stub jarvis.ecosystem to prevent circular imports during test bootstrap
+ecosystem_pkg = types.ModuleType("jarvis.ecosystem")
+meta_module = types.ModuleType("jarvis.ecosystem.meta_intelligence")
 
 
-class ProjectMemory:
-    def add(self, *a, **k):  # pragma: no cover - stub
-        pass
-
-    def query(self, *a, **k):  # pragma: no cover - stub
-        return []
-
-
-project_memory.ProjectMemory = ProjectMemory
-sys.modules.setdefault("jarvis.memory.project_memory", project_memory)
-
-# Stub neo4j module to avoid optional dependency
-neo4j_stub = types.ModuleType("neo4j")
-neo4j_stub.GraphDatabase = object
-neo4j_stub.Driver = object
-sys.modules.setdefault("neo4j", neo4j_stub)
-
-neo4j_exceptions = types.ModuleType("neo4j.exceptions")
-
-
-class ServiceUnavailable(Exception):  # pragma: no cover - stub
+class ExecutiveAgent:  # pragma: no cover - minimal placeholder
     pass
 
 
-class TransientError(Exception):  # pragma: no cover - stub
+meta_module.ExecutiveAgent = ExecutiveAgent
+ecosystem_pkg.meta_intelligence = meta_module
+ecosystem_pkg.superintelligence = types.ModuleType(
+    "jarvis.ecosystem.superintelligence"
+)
+sys.modules.setdefault("jarvis.ecosystem", ecosystem_pkg)
+sys.modules.setdefault("jarvis.ecosystem.meta_intelligence", meta_module)
+sys.modules.setdefault(
+    "jarvis.ecosystem.superintelligence", ecosystem_pkg.superintelligence
+)
+
+# Simplified team agent to satisfy orchestration imports
+team_agents_module = types.ModuleType("jarvis.orchestration.team_agents")
+
+
+class BlackInnovatorAgent:  # pragma: no cover - minimal placeholder
     pass
 
 
-neo4j_exceptions.ServiceUnavailable = ServiceUnavailable
-neo4j_exceptions.TransientError = TransientError
-neo4j_stub.exceptions = neo4j_exceptions
-sys.modules.setdefault("neo4j.exceptions", neo4j_exceptions)
+team_agents_module.BlackInnovatorAgent = BlackInnovatorAgent
+sys.modules.setdefault("jarvis.orchestration.team_agents", team_agents_module)
 
-# Ensure repository root on path
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 # Lightweight workflows package to avoid circular imports
 spec = importlib.util.spec_from_file_location(
