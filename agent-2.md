@@ -43,6 +43,8 @@
 - Installed flake8 and ran linting and pytest for verification.
 - Added SubOrchestrator DAG execution support.
 - Created unit tests for ExecutiveAgent.plan and SubOrchestrator specialist filtering.
+## Agent Log 2025-09-06
+- Restricted sub-orchestrator specialist set propagation and enforcement; updated planning tests and execution guards.
 ## Agent Log 2025-09-07
 - Introduced PersistentQueue for CuriosityRouter with Redis integration and in-memory fallback.
 - Added tests covering enqueue/dequeue, failure handling, and concurrency.

@@ -165,6 +165,8 @@ Added integration test verifying memory and knowledge graph persistence across m
 ## Agent Log 2025-09-08
 - Ensured `sys` import appears before usage in `conftest.py` and installed FastAPI, qdrant-client, and fakeredis to reduce collection errors.
 - Added tests for ExecutiveAgent sub-orchestrator spawning and SubOrchestrator specialist filtering.
+## Agent Log 2025-09-06
+- Added tests verifying allowed specialist propagation and enforcement in sub-orchestrators.
 ## Agent Log 2025-09-07
 - Added thread-safe PersistentQueue tests for Redis failure and concurrency. File is lengthy; consider archiving old logs.
 - Added tests for file-backed ProjectMemory fallback.
