@@ -13,6 +13,7 @@ Updated package init to gracefully handle coding_agent import errors.
 {"files": ["__init__.py"]}
 Dev Log
 [2025-08-27T20:19:23+00:00] Refined curiosity routing (sanitization and debug logs).
+- 2025-09-07: Removed trailing spaces in core, database, workflows, and mcp modules.
 ## Agent Interaction
 **Timestamp:** 2025-08-28T02:27:38+00:00
 **Agent ID:** openai-assistant
