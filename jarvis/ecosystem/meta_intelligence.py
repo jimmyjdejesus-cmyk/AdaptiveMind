@@ -70,12 +70,14 @@ class ExecutiveAgent(AIAgent):
         Each spawned child orchestrator is restricted to the specialists
         referenced by mission nodes within that team scope.
         """
-        scope_caps: Dict[str, set[str]] = {}
+        scope_specialists: Dict[str, set[str]] = {}
         for node in dag.nodes.values():
             if node.team_scope:
-                scope_caps.setdefault(node.team_scope, set()).add(node.capability)
+                scope_specialists.setdefault(node.team_scope, set()).add(
+                    node.team_scope
+                )
 
-        for scope, caps in scope_caps.items():
+        for scope, specialists in scope_specialists.items():
             if (
                 scope
                 and scope not in self.orchestrator.specialists
@@ -85,7 +87,7 @@ class ExecutiveAgent(AIAgent):
                     scope,
                     {
                         "mission_name": scope,
-                        "allowed_specialists": sorted(caps),
+                        "allowed_specialists": sorted(specialists),
                     },
                 )
 
