@@ -11,7 +11,7 @@ try:  # pragma: no cover - optional import
         StepResult,
         END,
     )
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
     AgentSpec = None  # type: ignore
     DynamicOrchestrator = None  # type: ignore
     MultiAgentOrchestrator = None  # type: ignore
