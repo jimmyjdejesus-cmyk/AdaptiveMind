@@ -63,6 +63,21 @@ Logged action in tests/agent.md.
 ```
 File: tests/test_knowledge_query_get.py
 ```
+---## Agent Log 2025-09-07
+- Added minimal `AgentCore` class with flexible initialization and placeholder `run` method.
+- Updated `agent.core` package to re-export `AgentCore` cleanly.
+- Executed targeted backend coordination test with `pytest` and ran `flake8` on modified files.
+
+## Agent Log 2025-09-07
+- Enhanced AgentCore with component registry and helper methods.
+- Added unit test covering initialization and dynamic component attachment.
+- Ran flake8 and targeted pytest.
+
+## Agent Log 2025-09-07
+- Updated AgentCore.get_component to raise KeyError for absent components.
+- Extended unit test to cover missing component path.
+- Ran flake8 on AgentCore module and tests; all passed.
+- Ran pytest for AgentCore unit tests and backend coordination test.
 ---
 ## Agent Log 2025-09-08
 - Pinned FastAPI to 0.111.x and Pydantic to 2.7+ across requirements, pyproject, startup scripts, and documentation.
