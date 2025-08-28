@@ -38,3 +38,10 @@ Ran pytest tests/test_orchestrator_flow.py::test_orchestrator_with_critic; faile
 File: graph.py
 ```
 ---
+## Agent Log 2025-08-28
+- Filtered White team results from Black team context and executed without
+  security bias. Ran flake8 on graph.py.
+## Agent Log 2025-09-07
+- Refactored Black team context filtering into shared `filter_context` utility
+  and documented leakage safeguards.
+- Added unit test verifying White team data is removed from Black team context.

@@ -187,6 +187,10 @@ File is quite long; consider archiving older entries soon.
 ```
 File: tests/test_knowledge_query_get.py
 ```
+---
+## Agent Log 2025-09-07
+- Added test verifying Black team ignores White team context during graph execution.
+- File remains lengthy; consider archiving to agent-2.md soon.
 - Added unit test for AgentCore dynamic components.
 ## Note
 File is very long; starting new logs in agent-2.md.
