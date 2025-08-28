@@ -1,4 +1,4 @@
-"""Tests for the GET /knowledge/query endpoint."""
+"""Tests for knowledge and health endpoints including negative cases."""
 
 from unittest.mock import patch
 import types
@@ -68,9 +68,15 @@ def test_health_endpoint():
     assert response.json() == {"status": "ok"}
 
 
-def test_health_unsupported_method():
-    """Unsupported methods return HTTP 405 for health endpoint."""
+def test_health_post_unsupported_method():
+    """POST requests return HTTP 405 for health endpoint."""
     response = client.post("/health")
+    assert response.status_code == 405
+
+
+def test_health_put_unsupported_method():
+    """PUT requests return HTTP 405 for health endpoint."""
+    response = client.put("/health")
     assert response.status_code == 405
 
 
@@ -80,7 +86,13 @@ def test_unknown_endpoint():
     assert response.status_code == 404
 
 
-def test_unsupported_method():
-    """Unsupported HTTP methods return HTTP 405."""
+def test_knowledge_query_post_unsupported_method():
+    """POST requests return HTTP 405 for knowledge query endpoint."""
     response = client.post("/knowledge/query", json={"q": "nodes"})
+    assert response.status_code == 405
+
+
+def test_knowledge_query_delete_unsupported_method():
+    """DELETE requests return HTTP 405 for knowledge query endpoint."""
+    response = client.delete("/knowledge/query")
     assert response.status_code == 405
