@@ -31,6 +31,13 @@ Files: orchestration/graph.py
 - Integrated policy optimization and vector memory hooks across orchestration and retrieval modules.
 - Integrated BlackTeamOrchestrator export and spawn hook in team agent.
 \n## Agent Log 2025-09-06\n- Wired WhiteGate into multi-team orchestration to merge red/blue critic verdicts.\n
-
+- Added file-backed fallback MemoryManager and ProjectMemory.
+- Logged AgentSpec addition and export in orchestration module.
 ## Agent Log 2025-08-28
+- Updated orchestration graph for style compliance and removed unused context variable.
+## Agent Log 2025-08-28
+- Added context filtering for Black team to exclude White team outputs and ran flake8.
+## Agent Log 2025-09-07
+- Introduced `context_utils.filter_context` and wired graph to use it.
+- Logged security rationale and added test for White/Black context isolation.
 - Updated orchestration graph for style compliance and removed unused context variable.
