@@ -23,6 +23,25 @@ except ImportError:  # pragma: no cover
 from .quantum_memory import QuantumMemory
 from .replay_memory import Experience, ReplayMemory
 
+_LOCKS: Dict[str, threading.Lock] = {}
+_LOCKS_LOCK = threading.Lock()
+
+
+def _file_lock(path: str) -> threading.Lock:
+    """Return a process-wide lock for ``path``.
+
+    Ensures that multiple :class:`ProjectMemory` instances writing to the same
+    file coordinate access and avoid clobbering each other's data.
+    """
+
+    with _LOCKS_LOCK:
+        lock = _LOCKS.get(path)
+        if lock is None:
+            lock = threading.Lock()
+            _LOCKS[path] = lock
+        return lock
+
+
 # ---------------------------------------------------------------------------
 # Optional import of the full-featured ProjectMemory
 # ---------------------------------------------------------------------------
@@ -43,7 +62,6 @@ except ImportError:  # pragma: no cover - used in minimal test environments
         ) -> None:
             self.persist_directory = persist_directory
             os.makedirs(self.persist_directory, exist_ok=True)
-            self._lock = threading.Lock()
 
         # Internal helpers -------------------------------------------------
         def _path(self, project: str, session: str) -> str:
@@ -71,7 +89,8 @@ except ImportError:  # pragma: no cover - used in minimal test environments
             }
             path = self._path(project, session)
 
-            with self._lock:
+            lock = _file_lock(path)
+            with lock:
                 try:
                     with open(path, "a+", encoding="utf-8") as fh:
                         if fcntl is not None:
@@ -115,7 +134,8 @@ except ImportError:  # pragma: no cover - used in minimal test environments
             """
 
             path = self._path(project, session)
-            with self._lock:
+            lock = _file_lock(path)
+            with lock:
                 try:
                     if not os.path.exists(path):
                         return []
@@ -151,7 +171,8 @@ except ImportError:  # pragma: no cover - used in minimal test environments
             """
 
             path = self._path(project, session)
-            with self._lock:
+            lock = _file_lock(path)
+            with lock:
                 try:
                     if not os.path.exists(path):
                         raise KeyError(record_id)
@@ -192,7 +213,8 @@ except ImportError:  # pragma: no cover - used in minimal test environments
             """
 
             path = self._path(project, session)
-            with self._lock:
+            lock = _file_lock(path)
+            with lock:
                 try:
                     if not os.path.exists(path):
                         raise KeyError(record_id)
