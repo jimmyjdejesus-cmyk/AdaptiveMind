@@ -5,3 +5,4 @@
 - Switched `Neo4jConfigForm` to retrieve API key via in-memory store.
 - Adjusted LogViewerPane tests to match UI placeholder and status titles.
 - Added Teams tab with sliders for Black team in `SettingsView.jsx`.
+- Added test for `LogViewerPane` covering non-OK HTTP response and retry.

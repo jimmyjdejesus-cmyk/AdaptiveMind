@@ -8,6 +8,10 @@ jest.mock('@tauri-apps/api', () => ({
   http: { fetch: jest.fn() },
 }));
 
+beforeEach(() => {
+  http.fetch.mockReset();
+});
+
 test('shows connection status and HITL badge', async () => {
   http.fetch.mockResolvedValue({ ok: true, data: 'first line' });
 
@@ -40,6 +44,21 @@ test('shows connection status and HITL badge', async () => {
 test('displays error and retries fetch successfully', async () => {
   http.fetch
     .mockRejectedValueOnce(new Error('network'))
+    .mockResolvedValueOnce({ ok: true, data: 'first line' });
+
+  render(<LogViewerPane />);
+
+  await screen.findByText(/Failed to load agent logs/);
+
+  fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+
+  await screen.findByText(/first line/);
+  expect(screen.queryByText(/Failed to load agent logs/)).not.toBeInTheDocument();
+});
+
+test('handles non-OK HTTP response then succeeds after retry', async () => {
+  http.fetch
+    .mockResolvedValueOnce({ ok: false, status: 500 })
     .mockResolvedValueOnce({ ok: true, data: 'first line' });
 
   render(<LogViewerPane />);
