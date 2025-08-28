@@ -36,3 +36,4 @@
 - Propagated critic note fallbacks through merge for debugging.
 - Added tests for divergent critic notes and extreme risk values.
 - Executed flake8 and pytest.
+
