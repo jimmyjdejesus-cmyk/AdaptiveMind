@@ -16,7 +16,7 @@ DEFAULT_WORKFLOWS_ENABLED = True  # Phase 4: Advanced Workflows!
 # Import with error handling - only working components
 try:  # pragma: no cover - optional dependencies
     from jarvis.core.simple_agent import JarvisAgent as SimpleJarvisAgent
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     SimpleJarvisAgent = None
 
 try:  # pragma: no cover - optional dependencies
