@@ -181,3 +181,11 @@ File is quite long; consider archiving older entries soon.
 File: tests/test_knowledge_query_get.py
 ```
 ---
+## Agent Log 2025-09-07
+- Introduced in-memory Qdrant client and Redis stub in test configuration to remove external dependencies.
+- Ran flake8 and pytest for vector store tests.
+
+## Agent Log 2025-09-07
+- Added dictionary-based Redis stub and synced Qdrant test client API with upstream.
+- Expanded vector store tests with scope eviction case and reran flake8 and pytest.
+
