@@ -173,7 +173,9 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
                         data = await coro
                     self.performance_tracker.record_event("step", True, attempt)
                     break
-                except Exception:
+                except Exception as e:
+                    if isinstance(e, asyncio.CancelledError):
+                        raise
                     self.performance_tracker.record_event("step", False, attempt)
                     if attempt > retries:
                         raise
