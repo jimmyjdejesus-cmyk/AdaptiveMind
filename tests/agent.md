@@ -149,3 +149,6 @@ Added integration test verifying memory and knowledge graph persistence across m
 
 - Added tests for file-backed ProjectMemory fallback.
 - Added tests for update/delete operations and concurrent access on file-backed ProjectMemory.
+
+- Added multi-process concurrency and corrupt/missing file tests for fallback ProjectMemory.
+
