@@ -10,6 +10,7 @@ import os
 import time
 import webbrowser
 from pathlib import Path
+import requests
 
 def check_npm_available():
     """Check if npm is available"""
@@ -144,10 +145,9 @@ def start_backend():
             
             # Test the connection
             try:
-                import urllib.request
-                urllib.request.urlopen("http://localhost:8000/health", timeout=5)
+                requests.get("http://localhost:8000/health", timeout=5)
                 print("✅ Backend health check passed")
-            except:
+            except Exception:
                 print("⚠️ Backend starting up, health check will retry...")
             
             return process
@@ -184,7 +184,7 @@ def start_frontend():
             cwd=frontend_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            shell=True if os.name == 'nt' else False  # Use shell on Windows
+            shell=False
         )
         
         # Give it a moment to start
@@ -228,11 +228,11 @@ def build_tauri_executable():
         # Install Tauri CLI if not present
         print("📦 Installing Tauri CLI...")
         result = subprocess.run(
-            ["npm", "install", "@tauri-apps/cli"], 
-            cwd=frontend_path, 
-            capture_output=True, 
+            ["npm", "install", "@tauri-apps/cli"],
+            cwd=frontend_path,
+            capture_output=True,
             text=True,
-            shell=True if os.name == 'nt' else False,
+            shell=False,
             check=True
         )
         print("✅ Tauri CLI installed successfully")
@@ -244,7 +244,7 @@ def build_tauri_executable():
             cwd=frontend_path,
             capture_output=True,
             text=True,
-            shell=True if os.name == 'nt' else False
+            shell=False
         )
         
         if result.returncode == 0:

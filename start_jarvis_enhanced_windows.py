@@ -10,6 +10,7 @@ import os
 import time
 import webbrowser
 from pathlib import Path
+import requests
 
 def print_windows_setup_guide():
     """Print setup guide for Windows users"""
@@ -46,7 +47,7 @@ def check_windows_node_installation():
     node_found = False
     for cmd in node_commands:
         try:
-            result = subprocess.run([cmd, "--version"], capture_output=True, text=True, shell=True)
+            result = subprocess.run([cmd, "--version"], capture_output=True, text=True, shell=False)
             if result.returncode == 0:
                 print(f"✅ Node.js found: {result.stdout.strip()}")
                 node_found = True
@@ -62,7 +63,7 @@ def check_windows_node_installation():
     npm_found = False
     for cmd in npm_commands:
         try:
-            result = subprocess.run([cmd, "--version"], capture_output=True, text=True, shell=True)
+            result = subprocess.run([cmd, "--version"], capture_output=True, text=True, shell=False)
             if result.returncode == 0:
                 print(f"✅ npm found: {result.stdout.strip()}")
                 npm_found = True
@@ -86,7 +87,7 @@ def install_dependencies_windows():
         subprocess.run([
             sys.executable, "-m", "pip", "install",
             "fastapi==0.111.0", "uvicorn", "websockets", "redis", "pydantic>=2.7,<3"
-        ], check=True, shell=True)
+        ], check=True, shell=False)
         print("✅ Python dependencies installed")
     except subprocess.CalledProcessError:
         print("❌ Failed to install Python dependencies")
@@ -103,14 +104,14 @@ def install_dependencies_windows():
                 for npm_cmd in ["npm", "npm.cmd"]:
                     try:
                         # First try normal install
-                        subprocess.run([npm_cmd, "install"], cwd=frontend_path, check=True, shell=True)
+                        subprocess.run([npm_cmd, "install"], cwd=frontend_path, check=True, shell=False)
                         print("✅ Node.js dependencies installed")
                         return True
                     except subprocess.CalledProcessError:
                         # If normal install fails, try with --legacy-peer-deps
                         try:
                             print("⚠️ Retrying with --legacy-peer-deps...")
-                            subprocess.run([npm_cmd, "install", "--legacy-peer-deps"], cwd=frontend_path, check=True, shell=True)
+                            subprocess.run([npm_cmd, "install", "--legacy-peer-deps"], cwd=frontend_path, check=True, shell=False)
                             print("✅ Node.js dependencies installed (with legacy peer deps)")
                             return True
                         except subprocess.CalledProcessError:
@@ -150,7 +151,7 @@ def start_backend_windows():
         process = subprocess.Popen(
             [sys.executable, "main.py"],
             cwd=backend_path,
-            shell=True,
+            shell=False,
             creationflags=subprocess.CREATE_NEW_CONSOLE
         )
         
@@ -164,10 +165,9 @@ def start_backend_windows():
             
             # Test the connection
             try:
-                import urllib.request
-                urllib.request.urlopen("http://localhost:8000/health", timeout=5)
+                requests.get("http://localhost:8000/health", timeout=5)
                 print("✅ Backend health check passed")
-            except:
+            except Exception:
                 print("⚠️ Backend starting up, health check will retry...")
             
             return process
@@ -195,7 +195,7 @@ def start_frontend_windows():
                 process = subprocess.Popen(
                     [npm_cmd, "run", "dev"],
                     cwd=frontend_path,
-                    shell=True,
+                    shell=False,
                     creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == 'nt' else 0
                 )
                 
