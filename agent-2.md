@@ -15,7 +15,7 @@
 - Added MCPClient integration tests for authentication failure and timeouts.
 - Pinned additional dependencies (python-socketio, websockets, qdrant-client, redis, streamlit, customtkinter, plotly, duckduckgo-search, beautifulsoup4, cryptography, bcrypt, psutil, bleach, pytest, pytest-asyncio, black, flake8, mypy, fakeredis, playwright, pillow, keyring, chromadb).
 ## Agent Log 2025-09-06
+- Wired Red/Blue critics into multi-team graph with concurrent review and tests.
 - Implemented ExecutiveAgent planning and dynamic sub-orchestrator spawning.
 - Added SubOrchestrator DAG execution support.
 - Created unit tests for ExecutiveAgent.plan and SubOrchestrator specialist filtering.
-

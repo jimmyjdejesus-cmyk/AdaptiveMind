@@ -8,6 +8,9 @@
 - Pruned duplicate method definitions to ensure single dispatch pathway and added retry success test coverage.
 # Agent Log\n- Updated mission.py to persist missions to Neo4j and added DAG retrieval helper.\n
 
+## Agent Log 2025-09-06
+- Integrated RedTeamCritic and BlueTeamCritic into MultiTeamOrchestrator with asynchronous review storage.
+- Added critic verdict tracking in TeamWorkflowState and initial state.
 ## Agent Log
 - Implemented `SubOrchestrator` specialist filtering and DAG execution.
 
