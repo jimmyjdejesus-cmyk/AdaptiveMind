@@ -236,7 +236,13 @@ from jarvis.critics import WhiteGate, CriticVerdict  # noqa: E402
 
 
 class MultiTeamOrchestrator:
-    """Minimal implementation for WhiteGate tests."""
+    """Minimal implementation for WhiteGate tests.
+
+    The `_to_verdict` helper normalises critic outputs and falls back to a
+    rejected verdict with ``risk=1.0`` when inputs are malformed or of an
+    unsupported type. Notes gathered during conversion are appended to the
+    merged verdict for easier debugging of failure cases.
+    """
 
     def __init__(self, orchestrator_agent, evaluator=None):
         self.orchestrator = orchestrator_agent
@@ -249,6 +255,13 @@ class MultiTeamOrchestrator:
         blue_output = blue_agent.run(objective, {})
 
         def _to_verdict(output):
+            """Convert arbitrary critic output to a CriticVerdict.
+
+            Unknown structures default to rejection with ``risk=1.0`` so
+            downstream agents halt safely. Diagnostic notes describe the
+            failure for debugging.
+            """
+
             if isinstance(output, CriticVerdict):
                 return output
             if isinstance(output, dict):
@@ -273,9 +286,12 @@ class MultiTeamOrchestrator:
                 f"Unsupported output type: {type(output).__name__}",
             )
 
-        merged = self.white_gate.merge(
-            _to_verdict(red_output), _to_verdict(blue_output)
-        )
+        red_verdict = _to_verdict(red_output)
+        blue_verdict = _to_verdict(blue_output)
+        merged = self.white_gate.merge(red_verdict, blue_verdict)
+        extra = [v.notes for v in (red_verdict, blue_verdict) if v.notes]
+        if extra:
+            merged.notes = "; ".join(filter(None, [merged.notes] + extra))
         if merged.approved:
             teams["innovators_disruptors"].run(objective, {})
         teams["security_quality"].run(objective, {})

@@ -1,64 +1,8 @@
 """WhiteGate edge-case tests for MultiTeamOrchestrator."""
 
-from typing import Any, Dict
-
-import pytest
 from jarvis.critics import CriticVerdict
-from jarvis.orchestration.graph import MultiTeamOrchestrator
 
-
-class DummyAgent:
-    def __init__(self, team: str, result: Any):
-        self.team = team
-        self.result = result
-        self.called = False
-
-    def log(self, message: str, data: Dict[str, Any] | None = None):
-        """No-op log method used by tests."""
-
-    def run(self, objective: str, context: Dict[str, Any]):
-        """Record invocation and return preset result."""
-        self.called = True
-        return self.result
-
-
-class DummyOrchestrator:
-    def __init__(self, teams):
-        self.teams = teams
-        self.team_status = {
-            name: "running"
-            for name in ["Red", "Blue", "Yellow", "Green", "White", "Black"]
-        }
-
-    def log(self, message: str, data: Dict[str, Any] | None = None):
-        """No-op orchestrator log."""
-
-    def broadcast(self, message: str, data: Dict[str, Any] | None = None):
-        """No-op broadcast used by tests."""
-
-
-@pytest.fixture
-def orchestrator_builder():
-    """Build a MultiTeamOrchestrator with configurable critic outputs."""
-
-    def _build(red_output: Any, blue_output: Any):
-        red_agent = DummyAgent("Red", red_output)
-        blue_agent = DummyAgent("Blue", blue_output)
-        yellow_agent = DummyAgent("Yellow", {})
-        green_agent = DummyAgent("Green", {})
-        black_agent = DummyAgent("Black", {})
-        white_agent = DummyAgent("White", {})
-        orch = DummyOrchestrator(
-            {
-                "adversary_pair": (red_agent, blue_agent),
-                "competitive_pair": (yellow_agent, green_agent),
-                "security_quality": white_agent,
-                "innovators_disruptors": black_agent,
-            }
-        )
-        return MultiTeamOrchestrator(orch), black_agent, white_agent
-
-    return _build
+pytest_plugins = ["tests.fixtures.orchestrator"]
 
 
 def test_white_gate_blocks_downstream_when_rejected(orchestrator_builder):
@@ -105,6 +49,10 @@ def test_white_gate_handles_unexpected_output_type(orchestrator_builder):
     result = orchestrator.run("objective")
     assert not black_agent.called
     assert result["halt"] is True
+    assert (
+        "Unsupported output type"
+        in result["critics"]["white_gate"]["notes"]
+    )
 
 
 def test_white_gate_calls_security_quality_always(orchestrator_builder):
@@ -140,4 +88,36 @@ def test_white_gate_handles_malformed_verdict(orchestrator_builder):
     result = orchestrator.run("objective")
     assert not black_agent.called
     assert result["halt"] is True
+    notes = result["critics"]["white_gate"]["notes"]
+    assert "Malformed verdict structure" in notes
     assert result["critics"]["white_gate"]["risk"] == 1.0
+
+
+def test_white_gate_propagates_critic_notes(orchestrator_builder):
+    """Notes from both critics surface in merged verdict."""
+    red_verdict = CriticVerdict(
+        approved=True, fixes=[], risk=0.0, notes="red note"
+    )
+    blue_verdict = CriticVerdict(
+        approved=True, fixes=[], risk=0.0, notes="blue note"
+    )
+    orchestrator, _black_agent, _white_agent = orchestrator_builder(
+        red_verdict, blue_verdict
+    )
+    result = orchestrator.run("objective")
+    notes = result["critics"]["white_gate"]["notes"]
+    assert "red note" in notes
+    assert "blue note" in notes
+
+
+def test_white_gate_handles_extreme_risk(orchestrator_builder):
+    """High risk scores halt workflow and surface the risk."""
+    red_verdict = CriticVerdict(approved=True, fixes=[], risk=0.0, notes="")
+    blue_verdict = CriticVerdict(approved=True, fixes=[], risk=10.0, notes="")
+    orchestrator, black_agent, _white_agent = orchestrator_builder(
+        red_verdict, blue_verdict
+    )
+    result = orchestrator.run("objective")
+    assert not black_agent.called
+    assert result["halt"] is True
+    assert result["critics"]["white_gate"]["risk"] == 10.0

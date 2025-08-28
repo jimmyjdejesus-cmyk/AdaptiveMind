@@ -155,3 +155,5 @@ Added integration test verifying memory and knowledge graph persistence across m
 - Centralized WhiteGate test setup via fixture and documented edge-case intent.
 - Added tests for missing critic fields and malformed verdict structures.
 - Ran flake8 and pytest for verification.
+
+## Further logs in agent-2.md
