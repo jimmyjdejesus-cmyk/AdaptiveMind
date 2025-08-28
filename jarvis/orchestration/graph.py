@@ -203,10 +203,14 @@ def _run_adversary_pair(self, state: TeamWorkflowState) -> TeamWorkflowState:
         black_agent = self.orchestrator.teams["innovators_disruptors"]
         
         # Create a filtered context for the Black team
-        filtered_context = state["context"].copy()
+        filtered_context = {
+            k: v for k, v in state["context"].items() if k != "security_quality"
+        }
         # In a real scenario, we would filter the memory bus view here.
-        
-        black_output = self._run_team(black_agent, state)
+
+        black_state = state.copy()
+        black_state["context"] = filtered_context
+        black_output = self._run_team(black_agent, black_state)
         state["team_outputs"]["innovators_disruptors"] = black_output
         return state
 

@@ -28,3 +28,6 @@
 - Added SubOrchestrator DAG execution support.
 - Created unit tests for ExecutiveAgent.plan and SubOrchestrator specialist filtering.
 
+
+## Agent Log 2025-09-20
+- Passed filtered context to Black team in orchestration graph and added regression test.

@@ -14,3 +14,6 @@
 - Added critic verdict tracking in TeamWorkflowState and initial state.
 ## Agent Log
 - Implemented `SubOrchestrator` specialist filtering and DAG execution.
+
+## Agent Log 2025-09-20
+- Filtered White team outputs from Black team context in MultiTeamOrchestrator._run_innovators_disruptors.
