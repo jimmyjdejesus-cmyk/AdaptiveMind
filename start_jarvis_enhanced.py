@@ -10,7 +10,6 @@ import os
 import time
 import webbrowser
 from pathlib import Path
-import requests
 
 def check_npm_available():
     """Check if npm is available"""
@@ -30,12 +29,13 @@ def check_dependencies():
         import uvicorn
         import websockets
         import redis
+        import requests
         print("✅ Python dependencies found")
     except ImportError as e:
         print(f"❌ Missing Python dependency: {e}")
         print("📦 Installing Python dependencies...")
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "fastapi==0.111.0", "uvicorn", "websockets", "redis", "pydantic>=2.7,<3"], check=True)
+            subprocess.run([sys.executable, "-m", "pip", "install", "fastapi==0.111.0", "uvicorn", "websockets", "redis", "requests", "pydantic>=2.7,<3"], check=True)
             print("✅ Python dependencies installed successfully")
         except subprocess.CalledProcessError:
             print("❌ Failed to install Python dependencies")
@@ -115,7 +115,7 @@ def start_backend():
         print("📦 Installing Python dependencies...")
         subprocess.run([
             sys.executable, "-m", "pip", "install",
-            "fastapi==0.111.0", "uvicorn", "websockets", "redis", "pydantic>=2.7,<3"
+            "fastapi==0.111.0", "uvicorn", "websockets", "redis", "requests", "pydantic>=2.7,<3"
         ], check=True, capture_output=True)
         print("✅ Python dependencies ready")
         
@@ -145,8 +145,11 @@ def start_backend():
             
             # Test the connection
             try:
+                import requests
                 requests.get("http://localhost:8000/health", timeout=5)
                 print("✅ Backend health check passed")
+            except ImportError:
+                print("⚠️ 'requests' not installed; skipping backend health check")
             except Exception:
                 print("⚠️ Backend starting up, health check will retry...")
             
