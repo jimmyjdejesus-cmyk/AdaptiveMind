@@ -142,3 +142,6 @@ Added integration test verifying memory and knowledge graph persistence across m
 **Associated Data:**
 ```json
 {"files": ["test_mission_step_persistence.py"]}
+## Agent Log 2025-09-06
+- Added tests for ExecutiveAgent sub-orchestrator spawning and SubOrchestrator specialist filtering.
+
