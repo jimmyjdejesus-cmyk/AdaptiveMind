@@ -205,7 +205,7 @@ class MultiTeamOrchestrator:
                 return output
             if isinstance(output, dict):
                 return CriticVerdict(
-                    approved=bool(output.get("approved")),
+                    approved=output.get("approved", False),
                     fixes=list(output.get("fixes", [])),
                     risk=float(output.get("risk", 0.0)),
                     notes=str(output.get("notes", "")),
