@@ -178,3 +178,47 @@ async def test_run_step_timeout_records_failure():
         await orchestrator.run_step(step_ctx)
 
     assert tracker.metrics["failed_steps"] == 1
+
+
+@pytest.mark.asyncio
+async def test_dispatch_unknown_specialist_raises():
+    """Dispatching an unregistered specialist should raise ValueError."""
+    mcp_client = DummyMcpClient()
+    orchestrator = MultiAgentOrchestrator(mcp_client, specialists={})
+
+    with pytest.raises(ValueError):
+        await orchestrator.dispatch_specialist("ghost", "test")
+
+
+@pytest.mark.asyncio
+async def test_coordinate_specialists_missing_specialist():
+    """Coordinator returns error when analysis requests missing specialist."""
+
+    class MissingSpecClient(DummyMcpClient):
+        async def generate_response(self, server, model, prompt):  # noqa: D401
+            return json.dumps(
+                {"specialists_needed": ["ghost"], "complexity": "low"}
+            )
+
+    mcp_client = MissingSpecClient()
+    orchestrator = MultiAgentOrchestrator(mcp_client, specialists={})
+
+    result = await orchestrator.coordinate_specialists("test request")
+    assert result["error"] is True
+    assert "Unknown specialist" in result["synthesized_response"]
+
+
+@pytest.mark.asyncio
+async def test_coordinate_specialists_invalid_json():
+    """Invalid JSON analysis should fall back to simple response."""
+
+    class BadJsonClient(DummyMcpClient):
+        async def generate_response(self, server, model, prompt):  # noqa: D401
+            return "not json"
+
+    mcp_client = BadJsonClient()
+    orchestrator = MultiAgentOrchestrator(mcp_client, specialists={})
+
+    result = await orchestrator.coordinate_specialists("simple request")
+    assert result["type"] == "simple"
+    assert result["specialists_used"] == []
