@@ -20,7 +20,7 @@ class TestExecutiveAgentPlan(unittest.TestCase):
         agent.orchestrator.create_child_orchestrator = MagicMock()
         agent.plan("goal", {})
         agent.orchestrator.create_child_orchestrator.assert_called_with(
-            "team", {"mission_name": "team", "allowed_specialists": ["cap"]}
+            "team", {"mission_name": "team", "allowed_specialists": ["team"]}
         )
 
     def test_child_orchestrator_restricts_specialists(self):
@@ -34,7 +34,7 @@ class TestExecutiveAgentPlan(unittest.TestCase):
         planner.plan.return_value = dag
 
         agent = ExecutiveAgent("exec", mission_planner=planner)
-        fake_specialists = {"cap": object(), "other": object()}
+        fake_specialists = {"team": object(), "other": object()}
 
         def fake_create_child(name, spec):
             from jarvis.orchestration.sub_orchestrator import SubOrchestrator
@@ -50,7 +50,7 @@ class TestExecutiveAgentPlan(unittest.TestCase):
         agent.orchestrator.create_child_orchestrator = fake_create_child
         agent.plan("goal", {})
         child = agent.orchestrator.child_orchestrators["team"]
-        self.assertEqual(set(child.specialists.keys()), {"cap"})
+        self.assertEqual(set(child.specialists.keys()), {"team"})
 
 
 if __name__ == "__main__":  # pragma: no cover
