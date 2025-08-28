@@ -158,6 +158,11 @@ Added integration test verifying memory and knowledge graph persistence across m
 ## Agent Log 2025-09-06
 - Added test_adversary_pair_critics to verify critic verdict storage and asynchronous review. File is long; consider splitting.
 - Added tests for ExecutiveAgent sub-orchestrator spawning and SubOrchestrator specialist filtering.
+- Added tests for file-backed ProjectMemory fallback.
+## Agent Log 2025-09-07
+- Stubbed ExecutiveAgent and MultiTeamOrchestrator in conftest for WhiteGate test execution.
+## Agent Log 2025-09-08
+- Added edge case tests for MultiTeamOrchestrator white gate behavior.
 ## Agent Interaction
 **Timestamp:** 2025-08-28T02:28:19+00:00
 **Agent ID:** openai-assistant
@@ -184,3 +189,7 @@ File: tests/test_knowledge_query_get.py
 ## Agent Log 2025-09-07
 - Added test verifying Black team ignores White team context during graph execution.
 - File remains lengthy; consider archiving to agent-2.md soon.
+- Added unit test for AgentCore dynamic components.
+## Note
+File is very long; starting new logs in agent-2.md.
+- Extended AgentCore unit test to assert missing component raises KeyError.
