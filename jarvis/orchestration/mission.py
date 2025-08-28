@@ -5,7 +5,12 @@ import os
 import time
 import logging
 from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+try:  # pragma: no cover - optional dependency
+    from jarvis.world_model.knowledge_graph import KnowledgeGraph
+except Exception:  # pragma: no cover
+    KnowledgeGraph = Any  # type: ignore
 
 from jarvis.world_model.neo4j_graph import Neo4jGraph
 
@@ -48,7 +53,10 @@ class MissionDAG:
     def to_dict(self) -> Dict[str, any]:
         return {
             "mission_id": self.mission_id,
-            "nodes": {k: {**asdict(v), "state": asdict(v.state)} for k, v in self.nodes.items()},
+            "nodes": {
+                k: {**asdict(v), "state": asdict(v.state)}
+                for k, v in self.nodes.items()
+            },
             "edges": list(self.edges),
             "rationale": self.rationale,
         }
@@ -67,7 +75,12 @@ class MissionDAG:
             for k, v in data.get("nodes", {}).items()
         }
         edges = [tuple(e) for e in data.get("edges", [])]
-        return cls(mission_id=data["mission_id"], nodes=nodes, edges=edges, rationale=data.get("rationale", ""))
+        return cls(
+            mission_id=data["mission_id"],
+            nodes=nodes,
+            edges=edges,
+            rationale=data.get("rationale", ""),
+        )
 
 
 @dataclass
@@ -131,8 +144,9 @@ def update_node_state(
     step_id: str,
     state: str,
     provenance: Optional[dict] = None,
+    graph: KnowledgeGraph | None = None,
 ) -> None:
-    """Persist state transition for a mission node."""
+    """Persist state transition for a mission node and graph."""
 
     mission = load_mission(mission_id)
     node = mission.dag.nodes.get(step_id)
@@ -147,3 +161,56 @@ def update_node_state(
     node.state.provenance = provenance
     mission.dag.nodes[step_id] = node
     save_mission(mission)
+    if graph:
+        attrs: Dict[str, Any] = {
+            "mission_id": mission_id,
+            "status": state,
+        }
+        if provenance:
+            attrs["provenance"] = provenance
+        try:
+            graph.add_node(step_id, "mission_node", attrs)
+        except Exception:  # pragma: no cover - optional graph
+            pass
+
+
+def get_mission_graph(
+    mission_id: str, graph: KnowledgeGraph
+) -> Dict[str, Any]:
+    """Return nodes and edges for ``mission_id`` from ``graph``."""
+
+    nodes: List[tuple[str, Dict[str, Any]]] = []
+    edges: List[tuple[str, str, Dict[str, Any]]] = []
+    if hasattr(graph, "graph"):
+        # type: ignore[attr-defined]
+        for nid, data in graph.graph.nodes(data=True):
+            if data.get("mission_id") == mission_id:
+                nodes.append((nid, data))
+        # type: ignore[attr-defined]
+        for src, tgt, data in graph.graph.edges(data=True):
+            if data.get("mission_id") == mission_id:
+                edges.append((src, tgt, data))
+    elif hasattr(graph, "driver"):
+        with graph.driver.session() as session:  # type: ignore[attr-defined]
+            node_res = session.run(
+                "MATCH (n:Node {mission_id: $mid}) RETURN n.id AS id, n",
+                mid=mission_id,
+            )
+            nodes = [(r["id"], dict(r["n"])) for r in node_res]
+            edge_res = session.run(
+                (
+                    "MATCH (a:Node {mission_id: $mid})-[r]->"
+                    "(b:Node {mission_id: $mid}) "
+                    "RETURN a.id AS source, b.id AS target, TYPE(r) AS type, r"
+                ),
+                mid=mission_id,
+            )
+            edges = [
+                (
+                    r["source"],
+                    r["target"],
+                    {"type": r["type"], **dict(r["r"])},
+                )
+                for r in edge_res
+            ]
+    return {"nodes": nodes, "edges": edges}

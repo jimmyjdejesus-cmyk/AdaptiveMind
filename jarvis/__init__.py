@@ -40,7 +40,6 @@ try:
 except ImportError:
     SecurityManager = None
     get_security_manager = None
-
 try:
     from jarvis.agents.coding_agent import CodingAgent
 except (ImportError, SyntaxError):  # pragma: no cover - optional dependency or syntax errors

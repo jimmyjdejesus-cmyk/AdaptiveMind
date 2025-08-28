@@ -44,14 +44,14 @@ except (ImportError, SyntaxError):  # pragma: no cover
     DecentralizedActor = None  # type: ignore
 
 try:
-    from .live_test_agent import LiveTestAgent
+    from .live_test_agent import LiveTestAgent  # noqa: F401
 except Exception:  # pragma: no cover
     LiveTestAgent = None
 
 # New specialist agents
 try:
-    from .specialist import SpecialistAgent
-    from .specialists import (
+    from .specialist import SpecialistAgent  # noqa: F401
+    from .specialists import (  # noqa: F401
         CodeReviewAgent,
         ArchitectureAgent,
         TestingAgent,
@@ -59,8 +59,8 @@ try:
         CloudCostOptimizerAgent,
         UserFeedbackAgent,
     )
-    from .critics import RedTeamCritic
-    
+    from .critics import RedTeamCritic  # noqa: F401
+
     # Add specialist agents to exports
     __all__ = [
         'CodingAgent',
@@ -83,7 +83,7 @@ try:
         'RedTeamCritic',
         'DecentralizedActor'
     ]
-    
+
 except Exception:  # pragma: no cover
     # Fallback if specialist agents not available
     __all__ = [
