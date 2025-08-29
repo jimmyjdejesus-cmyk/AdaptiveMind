@@ -1,17 +1,19 @@
-"""
-Defines the LangGraph-based orchestration logic for the multi-agent teams.
-"""
+"""Defines the LangGraph-based orchestration logic for the multi-agent teams."""
+
 import asyncio
 from typing import Dict, Any, TypedDict
 from langgraph.graph import StateGraph, END
+
 # from langgraph.checkpoints import SqliteSaver
 # Temporarily removed to resolve import error
 from jarvis.orchestration.team_agents import OrchestratorAgent, TeamMemberAgent
+
 from jarvis.orchestration.pruning import PruningEvaluator
 from jarvis.orchestration.context_utils import filter_context, filter_team_outputs
 
-from jarvis.critics import WhiteGate, CriticVerdict
-from jarvis.critics import RedTeamCritic, BlueTeamCritic
+from jarvis.critics import CriticVerdict, WhiteGate
+from jarvis.critics import BlueTeamCritic, RedTeamCritic
+
 
 # Team name constants to avoid hardcoded strings
 ADVERSARY_PAIR_TEAM = "adversary_pair"
@@ -311,7 +313,7 @@ class MultiTeamOrchestrator:
         if innovator_output:
             self.orchestrator.broadcast(
                 "Broadcasting innovative findings for collective learning.",
-                data=innovator_output
+                data=innovator_output,
             )
         return state
 
@@ -322,7 +324,7 @@ class MultiTeamOrchestrator:
             "context": {},
             "team_outputs": {},
             "critics": {},
-            "next_team": COMPETITIVE_PAIR_TEAM
+            "next_team": COMPETITIVE_PAIR_TEAM,
         }
 
         # The `stream` method will execute the graph step-by-step

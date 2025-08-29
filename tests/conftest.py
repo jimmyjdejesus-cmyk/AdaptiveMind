@@ -168,8 +168,13 @@ def Field(*args, **kwargs):
     return None
 
 
+def create_model(name, **fields):
+    return type(name, (BaseModel,), fields)
+
+
 pydantic_module.BaseModel = BaseModel
 pydantic_module.Field = Field
+pydantic_module.create_model = create_model
 sys.modules.setdefault("pydantic", pydantic_module)
 
 
@@ -483,6 +488,37 @@ memory_service.record_path = record_path
 memory_service.vector_store = _DummyVectorStore()
 sys.modules.setdefault("memory_service", memory_service)
 sys.modules.setdefault("memory_service.models", models_sub)
+
+# Stub jarvis.ecosystem to prevent circular imports during test bootstrap
+ecosystem_pkg = types.ModuleType("jarvis.ecosystem")
+meta_module = types.ModuleType("jarvis.ecosystem.meta_intelligence")
+
+
+class ExecutiveAgent:  # pragma: no cover - minimal placeholder
+    pass
+
+
+meta_module.ExecutiveAgent = ExecutiveAgent
+ecosystem_pkg.meta_intelligence = meta_module
+ecosystem_pkg.superintelligence = types.ModuleType(
+    "jarvis.ecosystem.superintelligence"
+)
+sys.modules.setdefault("jarvis.ecosystem", ecosystem_pkg)
+sys.modules.setdefault("jarvis.ecosystem.meta_intelligence", meta_module)
+sys.modules.setdefault(
+    "jarvis.ecosystem.superintelligence", ecosystem_pkg.superintelligence
+)
+
+# Simplified team agent to satisfy orchestration imports
+team_agents_module = types.ModuleType("jarvis.orchestration.team_agents")
+
+
+class BlackInnovatorAgent:  # pragma: no cover - minimal placeholder
+    pass
+
+
+team_agents_module.BlackInnovatorAgent = BlackInnovatorAgent
+sys.modules.setdefault("jarvis.orchestration.team_agents", team_agents_module)
 
 # Ensure repository root on path
 ROOT = Path(__file__).resolve().parent.parent

@@ -1,3 +1,5 @@
+## Agent Log 2025-09-07
+- Added minimal `AgentCore` stub so tests can import `agent.core` without errors.
 # agent/core activity log
 
 - Added `core.py` with `JarvisAgent` implementation using replay memory.

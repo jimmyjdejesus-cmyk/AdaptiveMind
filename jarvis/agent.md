@@ -65,7 +65,6 @@ File: memory/__init__.py
 - Introduced `context_utils.filter_context` and wired graph to use it.
 - Logged security rationale and added test for White/Black context isolation.
 - Extended context filtering to additional orchestration stages and documented White-team isolation.
-
 ## Agent Interaction
 **Timestamp:** 2025-08-28T02:27:38+00:00
 **Agent ID:** openai-assistant
