@@ -437,3 +437,12 @@ Files: requirements.txt, pyproject.toml, build.sh, start_backend.bat, start_back
 ## Agent Log 2025-08-28
 - Added AgentSpec dataclass with run callback and metadata in orchestrator.
 - Exported orchestration dataclasses via __all__ and ran pytest.
+
+## Agent Log 2025-08-29
+- Removed duplicate dependency entries and pinned versions in `requirements.txt`.
+- Ran `pip install -r requirements.txt` to verify installation.
+
+**Associated Data:**
+```
+File: requirements.txt
+```
