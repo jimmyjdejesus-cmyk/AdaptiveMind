@@ -27,10 +27,11 @@ except ImportError:
     auth_cfg = {}
 
 SECRET_KEY = os.getenv("JARVIS_AUTH_SECRET") or auth_cfg.get("secret_key")
-if not SECRET_KEY:
+if SECRET_KEY == "CHANGE_ME" or not SECRET_KEY:
     raise ValueError(
         "No secret key configured. Set JARVIS_AUTH_SECRET or auth.secret_key."
     )
+
 ALGORITHM = auth_cfg.get("algorithm", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(
     os.getenv(

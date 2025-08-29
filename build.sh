@@ -26,7 +26,7 @@ if [ -f "start_jarvis_enhanced.py" ]; then
     
     # Install dependencies first
     echo "📦 Installing dependencies..."
-      pip install -r requirements.txt
+    pip install -r requirements.txt
     
     # Build frontend with npm
     if [ -d "src-tauri" ]; then
@@ -79,4 +79,3 @@ echo ""
 echo "💡 To run in development mode:"
 echo "   • Windows: start_jarvis.bat"
 echo "   • Cross-platform: python start_jarvis_enhanced.py"
-
