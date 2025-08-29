@@ -101,3 +101,41 @@ const SettingsView = () => {
           <input type="text" value={apiKey} onChange={handleApiKeyChange} />
 
         </label>
+
+      </div>
+
+      <div className="settings-section">
+        <label>
+          OpenAI API Key:
+          <input type="password" value={openaiKey} onChange={handleOpenaiKeyChange} />
+        </label>
+      </div>
+
+      <div className="settings-section">
+        <label>
+          Anthropic API Key:
+          <input type="password" value={anthropicKey} onChange={handleAnthropicKeyChange} />
+        </label>
+      </div>
+
+      <div className="settings-section">
+        <label>
+          Neo4j URI:
+          <input type="text" value={neo4jUri} onChange={handleNeo4jUriChange} />
+        </label>
+        <label>
+          Neo4j User:
+          <input type="text" value={neo4jUser} onChange={handleNeo4jUserChange} />
+        </label>
+        <label>
+          Neo4j Password:
+          <input type="password" value={neo4jPassword} onChange={handleNeo4jPasswordChange} />
+        </label>
+      </div>
+
+    </div>
+
+  );
+};
+
+export default SettingsView;
