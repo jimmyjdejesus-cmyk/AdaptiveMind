@@ -34,4 +34,3 @@ class JarvisAgent:
             # Return the previously taken action for this state
             return recalled[0].action
         return None
-

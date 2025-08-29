@@ -64,3 +64,9 @@ def create_mission(
         "mission_id": mission.id,
         "status": WorkflowStatus.PENDING.value,
     }
+
+
+@app.get("/health")
+def get_health() -> dict:
+    """Health check endpoint."""
+    return {"status": "ok"}
