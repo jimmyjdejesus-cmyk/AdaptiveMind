@@ -3,8 +3,8 @@
 import sys
 import types
 from pathlib import Path
+from enum import Enum
 from unittest.mock import MagicMock
-import importlib.util
 import pytest
 
 # Stub external dependencies
@@ -156,6 +156,21 @@ sys.modules.setdefault(
     "jarvis.agents.critics.constitutional_critic", const_module
 )
 
+# Minimal specialist registry for orchestrator imports
+specialist_registry_module = types.ModuleType(
+    "jarvis.agents.specialist_registry"
+)
+
+
+def get_specialist_registry():  # pragma: no cover - simple stub
+    return {}
+
+
+specialist_registry_module.get_specialist_registry = get_specialist_registry
+sys.modules.setdefault(
+    "jarvis.agents.specialist_registry", specialist_registry_module
+)
+
 # Internal package stubs
 homeostasis_module = types.ModuleType("jarvis.homeostasis")
 monitor_submodule = types.ModuleType("jarvis.homeostasis.monitor")
@@ -219,6 +234,18 @@ memory_service.PathRecord = PathRecord
 memory_service.PathSignature = PathSignature
 memory_service.avoid_negative = avoid_negative
 memory_service.record_path = record_path
+
+
+class Hypergraph:  # pragma: no cover - stub
+    pass
+
+
+class VectorStore:  # pragma: no cover - stub
+    pass
+
+
+hypergraph_sub.Hypergraph = Hypergraph
+vector_store_sub.VectorStore = VectorStore
 memory_service.hypergraph = hypergraph_sub
 memory_service.vector_store = vector_store_sub
 sys.modules.setdefault("memory_service", memory_service)
@@ -258,18 +285,43 @@ class BlackInnovatorAgent:  # pragma: no cover - minimal placeholder
 team_agents_module.BlackInnovatorAgent = BlackInnovatorAgent
 sys.modules.setdefault("jarvis.orchestration.team_agents", team_agents_module)
 
+# MCP client stub to satisfy CLI imports
+mcp_client_module = types.ModuleType("jarvis.mcp.client")
+
+
+class McpClient:  # pragma: no cover - stub
+    pass
+
+
+mcp_client_module.McpClient = McpClient
+sys.modules.setdefault("jarvis.mcp.client", mcp_client_module)
+
 # Ensure repository root on path
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Lightweight workflows package to avoid circular imports
-spec = importlib.util.spec_from_file_location(
-    "jarvis.workflows.engine", ROOT / "jarvis/workflows/engine.py"
-)
-engine_module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(engine_module)
+# Lightweight workflows package to avoid heavy dependencies
 workflows_pkg = types.ModuleType("jarvis.workflows")
+engine_module = types.ModuleType("jarvis.workflows.engine")
+
+
+class WorkflowStatus(Enum):  # pragma: no cover - minimal enum
+    PENDING = "pending"
+
+
+class WorkflowEngine:  # pragma: no cover - stub
+    pass
+
+
+def from_mission_dag(*args, **kwargs):  # pragma: no cover - stub
+    return None
+
+
+engine_module.WorkflowStatus = WorkflowStatus
+engine_module.WorkflowEngine = WorkflowEngine
+engine_module.from_mission_dag = from_mission_dag
+engine_module.workflow_engine = object()
 workflows_pkg.engine = engine_module
 sys.modules.setdefault("jarvis.workflows", workflows_pkg)
 sys.modules.setdefault("jarvis.workflows.engine", engine_module)
