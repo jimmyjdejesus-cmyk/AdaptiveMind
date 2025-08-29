@@ -43,7 +43,3 @@ python main.py
 
 pause
 
-
-
-
-

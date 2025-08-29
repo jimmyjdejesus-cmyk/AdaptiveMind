@@ -10,6 +10,8 @@ from dataclasses import dataclass
 
 import pytest
 
+os.environ.setdefault("JARVIS_AUTH_SECRET", "test-secret")
+
 # Stub external dependencies
 neo4j_module = types.ModuleType("neo4j")
 neo4j_module.GraphDatabase = object

@@ -10,6 +10,7 @@ from typing import Dict
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel, Field
 
 from .auth import Token, login_for_access_token, role_required
 from .knowledge_graph import knowledge_graph

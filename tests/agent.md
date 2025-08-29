@@ -24,6 +24,59 @@ def test_read_main(client: TestClient):
     assert response.status_code == 200
     assert response.json() == {"message": "Welcome to Jarvis AI"}
 
+# Attempt to import the full Jarvis orchestration system
+# If it fails, create mock objects to allow the server to run for frontend development
+try:
+    from jarvis.agents.base_specialist import BaseSpecialist
+    from jarvis.agents.curiosity_agent import CuriosityAgent
+    from jarvis.agents.mission_planner import MissionPlanner
+    from jarvis.core.mcp_agent import MCPJarvisAgent
+    from jarvis.orchestration.mission import Mission, MissionDAG
+    from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
+    from jarvis.world_model.hypergraph import HierarchicalHypergraph
+    from jarvis.world_model.neo4j_graph import Neo4jGraph
+    from jarvis.workflows.engine import WorkflowStatus, from_mission_dag, workflow_engine
+    JARVIS_AVAILABLE = True
+    logger.info("✅ Jarvis orchestration system loaded successfully")
+except ImportError as e:
+    logger.warning(f"⚠️ Jarvis orchestration not available, using mock objects: {e}")
+    
+    JARVIS_AVAILABLE = False
+# Agent Log - tests
+- Added unit tests for `CuriosityRouter` covering enqueue behavior and disabled mode.
+# Agent Log
+- Added tests for `run_step` timeout handling, retry backoff, and performance tracking.
+## Agent Log 2025-08-31
+- Updated CLI tests to use ExecutiveAgent.
+- Added multi-step mission test verifying mission results and execution graph output.
+## Agent Log 2025-09-01
+- Added docstrings and failure scenario tests for CLI.
+- Ensured tests meet PEP 8 using flake8.
+## Agent Log 2025-09-02
+- Verified CLI returns mission result through updated unit test.
+## Agent Log 2025-09-03
+- Added integration test exercising MCPClient against an aiohttp server.
+## Agent Log 2025-09-04
+- Expanded MCPClient integration tests to include server error handling and tool execution.
+## Agent Log 2025-09-05
+- Added integration tests covering authentication failures and request timeouts for MCPClient.
+## Agent Interaction
+**Timestamp:** 2025-08-28T23:07:00+00:00
+**Agent ID:** openai-assistant
+**Team:** tests
+**Action/Message:**
+```
+Adjusted test_cli to patch ExecutiveAgent and handle new run subcommand.
+```
+**Associated Data:**
+```
+File: test_cli.py
+```
+---
+
+## Agent Interaction
+**Timestamp:** 2025-08-28T23:07:00+00:00
+=======
 
 def test_get_mission_history():
     """Test mission history retrieval via the API."""
@@ -80,6 +133,21 @@ Added integration test verifying memory and knowledge graph persistence across m
 - Added tests for ExecutiveAgent sub-orchestrator spawning and SubOrchestrator specialist filtering.## Agent Log 2025-08-28
 - Restored conftest.py and added create_model stub to pydantic mock.
 
+**Timestamp:** 2025-08-28T02:28:19+00:00
+**Agent ID:** openai-assistant
+**Team:** tests
+**Action/Message:**
+```
+Wrapped long lines in test_knowledge_query_get to satisfy flake8 E501.
+File is quite long; consider archiving older entries soon.
+```
+**Associated Data:**
+```
+File: tests/test_knowledge_query_get.py
+```
+---
+
+=======
 ## Agent Log 2025-09-07
 - Added PerformanceTracker unit tests covering success and failure retries.
 - Stubbed ecosystem and team agents in conftest to resolve import cycles.
