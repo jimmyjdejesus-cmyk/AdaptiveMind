@@ -1,5 +1,0 @@
-app_name: "Jarvis AI"
-debug: false
-integrations:
-  ollama:
-    base_url: "http://ollama:11434"
