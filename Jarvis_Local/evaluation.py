@@ -46,6 +46,7 @@ def run_evaluation():
     orchestrator = Orchestrator()
 
     passed_count = 0
+    failed_tests = []
     total_count = len(TEST_SUITE)
 
     for i, test in enumerate(TEST_SUITE):
@@ -67,15 +68,23 @@ def run_evaluation():
             else:
                 log.warning(f"--- RESULT: FAILED ---")
                 log.warning(f"   - Response was: {response}")
+                failed_tests.append(test["name"]) 
 
         except Exception as e:
             log.error(f"--- RESULT: ERROR ---")
             log.error(f"   - Validator function failed with error: {e}")
             log.error(f"   - Response was: {response}")
+            failed_tests.append(test["name"])
 
     log.info("--- EVALUATION HARNESS COMPLETE ---")
     log.info(f"--- FINAL SCORE: {passed_count} / {total_count} PASSED ---")
-    return passed_count, total_count
+
+    # --- Returning a dictionary with results ---
+    return {
+        "passed": passed_count,
+        "total" : total_count,
+        "failed": failed_tests
+    }
 
 if __name__ == "__main__":
     run_evaluation()
