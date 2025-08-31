@@ -4,8 +4,9 @@
 MODEL_PATH = "Jarvis_Local\models\Phi-4-mini-instruct.Q4_K_M.gguf"
 
 # This MUST be 0 for CPU only setup, -1 to offload to GPU(if available)
-N_GPU_LAYERS = -1
+N_GPU_LAYERS = 0
 
+N_THREADS = 6 # Set this to this number of physical CPU cores
 # The context window of the model.
 N_CTX = 512
 

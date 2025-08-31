@@ -20,8 +20,9 @@ class BaseAgent:
                 model_path=config.MODEL_PATH,
                 n_ctx=config.N_CTX,
                 n_gpu_layers=config.N_GPU_LAYERS,
-                verbose=True,
-                logits_all=True  # Enable logits for logprobs support
+                verbose=False,
+                logits_all=True,  # Enable logits for logprobs support
+                n_threads=config.N_THREADS  # Use the configured number of threads
             )
             log.info(
                 "Model loaded for agent with persona: %s",
