@@ -1,32 +1,23 @@
-# orchestrator.py
-from agent import MetaAgent
-from specialist.specialist_agent import CodingAgent # <-- IMPORT THE NEW AGENT
+from agents.meta_agent.agent import MetaAgent
+from agents.specialists.coding_specialist.agent import CodingAgent
 from logger_config import log
 
 class Orchestrator:
     def __init__(self):
-        log.info("Initializing Orchestrator...")
-        # The MetaAgent loads the model into memory
+        log.info("Initializing Orchestrator and its agents...")
+        # Note: This loads the model twice. We will optimize this later.
         self.meta_agent = MetaAgent()
-        # The CodingAgent SHARES the loaded model instance to save resources
-        self.coding_agent = CodingAgent(shared_llm_instance=self.meta_agent.llm)
-
-        self.history = []
-        log.info("Orchestrator initialization complete with all agents.")
+        self.coding_agent = CodingAgent()
+        log.info("Orchestrator initialization complete.")
 
     def handle_request(self, user_input):
         log.info(f"Orchestrator received request: '{user_input}'")
-
-        # --- This is the new routing logic ---
-        # A simple keyword-based router.
         coding_keywords = ["code", "python", "function", "script", "algorithm"]
         if any(keyword in user_input.lower() for keyword in coding_keywords):
             log.info("Request routed to CodingAgent.")
-            response = self.coding_agent.invoke(user_input, self.history)
+            response = self.coding_agent.invoke(user_input)
         else:
             log.info("Request routed to MetaAgent.")
-            response = self.meta_agent.invoke(user_input, self.history)
-
-        self.history.append({"user": user_input, "jarvis": response})
+            response = self.meta_agent.invoke(user_input)
         log.info("Orchestrator processed request and received response.")
         return response

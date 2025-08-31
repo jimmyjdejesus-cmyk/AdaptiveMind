@@ -8,3 +8,6 @@ N_GPU_LAYERS = -1
 
 # The context window of the model.
 N_CTX = 512
+
+# Confidence threshold for filtering responses
+CONFIDENCE_THRESHOLD = 10.0
