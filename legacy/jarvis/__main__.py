@@ -10,23 +10,9 @@ def build_default_agent():
     return create_dynamic_agent("default_agent", tools)
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Jarvis locally (CLI or --gui)")
-    parser.add_argument("objective", type=str, nargs="?", help="Objective (CLI mode)")
-    parser.add_argument("--gui", action="store_true", help="Launch the desktop UI")
-    
+    parser = argparse.ArgumentParser(description="Run Jarvis locally (CLI)")
+    parser.add_argument("objective", type=str, help="Objective (CLI mode)")
     args = parser.parse_args()
-    if args.gui:
-        try:
-            from .ui import JarvisChatUI
-        except ModuleNotFoundError:
-            print("Tkinter not available. Install Tkinter or run CLI without --gui.")
-            return
-        ui = JarvisChatUI()
-        ui.start()
-        return
-
-    if not args.objective:
-        parser.error("objective is required unless --gui is used")
 
     agent = build_default_agent()
     result = agent.run(args.objective)
