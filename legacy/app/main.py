@@ -179,6 +179,45 @@ class AgentsListResponse(BaseModel):
     count: int
 
 
+# -----------------------
+# v1 Feed + Jobs Schemas
+# -----------------------
+
+class FeedItem(BaseModel):
+    id: str | None = None
+    source: str | None = None
+    content: str
+    metadata: Dict[str, Any] | None = None
+
+
+class FeedIngestRequest(BaseModel):
+    items: list[FeedItem]
+    persist_to_knowledge: bool = True
+    persist_to_memory: bool = True
+
+
+class FeedIngestResponse(BaseModel):
+    ingested: int
+    errors: int
+
+
+class JobRequest(BaseModel):
+    mode: str = Field(..., description="chat | agent | workflow")
+    payload: Dict[str, Any] = Field(default_factory=dict)
+    callback_url: str | None = Field(default=None, description="Optional HTTP callback for result")
+
+
+class JobResponse(BaseModel):
+    job_id: str
+    status: str
+
+
+class JobStatusResponse(BaseModel):
+    job_id: str
+    status: str
+    result: Dict[str, Any] | None = None
+
+
 class Neo4jConfig(BaseModel):
     uri: str
     user: str
@@ -901,6 +940,110 @@ def v1_chat_stream(req: ChatRequest):
             return
 
     return StreamingResponse(_generator(), media_type="text/plain")
+
+
+# -----------------------
+# v1 Feed Ingestion
+# -----------------------
+
+@api_v1.post("/feed/ingest", response_model=FeedIngestResponse)
+def v1_feed_ingest(req: FeedIngestRequest) -> FeedIngestResponse:
+    ingested = 0
+    errors = 0
+
+    # Store feed in memory and knowledge graph (best effort)
+    if req.items:
+        for item in req.items:
+            try:
+                if req.persist_to_memory and new_conversation_memory is not None:
+                    # Simplified: append as a system note
+                    if hasattr(new_conversation_memory, "add_conversation"):
+                        new_conversation_memory.add_conversation({
+                            "id": item.id or "feed",
+                            "messages": [{"role": "system", "content": item.content}],
+                            "metadata": item.metadata or {"source": item.source or "feed"}
+                        })
+                if req.persist_to_knowledge and new_knowledge_graph is not None:
+                    # Simplified: add node for item
+                    if hasattr(new_knowledge_graph, "add_fact"):
+                        new_knowledge_graph.add_fact(
+                            subject=item.metadata.get("subject") if item.metadata else (item.source or "feed"),
+                            predicate="mentions",
+                            obj=item.content
+                        )
+                ingested += 1
+            except Exception:
+                errors += 1
+
+    return FeedIngestResponse(ingested=ingested, errors=errors)
+
+
+# -----------------------
+# v1 Job Submission + Exit
+# -----------------------
+import uuid as _uuid
+_jobs: Dict[str, Dict[str, Any]] = {}
+
+
+@api_v1.post("/jobs", response_model=JobResponse)
+async def v1_submit_job(req: JobRequest) -> JobResponse:
+    job_id = str(_uuid.uuid4())
+    _jobs[job_id] = {"status": "queued", "result": None, "callback": req.callback_url}
+
+    async def _run_job():
+        try:
+            _jobs[job_id]["status"] = "running"
+            mode = req.mode.lower()
+            result: Dict[str, Any] = {"ok": True}
+            if mode == "chat":
+                messages = req.payload.get("messages", [])
+                model = req.payload.get("model")
+                temperature = req.payload.get("temperature")
+                max_tokens = req.payload.get("max_tokens")
+                chat_req = ChatRequest(messages=[ChatMessage(**m) for m in messages], model=model, temperature=temperature, max_tokens=max_tokens)
+                chat_resp = v1_chat(chat_req)
+                result = {"type": "chat", "response": chat_resp.dict()}
+            elif mode == "agent":
+                agent_type = req.payload.get("agent_type", "research")
+                objective = req.payload.get("objective", "")
+                context = req.payload.get("context", {})
+                task_req = AgentTaskRequest(agent_type=agent_type, objective=objective, context=context)
+                agent_result = await v1_execute_agent_task(task_req)
+                result = {"type": "agent", "response": agent_result}
+            elif mode == "workflow":
+                wf_type = req.payload.get("workflow_type", "research")
+                parameters = req.payload.get("parameters", {})
+                wf_req = WorkflowTaskRequest(workflow_type=wf_type, parameters=parameters)
+                wf_result = await v1_execute_workflow_task(wf_req)
+                result = {"type": "workflow", "response": wf_result}
+            else:
+                result = {"ok": False, "error": f"Unknown mode: {mode}"}
+
+            _jobs[job_id]["result"] = result
+            _jobs[job_id]["status"] = "completed"
+
+            # Optional callback webhook
+            cb = _jobs[job_id]["callback"]
+            if cb:
+                try:
+                    import requests as _requests
+                    _requests.post(cb, json={"job_id": job_id, "status": "completed", "result": result}, timeout=10)
+                except Exception:
+                    pass
+        except Exception as e:
+            _jobs[job_id]["status"] = "failed"
+            _jobs[job_id]["result"] = {"ok": False, "error": str(e)}
+
+    asyncio.create_task(_run_job())
+    return JobResponse(job_id=job_id, status="queued")
+
+
+@api_v1.get("/jobs/{job_id}", response_model=JobStatusResponse)
+def v1_get_job(job_id: str) -> JobStatusResponse:
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return JobStatusResponse(job_id=job_id, status=job.get("status", "unknown"), result=job.get("result"))
 
 
 # Register v1 router
