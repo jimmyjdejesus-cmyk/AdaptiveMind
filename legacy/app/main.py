@@ -73,8 +73,8 @@ app.include_router(galaxy_router)
 neo4j_graph = Neo4jGraph()
 planner = MissionPlanner(missions_dir=os.path.join("config", "missions"))
 
-# Versioned API router
-api_v1 = APIRouter(prefix="/api/v1", tags=["api-v1"])
+# Versioned API router (secured by default via API key)
+api_v1 = APIRouter(prefix="/api/v1", tags=["api-v1"], dependencies=[Depends(_require_api_key_dep)])
 
 # -----------------------
 # Bridge to new runtime (OllamaClient)
@@ -234,6 +234,11 @@ def _require_api_key(x_api_key: str | None) -> None:
     api_key = os.environ.get("JARVIS_API_KEY")
     if not api_key or not (x_api_key and secrets.compare_digest(x_api_key, api_key)):
         raise HTTPException(status_code=401, detail="Invalid API key")
+
+
+def _require_api_key_dep(x_api_key: str | None = Header(None)) -> None:
+    """FastAPI dependency wrapper for API key enforcement."""
+    _require_api_key(x_api_key)
 
 
 @app.post("/token")
