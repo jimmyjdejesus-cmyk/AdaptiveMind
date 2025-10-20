@@ -95,7 +95,7 @@ class TraceCollector:
 
     def latest(self, limit: int = 50) -> List[TraceRecord]:
         with self._lock:
-            return list(list(self._records)[-limit:])
+            return list(self._records)[-limit:]
 
     def filter_by_persona(self, persona: str, limit: int = 50) -> List[TraceRecord]:
         with self._lock:
