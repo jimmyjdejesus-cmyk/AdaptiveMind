@@ -30,7 +30,7 @@ class OllamaBackend(LLMBackend):
             response.raise_for_status()
             data = response.json()
             models = {entry.get("name") for entry in data.get("models", [])}
-            self._health_cache = self._model in models if models else True
+            self._health_cache = self._model in models
         except Exception:
             self._health_cache = False
         self._last_health_check = now
