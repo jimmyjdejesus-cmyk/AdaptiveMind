@@ -40,6 +40,7 @@ class OllamaBackend(LLMBackend):
         payload: Dict[str, object] = {
             "model": self._model,
             "prompt": request.context,
+            "stream": False,
             "options": {
                 "temperature": request.temperature,
                 "num_predict": request.max_tokens,

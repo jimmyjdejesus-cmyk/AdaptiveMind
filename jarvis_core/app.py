@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+from dataclasses import asdict
 from typing import Iterable, List, Optional
 
 from .config import AppConfig, load_config
