@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Protocol, Sequence
+from typing import Dict, Iterator, Protocol, Sequence
 
 
 @dataclass
@@ -22,6 +22,15 @@ class GenerationResponse:
     diagnostics: Dict[str, str] | None = None
 
 
+@dataclass
+class GenerationChunk:
+    content: str  # Incremental content (e.g., a token or partial text)
+    tokens: int  # Cumulative tokens generated so far
+    backend: str
+    finished: bool  # True if this is the final chunk
+    diagnostics: Dict[str, str] | None = None
+
+
 class LLMBackend(Protocol):
     name: str
 
@@ -31,5 +40,8 @@ class LLMBackend(Protocol):
     def generate(self, request: GenerationRequest) -> GenerationResponse:
         ...
 
+    def stream(self, request: GenerationRequest) -> Iterator[GenerationChunk]:
+        ...
 
-__all__ = ["GenerationRequest", "GenerationResponse", "LLMBackend"]
+
+__all__ = ["GenerationRequest", "GenerationResponse", "GenerationChunk", "LLMBackend"]

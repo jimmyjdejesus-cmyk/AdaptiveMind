@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable, List, Sequence
 
 from ..config import AppConfig, PersonaConfig
-from ..logging import get_logger
+from ..logger import get_logger
 
 logger = get_logger(__name__)
 

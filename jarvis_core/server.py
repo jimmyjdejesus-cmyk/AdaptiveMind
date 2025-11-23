@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+import json
 from typing import List, Optional
 
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from .app import JarvisApplication
 from .config import AppConfig
-from .logging import get_logger
+from .logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -104,6 +105,99 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
         )
         return ChatResponse(**payload)
 
+    @fastapi_app.post("/v1/chat/completions")
+    async def openai_chat_completions(request: Request, app: JarvisApplication = Depends(_app_dependency)):
+        """OpenAI-compatible endpoint for chat completions."""
+        try:
+            body = await request.json()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid JSON")
+
+        # Extract standard OpenAI fields
+        messages = body.get("messages", [])
+        model = body.get("model", "default")
+        temperature = body.get("temperature", 0.7)
+        max_tokens = body.get("max_tokens", 512)
+        stream = body.get("stream", False)
+        
+        # Map to Jarvis internal format
+        # Use 'generalist' persona by default, or infer from model name if possible
+        persona = "generalist"
+        
+        if stream:
+            # Streaming response
+            def generate():
+                try:
+                    for chunk in app.stream_chat(
+                        persona=persona,
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        metadata={"source": "openai-api", "requested_model": model}
+                    ):
+                        # Yield OpenAI-compatible SSE format
+                        delta = {"content": chunk["content"]} if chunk["content"] else {}
+                        if chunk["finished"]:
+                            delta["finish_reason"] = "stop"
+                        event = {
+                            "id": "chatcmpl-jarvis-stream",
+                            "object": "chat.completion.chunk",
+                            "created": 0,  # TODO: Add timestamp
+                            "model": chunk["model"],
+                            "choices": [
+                                {
+                                    "index": 0,
+                                    "delta": delta,
+                                    "finish_reason": "stop" if chunk["finished"] else None,
+                                }
+                            ],
+                        }
+                        yield f"data: {json.dumps(event)}\n\n"
+                        if chunk["finished"]:
+                            yield "data: [DONE]\n\n"
+                            break
+                except Exception as e:
+                    logger.error(f"Streaming chat completion failed: {e}")
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            
+            return StreamingResponse(generate(), media_type="text/plain")
+        else:
+            # Non-streaming response
+            try:
+                payload = app.chat(
+                    persona=persona,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    metadata={"source": "openai-api", "requested_model": model}
+                )
+                
+                # Transform response to OpenAI format
+                return {
+                    "id": "chatcmpl-jarvis",
+                    "object": "chat.completion",
+                    "created": 0, # TODO: Add timestamp
+                    "model": payload["model"],
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {
+                                "role": "assistant",
+                                "content": payload["content"]
+                            },
+                            "finish_reason": "stop"
+                        }
+                    ],
+                    "usage": {
+                        "prompt_tokens": 0, # TODO: Calculate
+                        "completion_tokens": payload["tokens"],
+                        "total_tokens": payload["tokens"]
+                    }
+                }
+            except Exception as e:
+                logger.error(f"Chat completion failed: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
     @fastapi_app.get("/api/v1/monitoring/metrics", response_model=MetricsResponse)
     def metrics(app: JarvisApplication = Depends(_app_dependency)) -> MetricsResponse:
         return MetricsResponse(history=app.metrics_snapshot())
@@ -184,3 +278,18 @@ _OLLAMA_UI_HTML = """
 
 
 __all__ = ["build_app"]
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    
+    port = int(os.getenv("JARVIS_PORT", 8000))
+    host = os.getenv("JARVIS_HOST", "0.0.0.0")
+    
+    # Initialize config
+    from .config import load_config
+    config = load_config()
+    
+    app = build_app(config)
+    
+    uvicorn.run(app, host=host, port=port)

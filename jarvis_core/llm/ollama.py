@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Dict
+from typing import Dict, Iterator
 
 import requests
 
-from .base import GenerationRequest, GenerationResponse, LLMBackend
+from .base import GenerationChunk, GenerationRequest, GenerationResponse, LLMBackend
 
 
 class OllamaBackend(LLMBackend):
@@ -60,6 +60,46 @@ class OllamaBackend(LLMBackend):
             "total_duration": str(data.get("total_duration")),
         }
         return GenerationResponse(content=message, tokens=int(tokens), backend=self.name, diagnostics=diagnostics)
+
+    def stream(self, request: GenerationRequest) -> Iterator[GenerationChunk]:
+        payload: Dict[str, object] = {
+            "model": self._model,
+            "prompt": request.context,
+            "stream": True,
+            "options": {
+                "temperature": request.temperature,
+                "num_predict": request.max_tokens,
+            },
+        }
+        http_response = requests.post(
+            f"{self._host}/api/generate",
+            json=payload,
+            timeout=self._timeout,
+            stream=True,
+        )
+        http_response.raise_for_status()
+        full_content = ""
+        total_tokens = 0
+        for line in http_response.iter_lines():
+            if line:
+                data = json.loads(line.decode("utf-8"))
+                chunk_content = data.get("response", "")
+                full_content += chunk_content
+                total_tokens = data.get("eval_count", total_tokens)
+                finished = data.get("done", False)
+                diagnostics = {
+                    "model": data.get("model", self._model),
+                    "total_duration": str(data.get("total_duration", "")),
+                }
+                yield GenerationChunk(
+                    content=chunk_content,
+                    tokens=total_tokens,
+                    backend=self.name,
+                    finished=finished,
+                    diagnostics=diagnostics,
+                )
+                if finished:
+                    break
 
 
 __all__ = ["OllamaBackend"]
