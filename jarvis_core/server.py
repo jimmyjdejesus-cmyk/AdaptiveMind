@@ -255,7 +255,11 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
 
     @fastapi_app.get("/api/v1/monitoring/traces", response_model=TracesResponse)
     def traces(app: JarvisApplication = Depends(_app_dependency)) -> TracesResponse:
-        return TracesResponse(traces=app.traces_latest())
+        try:
+            return TracesResponse(traces=app.traces_latest())
+        except Exception as e:
+            logger.error("Failed to retrieve traces", exc_info=e)
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve traces")
 
     # Management API endpoints -------------------------------------------
 
