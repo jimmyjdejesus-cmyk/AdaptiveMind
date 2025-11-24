@@ -361,7 +361,7 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
     def openai_chat_completions(request: OpenAIChatRequest, app: JarvisApplication = Depends(_app_dependency)) -> OpenAIChatResponse:
         import time
         # Convert OpenAI format to Jarvis format
-        persona = "generalist"  # Default persona
+        persona = request.model if request.model in app.config.personas else "generalist"
         messages = request.messages
         temperature = request.temperature
         max_tokens = request.max_tokens
