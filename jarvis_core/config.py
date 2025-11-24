@@ -16,6 +16,13 @@ class OllamaConfig(BaseModel):
     enable_ui: bool = Field(True, description="Expose the Ollama chat UI")
 
 
+class OpenRouterConfig(BaseModel):
+    api_key: str = Field("", description="OpenRouter API Key")
+    model: str = Field("openai/gpt-3.5-turbo", description="Default OpenRouter model")
+    site_url: str = Field("", description="Site URL for OpenRouter rankings")
+    app_name: str = Field("Jarvis Local", description="App name for OpenRouter rankings")
+
+
 class WindowsMLConfig(BaseModel):
     enabled: bool = Field(False, description="Enable WindowsML fallback acceleration")
     model_path: Optional[Path] = Field(
@@ -84,34 +91,33 @@ class MonitoringConfig(BaseModel):
     harvest_interval_s: float = Field(30.0, ge=5.0)
 
 
+def _default_personas() -> Dict[str, PersonaConfig]:
+    default_persona = PersonaConfig(
+        name="generalist",
+        description="Balanced assistant persona",
+        system_prompt=(
+            "You are Jarvis, a local-first research assistant. Provide concise, factual answers and highlight sources."
+        ),
+        max_context_window=4096,
+    )
+    return {default_persona.name: default_persona}
+
+
 class AppConfig(BaseModel):
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
+    openrouter: OpenRouterConfig = Field(default_factory=OpenRouterConfig)
     windowsml: WindowsMLConfig = Field(default_factory=WindowsMLConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
-    personas: Dict[str, PersonaConfig] = Field(default_factory=dict)
+    personas: Dict[str, PersonaConfig] = Field(default_factory=_default_personas)
     context_pipeline: ContextPipelineConfig = Field(default_factory=ContextPipelineConfig)
     monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig)
     allowed_personas: List[str] = Field(default_factory=list)
     enable_research_features: bool = Field(True, description="Enable deep research workflows")
 
-    @field_validator("personas", mode="after")
-    @classmethod
-    def _validate_personas(cls, value: Dict[str, PersonaConfig]) -> Dict[str, PersonaConfig]:
-        if not value:
-            default_persona = PersonaConfig(
-                name="generalist",
-                description="Balanced assistant persona",
-                system_prompt=(
-                    "You are Jarvis, a local-first research assistant. Provide concise, factual answers and highlight sources."
-                ),
-                max_context_window=4096,
-            )
-            value = {default_persona.name: default_persona}
-        return value
-
-    @field_validator("allowed_personas", mode="before")
+    @field_validator("allowed_personas", mode="after")
     @classmethod
     def _default_allowed_personas(cls, value: List[str] | None, info: ValidationInfo) -> List[str]:
+        print(f"DEBUG: _default_allowed_personas value={value} info.data keys={info.data.keys()}")
         if value:
             return value
         personas = info.data.get("personas", {})
@@ -172,6 +178,8 @@ def load_config(explicit_path: Optional[str] = None) -> AppConfig:
         env_overrides.setdefault("ollama", {})["host"] = host
     if model := os.getenv("OLLAMA_MODEL"):
         env_overrides.setdefault("ollama", {})["model"] = model
+    if or_key := os.getenv("OPENROUTER_API_KEY"):
+        env_overrides.setdefault("openrouter", {})["api_key"] = or_key
     if keys := os.getenv("JARVIS_API_KEYS"):
         env_overrides.setdefault("security", {})["api_keys"] = [k.strip() for k in keys.split(",") if k.strip()]
     if persona := os.getenv("JARVIS_DEFAULT_PERSONA"):
@@ -186,6 +194,7 @@ def load_config(explicit_path: Optional[str] = None) -> AppConfig:
 __all__ = [
     "AppConfig",
     "OllamaConfig",
+    "OpenRouterConfig",
     "WindowsMLConfig",
     "SecurityConfig",
     "PersonaConfig",

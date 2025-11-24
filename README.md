@@ -1,10 +1,10 @@
 # Jarvis Local Assistant Runtime
 
-Jarvis_AI is a local-first multi-persona assistant that prioritises verifiable truth, observability, and secure extensibility. The new runtime ships with a simple Ollama-ready UI, an adaptive routing pipeline, and a comprehensive monitoring stack to support deep research workflows without sacrificing privacy.
+Jarvis_AI is a local-first multi-persona assistant that prioritises verifiable truth, observability, and secure extensibility. The new runtime integrates with the agent-ui frontend for a modern interface, an adaptive routing pipeline, and a comprehensive monitoring stack to support deep research workflows without sacrificing privacy.
 
 ## Key Features
 
-- **Ollama UI** – Minimal single-page interface for sending prompts to the adaptive router. Works with the contextual fallback when Ollama is unavailable.
+- **Agent-UI Integration** – Modern frontend interface for sending prompts to the adaptive router. Integrates with agent-ui for enhanced user experience.
 - **Context Engineering Pipeline** – Automatic persona prompts, conversation history, research snippets, and optional local documents with semantic chunking.
 - **Adaptive Routing** – Persona-aware router selects between Ollama, WindowsML, or the contextual fallback while recording metrics and traces.
 - **Security Controls** – API key enforcement and structured audit logging hooks to keep cloud usage gated.
@@ -27,44 +27,28 @@ pip install -r requirements-dev.txt
 uvicorn jarvis_core.server:build_app --factory --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000/ for the UI. The backend automatically attempts to use a local Ollama instance (`OLLAMA_HOST`) and falls back to the contextual generator when unavailable. To enable WindowsML acceleration, set `JARVIS_CONFIG` to a JSON file that provides the ONNX model path on Windows.
+The backend automatically attempts to use a local Ollama instance (`OLLAMA_HOST`) and falls back to the contextual generator when unavailable. To enable WindowsML acceleration, set `JARVIS_CONFIG` to a JSON file that provides the ONNX model path on Windows.
 
 ### Configuration
+### Frontend Integration
 
-Configuration is provided via JSON files (`~/.jarvis/config.json` by default) or environment variables. Key options:
+For the user interface, use [agent-ui](https://github.com/jimmyjdejesus-cmyk/agent-ui), a modern frontend that connects to this Jarvis_AI backend.
 
-| Option | Description |
-| ------ | ----------- |
-| `ollama.host` | Base URL for the Ollama server |
-| `ollama.model` | Default model name (`llama3` by default) |
-| `security.api_keys` | List of allowed API keys |
-| `personas` | Persona definitions with prompts and routing hints |
-| `context_pipeline.extra_documents_dir` | Directory with additional `.txt` documents added to the context |
-| `monitoring.enable_metrics_harvest` | Enables background harvesting of metrics |
+To set up:
 
-### Logging & Monitoring
+1. Clone agent-ui: `git clone https://github.com/jimmyjdejesus-cmyk/agent-ui.git`
+2. Follow agent-ui setup instructions.
+3. Configure agent-ui to point to Jarvis_AI backend at `http://127.0.0.1:8000`
 
-- Logs are emitted in structured JSON format through the central logger (`JARVIS_LOG_LEVEL` and `JARVIS_LOG_PATH` control verbosity and destination).
-- Metrics and traces are exposed via REST endpoints:
-  - `GET /api/v1/monitoring/metrics`
-  - `GET /api/v1/monitoring/traces`
 
-### Security & API Keys
+### Frontend Integration
 
-Supply comma-separated API keys via `JARVIS_API_KEYS` or `security.api_keys` in the config. Requests must include the `X-API-Key` header (or `api_key` query parameter) when keys are configured.
+For the user interface, use [agent-ui](https://github.com/jimmyjdejesus-cmyk/agent-ui), a modern frontend that connects to this Jarvis_AI backend.
 
-### Extending with MCP/LSP
+To set up:
 
-Use the templates in `jarvis_core/extensions/templates.py` as starting points for adding MCP or LSP bridges. Each template defines an entrypoint and schema to encourage consistent integrations.
+1. Clone agent-ui: `git clone https://github.com/jimmyjdejesus-cmyk/agent-ui.git`
+2. Follow agent-ui setup instructions.
+3. Configure agent-ui to point to Jarvis_AI backend at `http://127.0.0.1:8000`
 
-### Running Tests
 
-```bash
-pytest
-```
-
-The integration tests spin up the FastAPI application with the adaptive routing pipeline and validate persona routing, metrics harvesting, and API-key enforcement.
-
-## Legacy Components
-
-The `legacy/` folder keeps the historical mission-planning system for reference. The new runtime operates independently but can be bridged using the documented architecture in `UNIFIED_ARCHITECTURE.md`.

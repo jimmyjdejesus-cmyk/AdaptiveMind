@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import threading
 from dataclasses import asdict
-from typing import Iterable, List, Optional
+from typing import Iterable, Iterator, List, Optional
 
 from .config import AppConfig, load_config
 from .context.engine import ContextEngine
+from .llm.base import GenerationChunk
 from .llm.fallback import ContextualFallbackLLM
 from .llm.ollama import OllamaBackend
+from .llm.openrouter import OpenRouterBackend
 from .llm.windowsml import WindowsMLBackend
-from .logging import get_logger
+from .logger import get_logger
 from .monitoring.metrics import MetricsRegistry, TraceCollector
 from .routing.router import AdaptiveLLMRouter
 
@@ -43,6 +45,12 @@ class JarvisApplication:
                 host=self.config.ollama.host,
                 model=self.config.ollama.model,
                 timeout=self.config.ollama.timeout,
+            ),
+            OpenRouterBackend(
+                api_key=self.config.openrouter.api_key,
+                model=self.config.openrouter.model,
+                site_url=self.config.openrouter.site_url,
+                app_name=self.config.openrouter.app_name,
             ),
             WindowsMLBackend(
                 model_path=self.config.windowsml.model_path,
@@ -104,6 +112,31 @@ class JarvisApplication:
             "tokens": response.tokens,
             "diagnostics": response.diagnostics or {},
         }
+
+    def stream_chat(
+        self,
+        persona: str,
+        messages: List[dict],
+        temperature: float = 0.7,
+        max_tokens: int = 512,
+        metadata: Optional[dict] = None,
+        external_context: Iterable[str] | None = None,
+    ) -> Iterator[dict]:
+        for chunk in self.router.stream(
+            persona_name=persona,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            metadata=metadata,
+            external_context=external_context,
+        ):
+            yield {
+                "content": chunk.content,
+                "model": chunk.backend,
+                "tokens": chunk.tokens,
+                "finished": chunk.finished,
+                "diagnostics": chunk.diagnostics or {},
+            }
 
     def personas(self) -> List[dict]:
         return [
