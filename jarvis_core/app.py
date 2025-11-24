@@ -135,7 +135,7 @@ class JarvisApplication:
         import hashlib
 
         # Calculate config hash for change detection
-        config_str = str(self.config.model_dump())
+        config_str = self.config.model_dump_json()
         config_hash = hashlib.sha256(config_str.encode()).hexdigest()[:16]
 
         return {
