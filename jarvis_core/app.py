@@ -157,15 +157,16 @@ class JarvisApplication:
     def list_backends(self) -> List[dict]:
         """List all backends with their status."""
         import time
-        backends = []
-        for backend in self.backends:
-            backends.append({
+        backends = [
+            {
                 "name": backend.name,
                 "type": backend.__class__.__name__.lower().replace('backend', ''),
                 "is_available": backend.is_available(),
                 "last_checked": time.time(),  # TODO: track actual last check time
                 "config": {},  # TODO: expose relevant config without secrets
-            })
+            }
+            for backend in self.backends
+        ]
         return backends
 
     def get_context_config(self) -> dict:
