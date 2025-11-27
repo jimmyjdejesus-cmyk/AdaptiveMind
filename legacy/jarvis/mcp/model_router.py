@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
 from .client import MCPClient, MCPError
+from .providers.openrouter import OpenRouterClient
 
 logger = logging.getLogger(__name__)
 
@@ -26,25 +27,56 @@ class ModelRouter:
 
     def __init__(self, mcp_client: MCPClient) -> None:
         self.mcp_client = mcp_client
+        self.openrouter = OpenRouterClient()
+
+        # CLOUD-FIRST CONFIGURATION
+        self.strategy = os.getenv("ROUTE_STRATEGY", "cloud_first")
+        self.prefer_free = os.getenv("PREFER_FREE_CLOUD", "true") == "true"
+        self.allow_local_fallback = os.getenv("ALLOW_LOCAL_FALLBACK", "true") == "true"
+
         self.models: Dict[str, ModelMetadata] = {
-            "gpt-4": ModelMetadata(
-                server="openai", context_window=8192, cost_per_token=0.9, quality_score=0.9,
-                strengths=["coding", "general", "reasoning"]
+            # Cloud models (via OpenRouter)
+            "openrouter-llama-free": ModelMetadata(
+                server="openrouter", context_window=8192, cost_per_token=0.0,
+                quality_score=0.6, strengths=["general", "fast", "free"]
             ),
-            "claude-3.5-sonnet": ModelMetadata(
-                server="anthropic", context_window=200000, cost_per_token=0.7, quality_score=0.85,
-                strengths=["coding", "summarization", "long_context"]
+            "openrouter-claude": ModelMetadata(
+                server="openrouter", context_window=200000, cost_per_token=0.8,
+                quality_score=0.95, strengths=["coding", "reasoning", "complex"]
             ),
-            "gpt-3.5-turbo": ModelMetadata(
-                server="openai", context_window=4096, cost_per_token=0.3, quality_score=0.7,
-                strengths=["general", "fast"]
+            "openrouter-gpt4o": ModelMetadata(
+                server="openrouter", context_window=128000, cost_per_token=0.6,
+                quality_score=0.9, strengths=["coding", "general", "reasoning"]
             ),
+
+            # Local models (fallback)
             "llama3.2": ModelMetadata(
                 server="ollama", context_window=8192, cost_per_token=0.1, quality_score=0.6,
                 strengths=["general", "fast", "local"]
             ),
+            "llama3": ModelMetadata(
+                server="ollama", context_window=8192, cost_per_token=0.15, quality_score=0.7,
+                strengths=["general", "reasoning", "local"]
+            ),
         }
         self.last_justification: str = ""
+
+    def _classify_complexity(self, prompt: str, task_type: str) -> str:
+        """Auto-classify task complexity"""
+        prompt_len = len(prompt)
+        prompt_lower = prompt.lower()
+
+        # High complexity keywords
+        high_kw = ["architecture", "design", "audit", "security", "refactor", "system", "database"]
+        if any(kw in prompt_lower for kw in high_kw) or prompt_len > 2000:
+            return "high"
+
+        # Medium complexity keywords
+        medium_kw = ["write", "create", "implement", "debug", "review", "analyze", "explain"]
+        if any(kw in prompt_lower for kw in medium_kw) or prompt_len > 500:
+            return "medium"
+
+        return "low"
 
     def _intelligent_route(
         self,
@@ -97,44 +129,62 @@ class ModelRouter:
         task_type: str = "general",
         quality_vs_cost: float = 0.5,
         force_local: bool = False,
+        complexity: str = None,
     ) -> str:
         """
-        Routes a prompt to the best available model based on intelligent routing,
-        with health checks and a local fallback.
+        CLOUD-FIRST routing: Try cloud models first, fallback to local only if cloud fails.
         """
+        # Auto-detect complexity if not provided
+        if not complexity:
+            complexity = self._classify_complexity(prompt, task_type)
+
+        logger.info(f"Routing: task={task_type}, complexity={complexity}, strategy={self.strategy}")
+
+        # Force local override
         if force_local:
             self.last_justification = "Forced local execution."
-            selected_model = ("ollama", "llama3.2")
-            return await self.mcp_client.generate_response(selected_model[0], selected_model[1], prompt)
+            return await self._route_local(prompt, complexity)
 
-        excluded_servers = set()
-        while len(excluded_servers) < len(self.models):
-            selected_model = self._intelligent_route(prompt, task_type, quality_vs_cost, excluded_servers)
+        # CLOUD-FIRST: Try OpenRouter first
+        if self.strategy in ["cloud_first", "balanced"]:
+            try:
+                model = self.openrouter.get_model_for_complexity(complexity)
+                logger.info(f"Trying cloud first: {model}")
 
-            if not selected_model:
-                logger.warning("No suitable model found by router. Attempting local fallback.")
-                break # Break to go to final fallback
+                result = await self.openrouter.generate(
+                    prompt, model=model, complexity=complexity
+                )
 
-            server, model_name = selected_model
-            if await self.mcp_client.check_server_health(server):
-                logger.info("Routing to %s/%s. Justification: %s", server, model_name, self.last_justification)
-                try:
-                    return await self.mcp_client.generate_response(server, model_name, prompt)
-                except MCPError as e:
-                    logger.warning("Model %s on %s failed: %s. Excluding server and retrying.", model_name, server, e)
-                    excluded_servers.add(server)
-            else:
-                logger.warning("Selected server %s is unhealthy. Excluding and retrying.", server)
-                excluded_servers.add(server)
+                self.last_justification = f"Cloud-first routing: {model} (complexity: {complexity})"
+                return result
 
-        # Final fallback to local if all else fails
-        logger.warning("All other options exhausted. Falling back to local model.")
-        self.last_justification = "All preferred models/servers failed or were unhealthy. Falling back to local."
-        local_server, local_model = ("ollama", "llama3.2")
-        if await self.mcp_client.check_server_health(local_server):
-            return await self.mcp_client.generate_response(local_server, local_model, prompt)
+            except Exception as e:
+                logger.warning(f"Cloud routing failed: {e}")
 
-        raise MCPError("All available models and servers are unhealthy or have failed.")
+        # FALLBACK: Use local Ollama only if cloud fails or local-first strategy
+        if self.allow_local_fallback or self.strategy == "local_first":
+            logger.info("Cloud failed or local-first strategy, using local Ollama")
+            return await self._route_local(prompt, complexity)
+
+        raise MCPError("All routing options exhausted and local fallback disabled")
+
+    async def _route_local(self, prompt: str, complexity: str) -> str:
+        """Route to local Ollama models based on complexity"""
+        if complexity == "high":
+            model = "llama3"  # Best local option for complex tasks
+            self.last_justification = f"Local fallback for high complexity: {model}"
+        elif complexity == "medium":
+            model = "llama3"  # Good balance for medium tasks
+            self.last_justification = f"Local fallback for medium complexity: {model}"
+        else:  # low
+            model = "llama3.2"  # Fast for simple tasks
+            self.last_justification = f"Local fallback for low complexity: {model}"
+
+        try:
+            return await self.mcp_client.generate_response("ollama", model, prompt)
+        except MCPError as e:
+            logger.error(f"Local routing failed: {e}")
+            raise
 
     # Backwards compatibility alias
     async def route_to_best_model(
