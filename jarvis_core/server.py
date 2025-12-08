@@ -246,98 +246,7 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
             logger.error("Chat request failed", exc_info=e)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Chat request failed")
 
-    @fastapi_app.post("/v1/chat/completions")
-    async def openai_chat_completions(request: Request, app: JarvisApplication = Depends(_app_dependency)):
-        """OpenAI-compatible endpoint for chat completions."""
-        try:
-            body = await request.json()
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid JSON")
 
-        # Extract standard OpenAI fields
-        messages = body.get("messages", [])
-        model = body.get("model", "default")
-        temperature = body.get("temperature", 0.7)
-        max_tokens = body.get("max_tokens", 512)
-        stream = body.get("stream", False)
-        
-        # Map to Jarvis internal format
-        # Use 'generalist' persona by default, or infer from model name if possible
-        persona = "generalist"
-        
-        if stream:
-            # Streaming response
-            def generate():
-                try:
-                    for chunk in app.stream_chat(
-                        persona=persona,
-                        messages=messages,
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                        metadata={"source": "openai-api", "requested_model": model}
-                    ):
-                        # Yield OpenAI-compatible SSE format
-                        delta = {"content": chunk["content"]} if chunk["content"] else {}
-                        if chunk["finished"]:
-                            delta["finish_reason"] = "stop"
-                        event = {
-                            "id": "chatcmpl-jarvis-stream",
-                            "object": "chat.completion.chunk",
-                            "created": 0,  # TODO: Add timestamp
-                            "model": chunk["model"],
-                            "choices": [
-                                {
-                                    "index": 0,
-                                    "delta": delta,
-                                    "finish_reason": "stop" if chunk["finished"] else None,
-                                }
-                            ],
-                        }
-                        yield f"data: {json.dumps(event)}\n\n"
-                        if chunk["finished"]:
-                            yield "data: [DONE]\n\n"
-                            break
-                except Exception as e:
-                    logger.error(f"Streaming chat completion failed: {e}")
-                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
-            
-            return StreamingResponse(generate(), media_type="text/plain")
-        else:
-            # Non-streaming response
-            try:
-                payload = app.chat(
-                    persona=persona,
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    metadata={"source": "openai-api", "requested_model": model}
-                )
-                
-                # Transform response to OpenAI format
-                return {
-                    "id": "chatcmpl-jarvis",
-                    "object": "chat.completion",
-                    "created": 0, # TODO: Add timestamp
-                    "model": payload["model"],
-                    "choices": [
-                        {
-                            "index": 0,
-                            "message": {
-                                "role": "assistant",
-                                "content": payload["content"]
-                            },
-                            "finish_reason": "stop"
-                        }
-                    ],
-                    "usage": {
-                        "prompt_tokens": 0, # TODO: Calculate
-                        "completion_tokens": payload["tokens"],
-                        "total_tokens": payload["tokens"]
-                    }
-                }
-            except Exception as e:
-                logger.error(f"Chat completion failed: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
 
     @fastapi_app.get("/api/v1/monitoring/metrics", response_model=MetricsResponse)
     def metrics(app: JarvisApplication = Depends(_app_dependency)) -> MetricsResponse:
@@ -458,11 +367,16 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
     @fastapi_app.post("/v1/chat/completions")
     def openai_chat_completions(request: OpenAIChatRequest, app: JarvisApplication = Depends(_app_dependency)) -> OpenAIChatResponse:
         import time
+
         # Convert OpenAI format to Jarvis format
         persona = request.model if request.model in app.config.personas else "generalist"
         messages = request.messages
         temperature = request.temperature
         max_tokens = request.max_tokens
+
+        # Estimate prompt tokens if not provided by Jarvis
+        prompt_text = " ".join([msg.content for msg in messages if hasattr(msg, 'content')])
+        estimated_prompt_tokens = len(prompt_text) // 4  # Rough approximation: ~4 chars per token
 
         # Call Jarvis chat
         payload = app.chat(
@@ -483,15 +397,19 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
             "finish_reason": "stop"
         }
 
+        # Use actual context tokens if available, otherwise estimate
+        prompt_tokens = payload.get("context_tokens", estimated_prompt_tokens)
+        completion_tokens = payload["tokens"]
+
         return OpenAIChatResponse(
             id=f"chatcmpl-{created}",
             created=created,
             model=payload["model"],
             choices=[choice],
             usage={
-                "prompt_tokens": payload.get("context_tokens", 0),
-                "completion_tokens": payload["tokens"],
-                "total_tokens": payload.get("context_tokens", 0) + payload["tokens"]
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": prompt_tokens + completion_tokens
             }
         )
 
