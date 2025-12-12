@@ -403,6 +403,6 @@ def client():
     mock_client = Mock()
     mock_response = Mock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"content": "test response", "id": "test-id", "object": "chat.completion", "created": int(time.time())}
+    mock_response.json.return_value = {"content": "test response", "id": "test-id", "object": "chat.completion", "created": time.time()}
     mock_client.post.return_value = mock_response
     return mock_client
