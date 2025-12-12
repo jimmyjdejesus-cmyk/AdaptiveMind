@@ -403,6 +403,26 @@ def client():
     mock_client = Mock()
     mock_response = Mock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"content": "test response", "id": "test-id", "object": "chat.completion", "created": time.time()}
+    mock_response.json.return_value = {
+        "id": "chatcmpl-test-id",
+        "object": "chat.completion",
+        "created": int(time.time()),
+        "model": "llama3.2:latest",
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "test response"
+                },
+                "finish_reason": "stop"
+            }
+        ],
+        "usage": {
+            "prompt_tokens": 5,
+            "completion_tokens": 15,
+            "total_tokens": 20
+        }
+    }
     mock_client.post.return_value = mock_response
     return mock_client
