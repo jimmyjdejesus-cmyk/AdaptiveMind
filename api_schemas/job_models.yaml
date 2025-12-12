@@ -1,0 +1,166 @@
+# Job Processing Models
+
+## JobRequest
+JobRequest:
+  type: object
+  properties:
+    mode:
+      type: string
+      enum: [chat, agent, workflow]
+      description: Type of job to execute
+    payload:
+      type: object
+      description: Payload for the job execution
+    callback_url:
+      type: string
+      format: uri
+      description: URL to call when job is complete
+  required:
+    - mode
+    - payload
+
+## JobResponse
+JobResponse:
+  type: object
+  properties:
+    job_id:
+      type: string
+      description: Unique identifier for the job
+    status:
+      type: string
+      enum: [queued, running, completed, failed, cancelled]
+      description: Current status of the job
+    position:
+      type: integer
+      description: Position in the queue (if queued)
+    estimated_start:
+      type: string
+      format: date-time
+      description: Estimated start time
+    created_at:
+      type: string
+      format: date-time
+      description: When the job was created
+  required:
+    - job_id
+    - status
+    - created_at
+
+## JobStatusResponse
+JobStatusResponse:
+  type: object
+  properties:
+    job_id:
+      type: string
+      description: Unique identifier for the job
+    status:
+      type: string
+      enum: [queued, running, completed, failed, cancelled]
+      description: Current status of the job
+    result:
+      type: object
+      description: Result of the job execution (if completed)
+    error:
+      type: string
+      description: Error message (if failed)
+    progress:
+      type: number
+      minimum: 0
+      maximum: 100
+      description: Progress percentage
+    started_at:
+      type: string
+      format: date-time
+      description: When the job started
+    completed_at:
+      type: string
+      format: date-time
+      description: When the job completed
+    execution_time:
+      type: number
+      description: Total execution time in seconds
+  required:
+    - job_id
+    - status
+
+## FeedItem
+FeedItem:
+  type: object
+  properties:
+    id:
+      type: string
+      description: Unique identifier for the item
+    source:
+      type: string
+      description: Source of the item
+    content:
+      type: string
+      description: Content of the item
+    metadata:
+      type: object
+      description: Additional metadata
+    timestamp:
+      type: string
+      format: date-time
+      description: When the item was created
+  required:
+    - content
+
+## FeedIngestRequest
+FeedIngestRequest:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/FeedItem'
+      description: List of items to ingest
+    persist_to_knowledge:
+      type: boolean
+      default: false
+      description: Whether to persist to knowledge base
+    persist_to_memory:
+      type: boolean
+      default: false
+      description: Whether to persist to memory
+  required:
+    - items
+
+## FeedIngestResponse
+FeedIngestResponse:
+  type: object
+  properties:
+    ingested:
+      type: integer
+      description: Number of items successfully ingested
+    errors:
+      type: array
+      items:
+        $ref: '#/IngestError'
+      description: List of ingestion errors
+    processing_time:
+      type: number
+      description: Time taken for processing in seconds
+  required:
+    - ingested
+
+## IngestError
+IngestError:
+  type: object
+  properties:
+    item_index:
+      type: integer
+      description: Index of the item that failed
+    error_code:
+      type: string
+      description: Error code
+    message:
+      type: string
+      description: Error message
+    item:
+      type: object
+      description: The item that caused the error
+  required:
+    - item_index
+    - error_code
+    - message

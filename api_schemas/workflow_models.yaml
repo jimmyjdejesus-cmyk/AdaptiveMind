@@ -1,0 +1,135 @@
+# Workflow Execution Models
+
+## WorkflowRequest
+WorkflowRequest:
+  type: object
+  properties:
+    workflow_type:
+      type: string
+      description: Type of workflow to execute
+    parameters:
+      type: object
+      description: Parameters for the workflow execution
+    priority:
+      type: integer
+      minimum: 1
+      maximum: 10
+      default: 5
+      description: Priority level for the workflow execution
+    timeout:
+      type: integer
+      minimum: 1
+      description: Timeout in seconds for the workflow execution
+  required:
+    - workflow_type
+
+## WorkflowResponse
+WorkflowResponse:
+  type: object
+  properties:
+    workflow_id:
+      type: string
+      description: Unique identifier for the workflow execution
+    status:
+      type: string
+      enum: [pending, running, completed, failed]
+      description: Current status of the workflow
+    result:
+      type: object
+      description: Result of the workflow execution
+    steps_completed:
+      type: integer
+      description: Number of steps completed
+    total_steps:
+      type: integer
+      description: Total number of steps in the workflow
+    execution_time:
+      type: number
+      description: Time taken for execution in seconds
+  required:
+    - workflow_id
+    - status
+
+## WorkflowCapabilitiesResponse
+WorkflowCapabilitiesResponse:
+  type: object
+  properties:
+    workflows:
+      type: array
+      items:
+        $ref: '#/WorkflowInfo'
+      description: List of available workflows with their capabilities
+  required:
+    - workflows
+
+## WorkflowInfo
+WorkflowInfo:
+  type: object
+  properties:
+    type:
+      type: string
+      description: Workflow type
+    name:
+      type: string
+      description: Human-readable name of the workflow
+    description:
+      type: string
+      description: Description of what the workflow does
+    parameters:
+      type: object
+      description: Supported parameters for this workflow
+    steps:
+      type: array
+      items:
+        type: string
+      description: List of steps in this workflow
+    estimated_duration:
+      type: integer
+      description: Estimated duration in seconds
+  required:
+    - type
+    - name
+
+## ActiveWorkflowsResponse
+ActiveWorkflowsResponse:
+  type: object
+  properties:
+    workflows:
+      type: array
+      items:
+        $ref: '#/ActiveWorkflow'
+      description: List of currently active workflows
+  required:
+    - workflows
+
+## ActiveWorkflow
+ActiveWorkflow:
+  type: object
+  properties:
+    workflow_id:
+      type: string
+      description: Unique identifier for the workflow
+    type:
+      type: string
+      description: Type of workflow
+    status:
+      type: string
+      enum: [pending, running, paused]
+      description: Current status
+    started_at:
+      type: string
+      format: date-time
+      description: When the workflow started
+    current_step:
+      type: string
+      description: Current step being executed
+    progress:
+      type: number
+      minimum: 0
+      maximum: 100
+      description: Progress percentage
+  required:
+    - workflow_id
+    - type
+    - status
+    - started_at

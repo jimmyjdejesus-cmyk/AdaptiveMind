@@ -414,7 +414,7 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
         )
 
     @fastapi_app.get("/v1/models")
-    def openai_models():
+    def openai_models(app: JarvisApplication = Depends(_app_dependency)):
         import time
         # For now, return hardcoded models
         data = [{

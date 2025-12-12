@@ -1,0 +1,189 @@
+# Monitoring and Metrics Models
+
+## HealthResponse
+HealthResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      enum: [ok, degraded, error]
+      description: Overall health status
+    ollama:
+      type: string
+      enum: [ok, unavailable, error]
+      description: Ollama service status
+    timestamp:
+      type: string
+      format: date-time
+      description: When the health check was performed
+  required:
+    - status
+    - ollama
+
+## MetricsResponse
+MetricsResponse:
+  type: object
+  properties:
+    metrics:
+      type: array
+      items:
+        $ref: '#/Metric'
+      description: List of available metrics
+  required:
+    - metrics
+
+## Metric
+Metric:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Name of the metric
+    type:
+      type: string
+      enum: [counter, gauge, histogram, summary]
+      description: Type of metric
+    value:
+      type: number
+      description: Current value of the metric
+    timestamp:
+      type: string
+      format: date-time
+      description: When the metric was recorded
+    labels:
+      type: object
+      description: Additional labels for the metric
+  required:
+    - name
+    - type
+    - value
+    - timestamp
+
+## MonitoringSummaryResponse
+MonitoringSummaryResponse:
+  type: object
+  properties:
+    time_window_minutes:
+      type: integer
+      description: Time window for the summary
+    total_requests:
+      type: integer
+      description: Total number of requests
+    average_response_time:
+      type: number
+      description: Average response time in milliseconds
+    error_rate:
+      type: number
+      description: Error rate as a percentage
+    active_agents:
+      type: integer
+      description: Number of currently active agents
+    memory_usage:
+      type: object
+      description: Memory usage statistics
+    cpu_usage:
+      type: object
+      description: CPU usage statistics
+  required:
+    - time_window_minutes
+    - total_requests
+    - average_response_time
+    - error_rate
+
+## PerformanceMetrics
+PerformanceMetrics:
+  type: object
+  properties:
+    throughput:
+      type: number
+      description: Requests per second
+    latency_p50:
+      type: number
+      description: 50th percentile latency in milliseconds
+    latency_p95:
+      type: number
+      description: 95th percentile latency in milliseconds
+    latency_p99:
+      type: number
+      description: 99th percentile latency in milliseconds
+    success_rate:
+      type: number
+      description: Success rate as a percentage
+    error_rate:
+      type: number
+      description: Error rate as a percentage
+  required:
+    - throughput
+    - latency_p50
+    - latency_p95
+    - latency_p99
+    - success_rate
+
+## ExportResponse
+ExportResponse:
+  type: object
+  properties:
+    format:
+      type: string
+      description: Export format
+    data:
+      type: string
+      description: Exported data content
+    generated_at:
+      type: string
+      format: date-time
+      description: When the export was generated
+    record_count:
+      type: integer
+      description: Number of records in the export
+  required:
+    - format
+    - data
+    - generated_at
+
+## MemoryStats
+MemoryStats:
+  type: object
+  properties:
+    total_memory:
+      type: integer
+      description: Total memory in bytes
+    used_memory:
+      type: integer
+      description: Used memory in bytes
+    free_memory:
+      type: integer
+      description: Free memory in bytes
+    memory_usage_percent:
+      type: number
+      description: Memory usage percentage
+    last_cleanup:
+      type: string
+      format: date-time
+      description: When memory was last cleaned up
+  required:
+    - total_memory
+    - used_memory
+    - free_memory
+
+## SyncResponse
+SyncResponse:
+  type: object
+  properties:
+    success:
+      type: boolean
+      description: Whether the sync was successful
+    records_synced:
+      type: integer
+      description: Number of records synced
+    duration:
+      type: number
+      description: Time taken for sync in seconds
+    timestamp:
+      type: string
+      format: date-time
+      description: When the sync was performed
+  required:
+    - success
+    - records_synced
+    - timestamp
