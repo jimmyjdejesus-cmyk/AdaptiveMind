@@ -315,12 +315,29 @@ sys.modules.setdefault("jarvis.orchestration.team_agents", team_agents_module)
 mcp_client_module = types.ModuleType("jarvis.mcp.client")
 
 
-class McpClient:  # pragma: no cover - stub
+class MCPClient:  # pragma: no cover - stub
     pass
 
 
-mcp_client_module.McpClient = McpClient
+class ModelRouter:  # pragma: no cover - stub
+    pass
+
+
+class MCPServerManager:  # pragma: no cover - stub
+    pass
+
+
+mcp_client_module.MCPClient = MCPClient
+mcp_client_module.ModelRouter = ModelRouter
+mcp_client_module.MCPServerManager = MCPServerManager
 sys.modules.setdefault("jarvis.mcp.client", mcp_client_module)
+
+# jarvis.mcp module
+mcp_module = types.ModuleType("jarvis.mcp")
+mcp_module.MCPClient = MCPClient
+mcp_module.ModelRouter = ModelRouter
+mcp_module.MCPServerManager = MCPServerManager
+sys.modules.setdefault("jarvis.mcp", mcp_module)
 
 # Ensure repository root on path
 ROOT = Path(__file__).resolve().parent.parent
