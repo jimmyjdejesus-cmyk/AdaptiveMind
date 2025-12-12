@@ -66,27 +66,32 @@ class NoKeyringError(Exception):
 keyring_errors_module.NoKeyringError = NoKeyringError
 sys.modules.setdefault("keyring.errors", keyring_errors_module)
 
-pydantic_module = types.ModuleType("pydantic")
+try:
+    import pydantic  # type: ignore
+except Exception:
+    # Minimal fallback when pydantic is not available in the test
+    # environment (keeps tests fast and avoids hard dependency in some dev setups).
+    pydantic_module = types.ModuleType("pydantic")
 
 
-class BaseModel:  # minimal stand-in
-    pass
+    class BaseModel:  # minimal stand-in
+        pass
 
 
-def Field(*args, **kwargs):
-    return None
+    def Field(*args, **kwargs):
+        return None
 
 
-pydantic_module.BaseModel = BaseModel
-pydantic_module.Field = Field
+    pydantic_module.BaseModel = BaseModel
+    pydantic_module.Field = Field
 
 
-def create_model(name, **fields):
-    return type(name, (BaseModel,), fields)
+    def create_model(name, **fields):
+        return type(name, (BaseModel,), fields)
 
 
-pydantic_module.create_model = create_model
-sys.modules.setdefault("pydantic", pydantic_module)
+    pydantic_module.create_model = create_model
+    sys.modules.setdefault("pydantic", pydantic_module)
 
 chromadb_module = types.ModuleType("chromadb")
 chromadb_utils = types.ModuleType("chromadb.utils")
