@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import ttk
 import settings
+from Jarvis_Local import config as local_config
 from logger_config import log
 
 class SettingsPanel(ttk.Frame):
@@ -52,15 +53,7 @@ class SettingsPanel(ttk.Frame):
         # --- Model Optimization Settings ---
         ttk.Label(self, text="Model Optimization", font=("Helvetica", 12, "bold")).pack(pady=(20,5), anchor="w")
 
-        ttk.Label(self, text="OpenAI API Key").pack(anchor="w", padx=5)
-        self.api_key_var = tk.StringVar()
-
-        # The show = "*" masks the input for security
-        api_key_entry = ttk.Entry(self, textvariable=self.api_key_var, show="*")
-        api_key_entry.pack(fill="x", padx=5, pady=2)
-
-        save_key_button = ttk.Button(self, text="Save API Key", command=self._on_save_key)
-        save_key_button.pack(pady=5)
+        # API Key entry is handled below under 'API Key Management'
 
         # --- API Key management Section ---
         ttk.Label(self, text="API Key Management", font=("Helvetica", 12, "bold")).pack(pady=(20,5), anchor="w")
@@ -76,21 +69,21 @@ class SettingsPanel(ttk.Frame):
 
         # N_GPU_LAYERS
         ttk.Label(self, text="GPU Layers:").pack(anchor="w", padx=5)
-        self.gpu_layers_var = tk.IntVar(value=settings.N_GPU_LAYERS)
+        self.gpu_layers_var = tk.IntVar(value=getattr(settings, 'N_GPU_LAYERS', getattr(local_config, 'N_GPU_LAYERS', -1)))
         ttk.Spinbox(self, from_=-1, to=100, textvariable=self.gpu_layers_var, command=self._update_settings).pack(fill="x", padx=5, pady=2)
         
         # N_THREADS
         ttk.Label(self, text="Threads:").pack(anchor="w", padx=5)
-        self.threads_var = tk.IntVar(value=settings.N_THREADS)
+        self.threads_var = tk.IntVar(value=getattr(settings, 'N_THREADS', getattr(local_config, 'N_THREADS', 8)))
         ttk.Spinbox(self, from_=1, to=16, textvariable=self.threads_var, command=self._update_settings).pack(fill="x", padx=5, pady=2)
         
         # N_CTX
         ttk.Label(self, text="Context Size:").pack(anchor="w", padx=5)
-        self.ctx_var = tk.IntVar(value=settings.N_CTX)
+        self.ctx_var = tk.IntVar(value=getattr(settings, 'N_CTX', getattr(local_config, 'N_CTX', 512)))
         ttk.Spinbox(self, from_=512, to=8192, textvariable=self.ctx_var, command=self._update_settings).pack(fill="x", padx=5, pady=2)
         
         # VERBOSE
-        self.verbose_var = tk.BooleanVar(value=settings.VERBOSE)
+        self.verbose_var = tk.BooleanVar(value=getattr(settings, 'VERBOSE', False))
         ttk.Checkbutton(self, text="Verbose Logging", variable=self.verbose_var, command=self._update_settings).pack(anchor="w", padx=5, pady=10)
 
     def _update_settings(self, *args):

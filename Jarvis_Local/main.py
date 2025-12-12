@@ -1,6 +1,6 @@
 # main.py
 import tkinter as tk
-from ui.main_window.app import MainWindow
+from Jarvis_Local.ui.main_window.app import MainWindow
 from logger_config import log
 
 if __name__ == "__main__":

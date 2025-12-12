@@ -68,6 +68,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Normalise middleware entries for Starlette/FastAPI compatibility across versions
+try:
+    normalized = []
+    for mw in list(app.user_middleware):
+        # If it's already a (cls, options) tuple, keep it; otherwise convert
+        if isinstance(mw, tuple) and len(mw) == 2:
+            normalized.append(mw)
+        else:
+            cls = getattr(mw, "cls", None)
+            options = getattr(mw, "kwargs", {})
+            normalized.append((cls, options))
+    app.user_middleware = normalized
+except Exception:
+    pass
+
 app.include_router(galaxy_router)
 
 # Exposed for tests to patch

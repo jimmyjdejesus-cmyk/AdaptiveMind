@@ -2,8 +2,8 @@
 """Base agent class for all agents in the system."""
 
 import ollama
-import settings
-from logger_config import log
+from Jarvis_Local import settings
+from Jarvis_Local.logger_config import log
 
 class BaseAgent:
     def __init__(self, system_prompt=""):
@@ -33,4 +33,10 @@ class BaseAgent:
             }
         except Exception as e:
             log.error(f"Agent invocation failed: {e}", exc_info=True)
-            return {"response": f"Error communicating with Ollama: {e}", "tokens_generated": 0, "group_low_confidence": 0}
+            return {
+                "response": f"Error communicating with Ollama: {e}",
+                "tokens_generated": 0,
+                "group_low_confidence": 0.0,
+                "avg_confidence": 0.0,
+                "single_low_confidence": 0.0,
+            }

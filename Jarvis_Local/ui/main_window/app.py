@@ -2,14 +2,14 @@
 import tkinter as tk
 from tkinter import ttk
 from threading import Thread
-from orchestrator import Orchestrator
-from tools.autotune import find_optimal_threshold
-from ui.components.chat_panel.app import ChatPanel
-from ui.components.settings_panel.settings_panel import SettingsPanel
-from ui.components.log_viewer.log_viewer import LogViewerWindow
+from Jarvis_Local.orchestrator import Orchestrator
+from Jarvis_Local.tools.autotune import find_optimal_threshold
+from Jarvis_Local.ui.components.chat_panel.app import ChatPanel
+from Jarvis_Local.ui.components.settings_panel.settings_panel import SettingsPanel
+from Jarvis_Local.ui.components.log_viewer.log_viewer import LogViewerWindow
 import settings
 from tools import key_manager
-from tools.demo_runner import run_demo
+from Jarvis_Local.tools.demo_runner import run_demo
 
 class MainWindow(tk.Frame):
     def __init__(self, master):
@@ -72,7 +72,7 @@ class MainWindow(tk.Frame):
         self.add_message_to_chat("J.A.R.V.I.S.: Starting auto-tuner...")
         # Note: This uses a placeholder function. You'll need to create find_optimal_threshold
         # or adapt the logic from your tools/autotune.py
-        thread = Thread(target=find_optimal_threshold, args=(self.add_message_to_chat,))
+        thread = Thread(target=find_optimal_threshold, args=())
         thread.start()
 
     def open_log_viewer(self):

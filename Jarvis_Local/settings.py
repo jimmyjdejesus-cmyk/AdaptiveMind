@@ -13,3 +13,22 @@ DRAFT_MODEL = "tinyllama:1b"
 
 # Active Model for the entire application
 ACTIVE_MODEL_NAME = VERIFIER_MODEL
+
+
+def get_active_model_path() -> str:
+	"""Return a model path that tests can resolve.
+
+	Prefer the explicit `Jarvis_Local/active_model.cfg` if present, otherwise
+	return the declared `ACTIVE_MODEL_NAME` (caller may convert to a path).
+	"""
+	cfg_path = os.path.join("Jarvis_Local", "active_model.cfg")
+	if os.path.exists(cfg_path):
+		return cfg_path
+	return ACTIVE_MODEL_NAME
+
+
+# Mapping of available model names to their identifiers for UI
+AVAILABLE_MODELS = {
+	"Verifier": VERIFIER_MODEL,
+	"Draft": DRAFT_MODEL,
+}
