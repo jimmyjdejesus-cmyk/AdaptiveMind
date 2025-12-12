@@ -1,0 +1,794 @@
+openapi: 3.0.3
+info:
+  title: Jarvis AI API v1
+  description: |
+    Comprehensive AI orchestration platform providing chat, agent execution, workflow management, security validation, and monitoring capabilities.
+    
+    ## Authentication
+    All endpoints require authentication via the `X-API-Key` header. Set `JARVIS_DISABLE_AUTH=true` to bypass authentication locally.
+  version: "1.0.0"
+  contact:
+    name: Jarvis AI Support
+    email: support@jarvis.ai
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://127.0.0.1:8000/api/v1
+    description: Local development server
+  - url: https://api.jarvis.ai/v1
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check the health status of the API and its dependencies
+      tags: [Health]
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                ollama: ok
+                timestamp: "2025-12-12T12:34:35Z"
+
+  /models:
+    get:
+      summary: List available models
+      description: Get a list of all available AI models
+      tags: [Models]
+      responses:
+        '200':
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsResponse'
+              example:
+                models:
+                  - "llama3.1:8b-instruct-q4_K_M"
+                  - "llama3.1:70b-instruct-q4_K_M"
+
+  /chat:
+    post:
+      summary: Chat completion
+      description: Generate a chat response using AI models
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            example:
+              messages:
+                - role: user
+                  content: "Hello, how are you?"
+              model: "llama3.1:8b-instruct-q4_K_M"
+              temperature: 0.7
+              max_tokens: 100
+      responses:
+        '200':
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              example:
+                content: "I'm doing well, thank you for asking! How can I help you today?"
+                model: "llama3.1:8b-instruct-q4_K_M"
+
+  /chat/stream:
+    post:
+      summary: Streaming chat completion
+      description: Generate a streaming chat response using AI models
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Streaming response
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Hello! How can I help you today?"
+
+  /agents:
+    get:
+      summary: List agents
+      description: Get a list of all available agents
+      tags: [Agents]
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsListResponse'
+              example:
+                agents:
+                  - "code_assistant"
+                  - "researcher"
+                  - "planner"
+                count: 3
+
+  /agents/execute:
+    post:
+      summary: Execute agent
+      description: Execute a specific agent with given objectives
+      tags: [Agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+            example:
+              agent_type: "code_assistant"
+              objective: "Write a Python function to sort a list"
+              context: {"language": "python"}
+              priority: 8
+              timeout: 300
+      responses:
+        '200':
+          description: Agent execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+              example:
+                result: {"code": "def sort_list(items):\n    return sorted(items)", "language": "python"}
+                agent_type: "code_assistant"
+                success: true
+                execution_time: 1.23
+
+  /agents/collaborate:
+    post:
+      summary: Agent collaboration
+      description: Execute multiple agents in collaboration
+      tags: [Agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCollaborationRequest'
+            example:
+              agent_types: ["researcher", "planner", "code_assistant"]
+              objective: "Create a web application"
+              context: {"requirements": "user authentication, database"}
+      responses:
+        '200':
+          description: Collaboration result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+              example:
+                result: {"app_structure": "created", "components": ["auth", "dashboard"]}
+                agent_type: "collaboration"
+                success: true
+                execution_time: 5.67
+
+  /agents/capabilities/{agent_type}:
+    get:
+      summary: Get agent capabilities
+      description: Get detailed capabilities of a specific agent type
+      tags: [Agents]
+      parameters:
+        - name: agent_type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Type of agent
+      responses:
+        '200':
+          description: Agent capabilities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCapabilitiesResponse'
+              example:
+                agent_type: "code_assistant"
+                capabilities: ["write_code", "debug", "optimize", "review"]
+                parameters: {"languages": ["python", "javascript", "java"]}
+
+  /agents/bridge/list:
+    get:
+      summary: List agent bridges
+      description: Get all agents with their status and capabilities
+      tags: [Agents]
+      responses:
+        '200':
+          description: Agent bridges list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentBridgeResponse'
+              example:
+                agents:
+                  - name: "code_assistant"
+                    type: "code_assistant"
+                    status: "active"
+                    capabilities: ["write_code", "debug"]
+                    last_used: "2025-12-12T12:34:35Z"
+
+  /memory/stats:
+    get:
+      summary: Memory statistics
+      description: Get memory usage statistics
+      tags: [Memory]
+      responses:
+        '200':
+          description: Memory statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryStats'
+
+  /memory/sync/to-legacy:
+    post:
+      summary: Sync memory to legacy
+      description: Synchronize current memory to legacy system
+      tags: [Memory]
+      responses:
+        '200':
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+              example:
+                success: true
+                records_synced: 1250
+                duration: 2.34
+                timestamp: "2025-12-12T12:34:35Z"
+
+  /memory/sync/from-legacy:
+    post:
+      summary: Load memory from legacy
+      description: Load memory data from legacy system
+      tags: [Memory]
+      responses:
+        '200':
+          description: Load result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+              example:
+                success: true
+                records_synced: 850
+                duration: 1.98
+                timestamp: "2025-12-12T12:34:35Z"
+
+  /memory/migrate:
+    post:
+      summary: Migrate memory
+      description: Migrate memory data between systems
+      tags: [Memory]
+      responses:
+        '200':
+          description: Migration result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+              example:
+                success: true
+                records_synced: 2100
+                duration: 4.56
+                timestamp: "2025-12-12T12:34:35Z"
+
+  /workflows/execute:
+    post:
+      summary: Execute workflow
+      description: Execute a workflow with given parameters
+      tags: [Workflows]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowRequest'
+            example:
+              workflow_type: "data_processing"
+              parameters: {"input_file": "data.csv", "output_format": "json"}
+              priority: 7
+              timeout: 600
+      responses:
+        '200':
+          description: Workflow execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowResponse'
+              example:
+                workflow_id: "wf_12345"
+                status: "completed"
+                result: {"processed": 1000, "errors": 0}
+                steps_completed: 5
+                total_steps: 5
+                execution_time: 12.34
+
+  /workflows/capabilities:
+    get:
+      summary: Workflow capabilities
+      description: Get available workflows and their capabilities
+      tags: [Workflows]
+      responses:
+        '200':
+          description: Workflow capabilities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowCapabilitiesResponse'
+              example:
+                workflows:
+                  - type: "data_processing"
+                    name: "Data Processing"
+                    description: "Process and transform data files"
+                    parameters: {"input_formats": ["csv", "json"], "output_formats": ["json", "xml"]}
+
+  /workflows/active:
+    get:
+      summary: Active workflows
+      description: Get list of currently active workflows
+      tags: [Workflows]
+      responses:
+        '200':
+          description: Active workflows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActiveWorkflowsResponse'
+              example:
+                workflows:
+                  - workflow_id: "wf_12345"
+                    type: "data_processing"
+                    status: "running"
+                    started_at: "2025-12-12T12:34:35Z"
+                    current_step: "validation"
+                    progress: 75.5
+
+  /security/validate:
+    post:
+      summary: Security validation
+      description: Validate an action for security compliance
+      tags: [Security]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecurityValidationRequest'
+            example:
+              agent_id: "agent_123"
+              action: "access_database"
+              context: {"resource": "user_data", "operation": "read"}
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityValidationResponse'
+              example:
+                allowed: true
+                reason: "Action permitted by security policy"
+                constraints: ["audit_required", "rate_limited"]
+                validation_id: "val_67890"
+
+  /security/events:
+    get:
+      summary: Security events
+      description: Get security events with optional filtering
+      tags: [Security]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+          description: Maximum number of events to return
+      responses:
+        '200':
+          description: Security events list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityEventsResponse'
+              example:
+                events:
+                  - event_id: "evt_123"
+                    timestamp: "2025-12-12T12:34:35Z"
+                    event_type: "validation_failed"
+                    agent_id: "agent_456"
+                    severity: "medium"
+                    description: "Unauthorized access attempt"
+                total_count: 1
+                has_more: false
+
+  /security/stats:
+    get:
+      summary: Security statistics
+      description: Get security-related statistics
+      tags: [Security]
+      responses:
+        '200':
+          description: Security statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityStats'
+              example:
+                total_validations: 150
+                allowed_actions: 120
+                blocked_actions: 30
+                critical_events: 2
+                last_validation: "2025-12-12T12:34:35Z"
+
+  /security/audit:
+    post:
+      summary: Security audit
+      description: Generate a security audit report
+      tags: [Security]
+      responses:
+        '200':
+          description: Audit result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityAuditResponse'
+              example:
+                audit_id: "audit_789"
+                status: "completed"
+                findings:
+                  - severity: "warning"
+                    category: "access_control"
+                    description: "Multiple failed validation attempts detected"
+                    recommendation: "Review agent access patterns"
+                summary: "Audit completed successfully with minor findings"
+                generated_at: "2025-12-12T12:34:35Z"
+
+  /monitoring/metrics:
+    get:
+      summary: System metrics
+      description: Get system performance metrics
+      tags: [Monitoring]
+      responses:
+        '200':
+          description: Metrics list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+              example:
+                metrics:
+                  - name: "request_count"
+                    type: "counter"
+                    value: 150
+                    timestamp: "2025-12-12T12:34:35Z"
+
+  /monitoring/summary:
+    get:
+      summary: Monitoring summary
+      description: Get monitoring summary for specified time window
+      tags: [Monitoring]
+      parameters:
+        - name: time_window_minutes
+          in: query
+          schema:
+            type: integer
+            default: 60
+            minimum: 1
+            maximum: 1440
+          description: Time window in minutes
+      responses:
+        '200':
+          description: Monitoring summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringSummaryResponse'
+              example:
+                time_window_minutes: 60
+                total_requests: 150
+                average_response_time: 245.6
+                error_rate: 2.1
+                active_agents: 5
+
+  /monitoring/health:
+    get:
+      summary: Monitoring health
+      description: Get detailed health information
+      tags: [Monitoring]
+      responses:
+        '200':
+          description: Health information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /monitoring/performance:
+    get:
+      summary: Performance metrics
+      description: Get detailed performance metrics
+      tags: [Monitoring]
+      responses:
+        '200':
+          description: Performance metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceMetrics'
+              example:
+                throughput: 25.3
+                latency_p50: 145.2
+                latency_p95: 289.7
+                latency_p99: 456.8
+                success_rate: 97.9
+
+  /monitoring/export:
+    get:
+      summary: Export monitoring data
+      description: Export monitoring data in specified format
+      tags: [Monitoring]
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv, xml]
+            default: json
+          description: Export format
+      responses:
+        '200':
+          description: Exported data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportResponse'
+              example:
+                format: "json"
+                data: '{"metrics": [...]}'
+                generated_at: "2025-12-12T12:34:35Z"
+                record_count: 150
+
+  /feed/ingest:
+    post:
+      summary: Feed ingestion
+      description: Ingest content items into the knowledge base
+      tags: [Feed]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedIngestRequest'
+            example:
+              items:
+                - source: "web"
+                  content: "Important document content"
+                  metadata: {"subject": "documentation"}
+              persist_to_knowledge: true
+              persist_to_memory: false
+      responses:
+        '200':
+          description: Ingestion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedIngestResponse'
+              example:
+                ingested: 1
+                errors: []
+                processing_time: 0.85
+
+  /jobs:
+    post:
+      summary: Submit job
+      description: Submit an asynchronous job for processing
+      tags: [Jobs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobRequest'
+            example:
+              mode: "chat"
+              payload:
+                messages:
+                  - role: "user"
+                    content: "Process this asynchronously"
+              callback_url: "https://example.com/webhook"
+      responses:
+        '200':
+          description: Job submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+              example:
+                job_id: "job_12345"
+                status: "queued"
+                position: 2
+                estimated_start: "2025-12-12T12:35:00Z"
+                created_at: "2025-12-12T12:34:35Z"
+
+  /jobs/{job_id}:
+    get:
+      summary: Get job status
+      description: Get the status and result of a specific job
+      tags: [Jobs]
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique job identifier
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+              example:
+                job_id: "job_12345"
+                status: "completed"
+                result: {"response": "Processing completed successfully"}
+                progress: 100
+                started_at: "2025-12-12T12:35:00Z"
+                completed_at: "2025-12-12T12:35:45Z"
+                execution_time: 45.2
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    # Chat Models
+    ChatMessage:
+      $ref: './api_schemas/chat_models.yaml#/ChatMessage'
+    
+    ChatRequest:
+      $ref: './api_schemas/chat_models.yaml#/ChatRequest'
+    
+    ChatResponse:
+      $ref: './api_schemas/chat_models.yaml#/ChatResponse'
+    
+    ModelsResponse:
+      $ref: './api_schemas/chat_models.yaml#/ModelsResponse'
+
+    # Agent Models
+    AgentRequest:
+      $ref: './api_schemas/agent_models.yaml#/AgentRequest'
+    
+    AgentCollaborationRequest:
+      $ref: './api_schemas/agent_models.yaml#/AgentCollaborationRequest'
+    
+    AgentResponse:
+      $ref: './api_schemas/agent_models.yaml#/AgentResponse'
+    
+    AgentsListResponse:
+      $ref: './api_schemas/agent_models.yaml#/AgentsListResponse'
+    
+    AgentCapabilitiesResponse:
+      $ref: './api_schemas/agent_models.yaml#/AgentCapabilitiesResponse'
+    
+    AgentBridgeResponse:
+      $ref: './api_schemas/agent_models.yaml#/AgentBridgeResponse'
+
+    # Workflow Models
+    WorkflowRequest:
+      $ref: './api_schemas/workflow_models.yaml#/WorkflowRequest'
+    
+    WorkflowResponse:
+      $ref: './api_schemas/workflow_models.yaml#/WorkflowResponse'
+    
+    WorkflowCapabilitiesResponse:
+      $ref: './api_schemas/workflow_models.yaml#/WorkflowCapabilitiesResponse'
+    
+    ActiveWorkflowsResponse:
+      $ref: './api_schemas/workflow_models.yaml#/ActiveWorkflowsResponse'
+
+    # Security Models
+    SecurityValidationRequest:
+      $ref: './api_schemas/security_models.yaml#/SecurityValidationRequest'
+    
+    SecurityValidationResponse:
+      $ref: './api_schemas/security_models.yaml#/SecurityValidationResponse'
+    
+    SecurityEventsResponse:
+      $ref: './api_schemas/security_models.yaml#/SecurityEventsResponse'
+    
+    SecurityStats:
+      $ref: './api_schemas/security_models.yaml#/SecurityStats'
+    
+    SecurityAuditResponse:
+      $ref: './api_schemas/security_models.yaml#/SecurityAuditResponse'
+
+    # Monitoring Models
+    HealthResponse:
+      $ref: './api_schemas/monitoring_models.yaml#/HealthResponse'
+    
+    MetricsResponse:
+      $ref: './api_schemas/monitoring_models.yaml#/MetricsResponse'
+    
+    MonitoringSummaryResponse:
+      $ref: './api_schemas/monitoring_models.yaml#/MonitoringSummaryResponse'
+    
+    PerformanceMetrics:
+      $ref: './api_schemas/monitoring_models.yaml#/PerformanceMetrics'
+    
+    ExportResponse:
+      $ref: './api_schemas/monitoring_models.yaml#/ExportResponse'
+    
+    MemoryStats:
+      $ref: './api_schemas/monitoring_models.yaml#/MemoryStats'
+    
+    SyncResponse:
+      $ref: './api_schemas/monitoring_models.yaml#/SyncResponse'
+
+    # Job Models
+    JobRequest:
+      $ref: './api_schemas/job_models.yaml#/JobRequest'
+    
+    JobResponse:
+      $ref: './api_schemas/job_models.yaml#/JobResponse'
+    
+    JobStatusResponse:
+      $ref: './api_schemas/job_models.yaml#/JobStatusResponse'
+    
+    FeedIngestRequest:
+      $ref: './api_schemas/job_models.yaml#/FeedIngestRequest'
+    
+    FeedIngestResponse:
+      $ref: './api_schemas/job_models.yaml#/FeedIngestResponse'
+
+tags:
+  - name: Health
+    description: Health and status endpoints
+  - name: Models
+    description: AI model management
+  - name: Chat
+    description: Chat and conversation endpoints
+  - name: Agents
+    description: Agent execution and management
+  - name: Memory
+    description: Memory management and migration
+  - name: Workflows
+    description: Workflow execution and management
+  - name: Security
+    description: Security validation and auditing
+  - name: Monitoring
+    description: System monitoring and metrics
+  - name: Feed
+    description: Content ingestion and processing
+  - name: Jobs
+    description: Asynchronous job processing

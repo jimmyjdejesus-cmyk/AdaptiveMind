@@ -1,0 +1,175 @@
+# Security and Validation Models
+
+## SecurityValidationRequest
+SecurityValidationRequest:
+  type: object
+  properties:
+    agent_id:
+      type: string
+      description: Identifier of the agent requesting validation
+    action:
+      type: string
+      description: Action being validated
+    context:
+      type: object
+      description: Additional context for validation
+  required:
+    - agent_id
+    - action
+
+## SecurityValidationResponse
+SecurityValidationResponse:
+  type: object
+  properties:
+    allowed:
+      type: boolean
+      description: Whether the action is allowed
+    reason:
+      type: string
+      description: Reason for the validation decision
+    constraints:
+      type: array
+      items:
+        type: string
+      description: List of constraints that must be followed
+    validation_id:
+      type: string
+      description: Unique identifier for this validation
+  required:
+    - allowed
+    - reason
+
+## SecurityEvent
+SecurityEvent:
+  type: object
+  properties:
+    event_id:
+      type: string
+      description: Unique identifier for the event
+    timestamp:
+      type: string
+      format: date-time
+      description: When the event occurred
+    event_type:
+      type: string
+      description: Type of security event
+    agent_id:
+      type: string
+      description: Agent involved in the event
+    severity:
+      type: string
+      enum: [low, medium, high, critical]
+      description: Severity level of the event
+    description:
+      type: string
+      description: Description of the event
+    metadata:
+      type: object
+      description: Additional event metadata
+  required:
+    - event_id
+    - timestamp
+    - event_type
+    - severity
+    - description
+
+## SecurityEventsResponse
+SecurityEventsResponse:
+  type: object
+  properties:
+    events:
+      type: array
+      items:
+        $ref: '#/SecurityEvent'
+      description: List of security events
+    total_count:
+      type: integer
+      description: Total number of events matching the query
+    has_more:
+      type: boolean
+      description: Whether there are more events available
+  required:
+    - events
+    - total_count
+
+## SecurityStats
+SecurityStats:
+  type: object
+  properties:
+    total_validations:
+      type: integer
+      description: Total number of validations performed
+    allowed_actions:
+      type: integer
+      description: Number of actions that were allowed
+    blocked_actions:
+      type: integer
+      description: Number of actions that were blocked
+    critical_events:
+      type: integer
+      description: Number of critical security events
+    last_validation:
+      type: string
+      format: date-time
+      description: When the last validation was performed
+  required:
+    - total_validations
+    - allowed_actions
+    - blocked_actions
+
+## SecurityAuditResponse
+SecurityAuditResponse:
+  type: object
+  properties:
+    audit_id:
+      type: string
+      description: Unique identifier for this audit
+    status:
+      type: string
+      enum: [completed, in_progress, failed]
+      description: Status of the audit
+    findings:
+      type: array
+      items:
+        $ref: '#/AuditFinding'
+      description: List of audit findings
+    summary:
+      type: string
+      description: Summary of the audit results
+    generated_at:
+      type: string
+      format: date-time
+      description: When the audit was generated
+  required:
+    - audit_id
+    - status
+    - summary
+    - generated_at
+
+## AuditFinding
+AuditFinding:
+  type: object
+  properties:
+    severity:
+      type: string
+      enum: [info, warning, error, critical]
+      description: Severity of the finding
+    category:
+      type: string
+      description: Category of the finding
+    description:
+      type: string
+      description: Description of the finding
+    recommendation:
+      type: string
+      description: Recommended action
+    affected_resources:
+      type: array
+      items:
+        type: string
+      description: Resources affected by this finding
+  required:
+    - severity
+    - category
+    - description
+    - recommendation

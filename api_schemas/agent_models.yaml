@@ -1,0 +1,142 @@
+# Agent Execution Models
+
+## AgentRequest
+AgentRequest:
+  type: object
+  properties:
+    agent_type:
+      type: string
+      description: Type of agent to execute
+    objective:
+      type: string
+      description: Objective or task for the agent
+    context:
+      type: object
+      description: Additional context for the agent execution
+    priority:
+      type: integer
+      minimum: 1
+      maximum: 10
+      default: 5
+      description: Priority level for the agent execution
+    timeout:
+      type: integer
+      minimum: 1
+      description: Timeout in seconds for the agent execution
+  required:
+    - agent_type
+    - objective
+
+## AgentCollaborationRequest
+AgentCollaborationRequest:
+  type: object
+  properties:
+    agent_types:
+      type: array
+      items:
+        type: string
+      description: List of agent types to collaborate
+    objective:
+      type: string
+      description: Collaboration objective
+    context:
+      type: object
+      description: Additional context for the collaboration
+  required:
+    - agent_types
+    - objective
+
+## AgentResponse
+AgentResponse:
+  type: object
+  properties:
+    result:
+      type: object
+      description: Result of the agent execution
+    agent_type:
+      type: string
+      description: Type of agent that executed
+    success:
+      type: boolean
+      description: Whether the execution was successful
+    execution_time:
+      type: number
+      description: Time taken for execution in seconds
+  required:
+    - result
+    - success
+
+## AgentsListResponse
+AgentsListResponse:
+  type: object
+  properties:
+    agents:
+      type: array
+      items:
+        type: string
+      description: List of available agent types
+    count:
+      type: integer
+      description: Number of agents available
+  required:
+    - agents
+    - count
+
+## AgentCapabilitiesResponse
+AgentCapabilitiesResponse:
+  type: object
+  properties:
+    agent_type:
+      type: string
+      description: The agent type
+    capabilities:
+      type: array
+      items:
+        type: string
+      description: List of capabilities for this agent type
+    parameters:
+      type: object
+      description: Supported parameters for this agent type
+  required:
+    - agent_type
+    - capabilities
+
+## AgentBridgeResponse
+AgentBridgeResponse:
+  type: object
+  properties:
+    agents:
+      type: array
+      items:
+        $ref: '#/AgentInfo'
+      description: List of agents with their status and capabilities
+  required:
+    - agents
+
+## AgentInfo
+AgentInfo:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Agent name
+    type:
+      type: string
+      description: Agent type
+    status:
+      type: string
+      enum: [active, inactive, error]
+      description: Current status of the agent
+    capabilities:
+      type: array
+      items:
+        type: string
+      description: Agent capabilities
+    last_used:
+      type: string
+      format: date-time
+      description: Last time the agent was used
+  required:
+    - name
+    - type
+    - status

@@ -1,0 +1,66 @@
+# Chat and Messaging Models
+
+## ChatMessage
+ChatMessage:
+  type: object
+  properties:
+    role:
+      type: string
+      enum: [user, assistant, system]
+      description: The role of the message sender
+    content:
+      type: string
+      description: The content of the message
+  required:
+    - role
+    - content
+
+## ChatRequest
+ChatRequest:
+  type: object
+  properties:
+    messages:
+      type: array
+      items:
+        $ref: '#/ChatMessage'
+      description: List of chat messages
+    model:
+      type: string
+      description: Model to use for chat
+    temperature:
+      type: number
+      minimum: 0
+      maximum: 2
+      default: 0.7
+      description: Temperature for response generation
+    max_tokens:
+      type: integer
+      minimum: 1
+      description: Maximum number of tokens to generate
+  required:
+    - messages
+
+## ChatResponse
+ChatResponse:
+  type: object
+  properties:
+    content:
+      type: string
+      description: The generated response content
+    model:
+      type: string
+      description: The model used to generate the response
+  required:
+    - content
+
+## ModelsResponse
+ModelsResponse:
+  type: object
+  properties:
+    models:
+      type: array
+      items:
+        type: string
+      description: List of available models
+  required:
+    - models
