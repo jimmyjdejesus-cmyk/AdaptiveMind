@@ -93,6 +93,18 @@ except Exception:
     pydantic_module.create_model = create_model
     sys.modules.setdefault("pydantic", pydantic_module)
 
+    # Minimal config loader shim for legacy imports (e.g. config.config_loader.load_config)
+    config_module = types.ModuleType("config")
+    config_loader_module = types.ModuleType("config.config_loader")
+
+    def load_config(explicit_path: str | None = None):  # pragma: no cover - test shim
+        return {}
+
+    config_loader_module.load_config = load_config
+    config_module.config_loader = config_loader_module
+    sys.modules.setdefault("config", config_module)
+    sys.modules.setdefault("config.config_loader", config_loader_module)
+
 chromadb_module = types.ModuleType("chromadb")
 chromadb_utils = types.ModuleType("chromadb.utils")
 chromadb_embedding = types.ModuleType("chromadb.utils.embedding_functions")
