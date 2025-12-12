@@ -9,8 +9,16 @@ import pytest
 
 # Stub external dependencies
 neo4j_module = types.ModuleType("neo4j")
-neo4j_module.GraphDatabase = object
 neo4j_module.Driver = object
+
+
+class GraphDatabase:
+    @staticmethod
+    def driver(uri, auth=None):
+        return object()
+
+
+neo4j_module.GraphDatabase = GraphDatabase
 exceptions_submodule = types.ModuleType("neo4j.exceptions")
 
 
