@@ -4,7 +4,7 @@ import sys
 import types
 from pathlib import Path
 from enum import Enum
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 import pytest
 
 # Stub external dependencies
