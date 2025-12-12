@@ -164,6 +164,8 @@ sys.modules.setdefault("networkx", nx_module)
 
 # Additional stubs
 requests_module = types.ModuleType("requests")
+requests_module.get = lambda *a, **k: Mock()
+requests_module.post = lambda *a, **k: Mock()
 sys.modules.setdefault("requests", requests_module)
 critics_pkg = types.ModuleType("jarvis.agents.critics")
 const_module = types.ModuleType("jarvis.agents.critics.constitutional_critic")
@@ -379,16 +381,11 @@ sys.modules.setdefault("jarvis.workflows.engine", engine_module)
 
 
 @pytest.fixture
-def mock_neo4j_graph(monkeypatch):
-    """Provide a mock Neo4j graph for tests requiring persistence."""
-    mock_graph = MagicMock()
-    mock_graph.connect = MagicMock()
-    mock_graph.close = MagicMock()
-    mock_graph.run = MagicMock(
-        return_value=MagicMock(data=MagicMock(return_value=[]))
-    )
-    monkeypatch.setattr(
-        "jarvis.world_model.neo4j_graph.Neo4jGraph",
-        MagicMock(return_value=mock_graph),
-    )
-    return mock_graph
+def client():
+    """Mock HTTP client for API tests"""
+    mock_client = Mock()
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"content": "test response"}
+    mock_client.post.return_value = mock_response
+    return mock_client

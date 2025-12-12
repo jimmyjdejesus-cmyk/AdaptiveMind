@@ -19,7 +19,7 @@ class TestOpenAICompatibility:
     @pytest.fixture
     def mock_config(self):
         """Mock Jarvis configuration"""
-        config = Mock(spec=AppConfig)
+        config = Mock()
         config.personas = {
             "generalist": {
                 "name": "generalist",
@@ -36,6 +36,7 @@ class TestOpenAICompatibility:
                 "routing_hint": "code"
             }
         }
+        config.security = Mock()
         config.security.api_keys = ["test-api-key"]
         return config
 
