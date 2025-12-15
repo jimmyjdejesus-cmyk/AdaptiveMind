@@ -39,11 +39,12 @@ uvicorn jarvis_core.server:build_app --factory --host 127.0.0.1 --port 8000
 ```bash
 curl -X POST http://localhost:8000/api/v1/local_chat \
   -H "Content-Type: application/json" \
-  -d '{"messages": [{"role": "user", "content": "What is Python?"}] }'
+  -d '{\n+    "messages": [{"role": "user", "content": "What is Python?"}]\n+  }'
 ```
 
-Expected: 200 OK with a JSON response containing the assistant reply. If the endpoint returns 503, ensure `ollama` is running and a model is pulled.
+Expected: 200 OK with a JSON response containing the assistant reply.
+If the endpoint returns 503, ensure `ollama` is running and a model is pulled.
 
 Notes
-* This uses `MCPJarvisAgent` with `force_local=True` so only local models are used.
-* If your `ollama` binary or service requires different host/port, set `OLLAMA_HOST` in the environment or in `legacy/.env`.
+* Uses `MCPJarvisAgent` with `force_local=True` to prefer local models.
+* If your `ollama` binary requires a non-default host/port, set `OLLAMA_HOST` in the environment.

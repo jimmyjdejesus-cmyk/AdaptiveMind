@@ -195,4 +195,5 @@ COMPLEXITY_MODELS = {
 
 **🎉 You're now running Jarvis AI with cloud-first intelligence!**
 
-The system will automatically choose the best model for each task while keeping costs under control and maintaining reliability through local fallbacks.
+The system will automatically choose the best model for each task while keeping costs under control.
+It also maintains reliability through local fallbacks.

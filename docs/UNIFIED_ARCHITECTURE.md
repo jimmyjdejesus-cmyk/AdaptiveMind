@@ -11,7 +11,8 @@ architecture and how the components work together.
 ### 1. Configuration System
 - **Unified Config**: Both GUI and backend use `~/.jarvis/config.json`
 - **Environment Variables**: `.env` file support with automatic loading
-- **Migration Tool**: `legacy/scripts/migrate_config.py` for seamless migration (archived; restore `archive/legacy` to use)
+- **Migration Tool**: `legacy/scripts/migrate_config.py` for seamless migration.
+  (Archived — restore from `archive/legacy` to use.)
 
 ### 2. Core Runtime
 - **New Agent Manager**: Multi-agent coordination and task management
