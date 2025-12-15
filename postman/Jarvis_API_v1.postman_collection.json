@@ -1,6 +1,7 @@
 {
   "info": {
     "name": "Jarvis API v1",
+    "description": "Jarvis AI API collection - Local-first AI orchestration platform",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -11,50 +12,325 @@
         "header": [
           { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
         ],
-        "url": { "raw": "{{BASE_URL}}/api/v1/health", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "health"] }
+        "url": {
+          "raw": "{{BASE_URL}}/health",
+          "host": ["{{BASE_URL}}"],
+          "path": ["health"]
+        }
       }
     },
     {
-      "name": "Models",
-      "request": {
-        "method": "GET",
-        "header": [ { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" } ],
-        "url": { "raw": "{{BASE_URL}}/api/v1/models", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "models"] }
-      }
-    },
-    {
-      "name": "Chat",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" },
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": { "mode": "raw", "raw": "{\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": \"Hello\"\n  }]\n}" },
-        "url": { "raw": "{{BASE_URL}}/api/v1/chat", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "chat"] }
-      }
-    },
-    {
-      "name": "Jobs submit + status",
+      "name": "Core API",
       "item": [
         {
-          "name": "Submit job",
+          "name": "List Models",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/models",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "models"]
+            }
+          }
+        },
+        {
+          "name": "List Personas",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/personas",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "personas"]
+            }
+          }
+        },
+        {
+          "name": "Chat",
           "request": {
             "method": "POST",
             "header": [
               { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"mode\": \"chat\",\n  \"payload\": {\n    \"messages\": [{\"role\": \"user\", \"content\": \"via job\"}]\n  }\n}" },
-            "url": { "raw": "{{BASE_URL}}/api/v1/jobs", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "jobs"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hello, how are you?\"\n    }\n  ],\n  \"persona\": \"generalist\",\n  \"temperature\": 0.7,\n  \"max_tokens\": 512\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/chat",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "chat"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monitoring",
+      "item": [
+        {
+          "name": "Get Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/monitoring/metrics",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "monitoring", "metrics"]
+            }
           }
         },
         {
-          "name": "Get job status",
+          "name": "Get Traces",
           "request": {
             "method": "GET",
-            "header": [ { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" } ],
-            "url": { "raw": "{{BASE_URL}}/api/v1/jobs/{{JOB_ID}}", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "jobs", "{{JOB_ID}}"] }
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/monitoring/traces",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "monitoring", "traces"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Management API",
+      "item": [
+        {
+          "name": "System Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/system/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "system", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Routing Config",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/routing/config",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "routing", "config"]
+            }
+          }
+        },
+        {
+          "name": "Update Routing Config",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allowed_personas\": [\"generalist\"],\n  \"enable_adaptive_routing\": true\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/config/routing",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "config", "routing"]
+            }
+          }
+        },
+        {
+          "name": "List Backends",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/backends",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "backends"]
+            }
+          }
+        },
+        {
+          "name": "Test Backend",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/backends/ollama/test",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "backends", "ollama", "test"]
+            }
+          }
+        },
+        {
+          "name": "Get Context Config",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/context/config",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "context", "config"]
+            }
+          }
+        },
+        {
+          "name": "Update Context Config",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enable_semantic_chunking\": true,\n  \"max_combined_context_tokens\": 8192\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/config/context",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "config", "context"]
+            }
+          }
+        },
+        {
+          "name": "Get Security Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/security/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "security", "status"]
+            }
+          }
+        },
+        {
+          "name": "Create Persona",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"custom-persona\",\n  \"description\": \"A custom persona for testing\",\n  \"system_prompt\": \"You are a helpful assistant.\",\n  \"max_context_window\": 4096,\n  \"routing_hint\": \"general\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/personas",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "personas"]
+            }
+          }
+        },
+        {
+          "name": "Update Persona",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description\",\n  \"max_context_window\": 8192\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/personas/custom-persona",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "personas", "custom-persona"]
+            }
+          }
+        },
+        {
+          "name": "Delete Persona",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/personas/custom-persona",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "personas", "custom-persona"]
+            }
+          }
+        },
+        {
+          "name": "Save Config",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/management/config/save",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "management", "config", "save"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OpenAI Compatible",
+      "item": [
+        {
+          "name": "Chat Completions",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"jarvis-default\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hello!\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 512\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/v1/chat/completions",
+              "host": ["{{BASE_URL}}"],
+              "path": ["v1", "chat", "completions"]
+            }
+          }
+        },
+        {
+          "name": "List Models",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-Key", "value": "{{JARVIS_API_KEY}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/v1/models",
+              "host": ["{{BASE_URL}}"],
+              "path": ["v1", "models"]
+            }
           }
         }
       ]
@@ -62,7 +338,6 @@
   ],
   "variable": [
     { "key": "BASE_URL", "value": "http://127.0.0.1:8000" },
-    { "key": "JARVIS_API_KEY", "value": "your-key" },
-    { "key": "JOB_ID", "value": "" }
+    { "key": "JARVIS_API_KEY", "value": "your-api-key-here" }
   ]
 }

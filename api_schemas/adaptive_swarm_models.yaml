@@ -1,0 +1,648 @@
+# Adaptive Swarm System API Models
+# OpenAPI 3.0 schema definitions for the Dynamically Adaptive Swarm System
+
+components:
+  schemas:
+    # Tier 1: Architecture Selection Models
+    TaskAnalysisRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: User query to analyze for architecture selection
+          example: "Analyze these 5 Python files and find security vulnerabilities"
+        agent_capabilities:
+          $ref: '#/components/schemas/AgentCapabilities'
+          description: Optional agent capabilities for selection
+        context:
+          type: object
+          description: Optional context information
+          additionalProperties: true
+          example:
+            files: ["file1.py", "file2.py"]
+            requirements: "security analysis"
+
+    TaskAnalysisResponse:
+      type: object
+      required:
+        - selected_architecture
+        - confidence
+        - processing_time
+        - task_characteristics
+      properties:
+        selected_architecture:
+          type: string
+          enum: [single, independent, centralized, decentralized, hybrid]
+          description: Recommended architecture type
+          example: "centralized"
+        confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Confidence in architecture selection (0.0 to 1.0)
+          example: 0.875
+        processing_time:
+          type: number
+          format: float
+          description: Time taken for analysis in seconds
+          example: 0.125
+        task_characteristics:
+          $ref: '#/components/schemas/TaskCharacteristics'
+        scores:
+          type: object
+          description: Performance scores for all architectures
+          additionalProperties:
+            type: number
+            format: float
+          example:
+            single: 1.102
+            independent: 0.926
+            centralized: 1.375
+            decentralized: 0.818
+            hybrid: 1.123
+        reasoning:
+          type: array
+          items:
+            type: string
+          description: Scientific reasoning for selection
+          example:
+            - "Task is highly parallelizable (0.8). Centralized coordination provides 80.9% improvement."
+            - "Low sequential dependency (0.2) makes multi-agent coordination effective."
+        model_used:
+          type: string
+          description: Model used for analysis
+          example: "llama3.1:8b"
+
+    TaskCharacteristics:
+      type: object
+      required:
+        - parallelizable
+        - dynamic
+        - sequential
+        - tool_intensive
+        - complexity
+      properties:
+        parallelizable:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Degree of parallelizability (0.0 to 1.0)
+          example: 0.8
+        dynamic:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Degree of dynamic adaptation needed (0.0 to 1.0)
+          example: 0.3
+        sequential:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Degree of sequential reasoning required (0.0 to 1.0)
+          example: 0.2
+        tool_intensive:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Degree of tool usage required (0.0 to 1.0)
+          example: 0.6
+        complexity:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Overall task complexity (0.0 to 1.0)
+          example: 0.5
+
+    AgentCapabilities:
+      type: object
+      required:
+        - baseline_accuracy
+        - token_budget
+        - model_capability
+      properties:
+        baseline_accuracy:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Single agent accuracy on task (0.0 to 1.0)
+          example: 0.6
+        token_budget:
+          type: integer
+          minimum: 1
+          description: Total token budget available
+          example: 100000
+        model_capability:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Relative capability of LLM (0.0 to 1.0)
+          example: 0.6
+
+    # Tier 2: Swarm Execution Models
+    SwarmExecutionRequest:
+      type: object
+      required:
+        - architecture_type
+        - query
+      properties:
+        architecture_type:
+          type: string
+          enum: [single, independent, centralized, decentralized, hybrid]
+          description: Selected architecture type from Tier 1
+          example: "centralized"
+        query:
+          type: string
+          description: Task query to execute
+          example: "Analyze these 5 Python files and find security vulnerabilities"
+        context:
+          type: object
+          description: Optional context information
+          additionalProperties: true
+          example:
+            files: ["file1.py", "file2.py"]
+            target: "security vulnerabilities"
+        max_agents:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Maximum number of agents to spawn
+          default: 5
+          example: 3
+
+    SwarmExecutionResponse:
+      type: object
+      required:
+        - success
+        - output
+        - architecture
+        - execution_time
+        - metrics
+      properties:
+        success:
+          type: boolean
+          description: Whether execution was successful
+          example: true
+        output:
+          type: string
+          description: Execution result output
+          example: "Analysis complete. Found 3 security vulnerabilities..."
+        architecture:
+          type: string
+          enum: [single, independent, centralized, decentralized, hybrid]
+          description: Architecture used for execution
+          example: "centralized"
+        execution_time:
+          type: number
+          format: float
+          description: Total execution time in seconds
+          example: 2.45
+        metrics:
+          $ref: '#/components/schemas/SwarmMetrics'
+        metadata:
+          type: object
+          description: Additional execution metadata
+          additionalProperties: true
+          example:
+            num_agents: 3
+            successful_subtasks: 3
+            total_subtasks: 3
+
+    SwarmMetrics:
+      type: object
+      required:
+        - tokens_used
+        - coordination_tokens
+        - error_amplification
+        - efficiency
+        - overhead
+      properties:
+        tokens_used:
+          type: integer
+          minimum: 0
+          description: Total tokens consumed
+          example: 1500
+        coordination_tokens:
+          type: integer
+          minimum: 0
+          description: Tokens used for coordination overhead
+          example: 150
+        error_amplification:
+          type: number
+          format: float
+          minimum: 0.0
+          description: Error amplification factor
+          example: 1.2
+        efficiency:
+          type: number
+          format: float
+          minimum: 0.0
+          description: Task efficiency score
+          example: 1.1
+        overhead:
+          type: number
+          format: float
+          minimum: 0.0
+          description: Coordination overhead ratio
+          example: 0.1
+
+    # Tier 3: Cloud Escalation Models
+    CloudEscalationRequest:
+      type: object
+      required:
+        - swarm_result
+      properties:
+        swarm_result:
+          $ref: '#/components/schemas/SwarmExecutionResponse'
+          description: Result from Tier 2 swarm execution
+        task_complexity:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Estimated task complexity (0.0 to 1.0)
+          default: 0.5
+          example: 0.7
+        user_preference:
+          type: string
+          enum: [auto, local, cloud]
+          description: User preference for execution location
+          default: "auto"
+          example: "auto"
+        budget_constraints:
+          type: object
+          description: Budget limitations for cost optimization
+          properties:
+            max_cost:
+              type: number
+              format: float
+              minimum: 0.0
+              description: Maximum acceptable cost in USD
+              example: 0.10
+          additionalProperties: false
+
+    CloudEscalationResponse:
+      type: object
+      required:
+        - decision
+        - reason
+        - confidence
+        - cost_analysis
+        - recommendations
+      properties:
+        decision:
+          type: string
+          enum: [escalate, continue_local, retry_local]
+          description: Escalation decision
+          example: "continue_local"
+        reason:
+          type: string
+          enum: [high_error_amplification, low_efficiency, task_failure, resource_constraints, complexity_threshold, cost_optimization]
+          description: Primary reason for decision
+          example: "cost_optimization"
+        confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Confidence in escalation decision (0.0 to 1.0)
+          example: 0.6
+        cost_analysis:
+          $ref: '#/components/schemas/CostAnalysis'
+        recommendations:
+          type: array
+          items:
+            type: string
+          description: Actionable recommendations
+          example:
+            - "Continuing with local execution"
+            - "Cost-effective local processing maintained"
+            - "Monitor error rates for potential future escalation"
+        thresholds:
+          type: object
+          description: Decision thresholds used
+          properties:
+            efficiency_threshold:
+              type: number
+              format: float
+              example: 0.5
+            error_amplification_threshold:
+              type: number
+              format: float
+              example: 4.4
+        metadata:
+          type: object
+          description: Additional decision metadata
+          additionalProperties: true
+          example:
+            processing_time: 0.025
+            decision_factors: 5
+
+    CostAnalysis:
+      type: object
+      required:
+        - local_cost
+        - cloud_cost
+        - cost_ratio
+      properties:
+        local_cost:
+          type: number
+          format: float
+          minimum: 0.0
+          description: Estimated cost for local execution in USD
+          example: 0.0015
+        cloud_cost:
+          type: number
+          format: float
+          minimum: 0.0
+          description: Estimated cost for cloud execution in USD
+          example: 0.0300
+        effective_cloud_cost:
+          type: number
+          format: float
+          minimum: 0.0
+          description: Effective cloud cost with reliability adjustments
+          example: 0.0240
+        cost_ratio:
+          type: number
+          format: float
+          minimum: 0.0
+          description: Cloud cost ratio relative to local
+          example: 20.0
+
+    # Complete System Models
+    AdaptiveSwarmRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: User query to process through the adaptive swarm system
+          example: "Analyze these 5 Python files and find security vulnerabilities"
+        context:
+          type: object
+          description: Optional context information
+          additionalProperties: true
+          example:
+            files: ["file1.py", "file2.py", "file3.py"]
+            requirements: "security vulnerabilities"
+        user_preferences:
+          $ref: '#/components/schemas/UserPreferences'
+
+    UserPreferences:
+      type: object
+      properties:
+        execution_preference:
+          type: string
+          enum: [auto, local, cloud]
+          description: Preference for execution location
+          default: "auto"
+          example: "auto"
+        budget_constraints:
+          type: object
+          description: Budget limitations
+          properties:
+            max_cost:
+              type: number
+              format: float
+              minimum: 0.0
+              description: Maximum acceptable cost in USD
+              example: 0.10
+          additionalProperties: false
+        performance_priority:
+          type: string
+          enum: [speed, accuracy, cost]
+          description: Performance optimization priority
+          default: "balanced"
+          example: "balanced"
+
+    AdaptiveSwarmResponse:
+      type: object
+      required:
+        - final_output
+        - success
+        - execution_summary
+        - tier_results
+        - system_metrics
+        - recommendations
+      properties:
+        final_output:
+          type: string
+          description: Final processed output
+          example: "Analysis complete. Found 3 security vulnerabilities in the analyzed files..."
+        success:
+          type: boolean
+          description: Whether the overall request was successful
+          example: true
+        execution_summary:
+          $ref: '#/components/schemas/ExecutionSummary'
+        tier_results:
+          type: object
+          description: Results from each tier
+          properties:
+            tier1_analysis:
+              $ref: '#/components/schemas/TaskAnalysisResponse'
+            tier2_execution:
+              $ref: '#/components/schemas/SwarmExecutionResponse'
+            tier3_escalation:
+              $ref: '#/components/schemas/CloudEscalationResponse'
+        system_metrics:
+          $ref: '#/components/schemas/SystemMetrics'
+        recommendations:
+          type: array
+          items:
+            type: string
+          description: System recommendations and insights
+          example:
+            - "Architecture selection optimal based on task characteristics"
+            - "Local execution saved $0.0285 compared to cloud"
+            - "Performance meets paper targets with 80.9% efficiency gain"
+
+    ExecutionSummary:
+      type: object
+      required:
+        - total_execution_time
+        - selected_architecture
+        - final_decision
+        - performance_summary
+      properties:
+        total_execution_time:
+          type: number
+          format: float
+          description: Total system execution time in seconds
+          example: 2.675
+        selected_architecture:
+          type: string
+          enum: [single, independent, centralized, decentralized, hybrid]
+          description: Architecture selected and used
+          example: "centralized"
+        final_decision:
+          type: string
+          enum: [escalate, continue_local, retry_local]
+          description: Final execution decision
+          example: "continue_local"
+        performance_summary:
+          type: object
+          description: Performance summary across all tiers
+          properties:
+            tier1_time:
+              type: number
+              format: float
+              example: 0.125
+            tier2_time:
+              type: number
+              format: float
+              example: 2.450
+            tier3_time:
+              type: number
+              format: float
+              example: 0.025
+            total_tokens:
+              type: integer
+              example: 1650
+            total_cost:
+              type: number
+              format: float
+              example: 0.0015
+
+    SystemMetrics:
+      type: object
+      required:
+        - system_efficiency
+        - cost_savings
+        - error_prevention
+        - scientific_insights
+      properties:
+        system_efficiency:
+          type: number
+          format: float
+          minimum: 0.0
+          description: Overall system efficiency score
+          example: 1.15
+        cost_savings:
+          type: number
+          format: float
+          description: Cost savings compared to baseline approach
+          example: 0.0285
+        error_prevention:
+          type: object
+          description: Error amplification prevention metrics
+          properties:
+            detected_amplification:
+              type: number
+              format: float
+              example: 1.2
+            prevented_multiplication:
+              type: boolean
+              example: true
+            threshold_exceeded:
+              type: boolean
+              example: false
+        scientific_insights:
+          type: object
+          description: Scientific insights from the execution
+          properties:
+            architecture_selection_factors:
+              type: integer
+              example: 5
+            paper_target_achievement:
+              type: number
+              format: float
+              example: 0.809
+            scaling_law_validation:
+              type: boolean
+              example: true
+
+    # System Management Models
+    SystemStatusResponse:
+      type: object
+      required:
+        - status
+        - capabilities
+        - performance_stats
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall system health status
+          example: "healthy"
+        capabilities:
+          type: object
+          description: System capabilities
+          properties:
+            tier1_available:
+              type: boolean
+              example: true
+            tier2_available:
+              type: boolean
+              example: true
+            tier3_available:
+              type: boolean
+              example: true
+            supported_architectures:
+              type: array
+              items:
+                type: string
+              example: [single, independent, centralized, decentralized, hybrid]
+        performance_stats:
+          $ref: '#/components/schemas/PerformanceStats'
+
+    PerformanceStats:
+      type: object
+      description: System performance statistics
+      properties:
+        total_tasks_processed:
+          type: integer
+          example: 150
+        success_rate:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.92
+        escalation_rate:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.15
+        average_efficiency:
+          type: number
+          format: float
+          example: 1.08
+        architecture_usage:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            single: 45
+            centralized: 60
+            decentralized: 30
+            independent: 10
+            hybrid: 5
+        cost_savings:
+          type: object
+          description: Cost savings breakdown
+          properties:
+            total_saved:
+              type: number
+              format: float
+              example: 4.25
+            average_per_task:
+              type: number
+              format: float
+              example: 0.028
+            cloud_avoidance_rate:
+              type: number
+              format: float
+              example: 0.85
