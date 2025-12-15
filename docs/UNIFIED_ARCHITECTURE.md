@@ -122,8 +122,10 @@ API_PORT=8000
 #### Backend API
 ```bash
 python -m uvicorn jarvis_core.server:build_app --factory --host 127.0.0.1 --port 8000
+```
 
-Note: The legacy runtime has been archived to `archive/legacy`; see `docs/MIGRATION_GUIDE.md` to restore it for testing if required.
+Note: The legacy runtime has been archived to `archive/legacy`. See `docs/MIGRATION_GUIDE.md` to
+restore it for testing if required.
 ```
 
 #### GUI Application
