@@ -9,9 +9,12 @@ pipeline, and a monitoring stack to support research workflows while protecting 
 
 ## Key Features
 
-- **Agent-UI Integration** – Modern frontend interface for sending prompts to the adaptive router and viewing traces.
-- **Context Engineering Pipeline** – Automatic persona prompts, conversation history, research snippets, and optional local documents with semantic chunking.
-- **Adaptive Routing** – Persona-aware router selects between Ollama, WindowsML, or the contextual fallback while recording metrics and traces.
+- **Agent-UI Integration** – Modern frontend interface for sending prompts to the adaptive router
+  and viewing traces.
+- **Context Engineering Pipeline** – Automatic persona prompts, conversation history, research
+  snippets, and optional local documents with semantic chunking.
+- **Adaptive Routing** – Persona-aware router selects between Ollama, WindowsML, or the
+  contextual fallback while recording metrics and traces.
 - **Security Controls** – API key enforcement and structured audit logging hooks to keep cloud usage gated.
 - **Observability** – Central JSON logger, rolling metrics registry, and trace harvesting endpoints.
 - **Extensibility Templates** – Templates for Model Context Protocol (MCP) and Language Server Protocol (LSP) adapters.
@@ -32,7 +35,8 @@ pip install -r requirements.txt
 uvicorn jarvis_core.server:build_app --factory --host 127.0.0.1 --port 8000
 ```
 
-The backend attempts to use a local Ollama instance (`OLLAMA_HOST`) and falls back to the contextual generator when unavailable.
+The backend attempts to use a local Ollama instance (`OLLAMA_HOST`) and falls back to the
+contextual generator when unavailable.
 
 ## Running tests locally
 
@@ -52,11 +56,11 @@ pytest -q
 Test mode notes (for developers):
 
 - Set `JARVIS_TEST_MODE=true` to enable test-only fallbacks used by the
-	local test harness (e.g., relaxed CORS for websocket-client tests and a
-	small fallback ExceptionMiddleware when Starlette's ExceptionMiddleware
-	is not present). The test suite sets this automatically when running
-	locally via `pytest` (see `tests/conftest.py`), but you can set it
-	explicitly when debugging:
+  local test harness (e.g., relaxed CORS for websocket-client tests and a
+  small fallback ExceptionMiddleware when Starlette's ExceptionMiddleware
+  is not present). The test suite sets this automatically when running
+  locally via `pytest` (see `tests/conftest.py`), but you can set it
+  explicitly when debugging:
 
 ```bash
 export JARVIS_TEST_MODE=true
