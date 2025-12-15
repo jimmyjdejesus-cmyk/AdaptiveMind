@@ -67,7 +67,23 @@ ensure a compatible Starlette/FastAPI version is installed (see
 
 ## Migration & Compatibility
 
-This branch keeps the `legacy/` directory intact to preserve backwards compatibility and provides a `Jarvis_Local/` runtime that implements the newer architecture (modern agents, improved monitoring, and a simplified onboarding flow). Review the `docs/` folder for migration steps and API differences.
+The legacy runtime has been archived and removed from the main tree to simplify maintenance. A snapshot tarball of
+the archived `legacy/` runtime is available as a GitHub Release asset: **v0.0.0-legacy-archive-2025-12-14**.
+
+To restore the legacy runtime locally (for migration testing or compatibility checks), either:
+
+- Download the release asset and extract it into the repo root as `legacy/`, or
+- Restore directly from the archived path in git history (or locally, if you previously checked out the archive):
+
+```bash
+# If you kept `archive/legacy` in your clone, restore with:
+git mv archive/legacy legacy
+git commit -m "restore legacy for local migration testing"
+# then start legacy runtime:
+uvicorn legacy.app.main:app --host 127.0.0.1 --port 8000
+```
+
+See `docs/MIGRATION_GUIDE.md` for more details on migration endpoints and recommended workflows.
 
 ---
 
