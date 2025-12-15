@@ -1,6 +1,12 @@
 # Integrating Auto-Deep-Research (ADR) into Jarvis_AI
 
-This document outlines how to integrate Auto-Deep-Research (ADR) as an optional provider in Jarvis_AI while keeping separation of concerns.
+This document outlines how to integrate Auto-Deep-Research (ADR) as an optional
+provider in Jarvis_AI while keeping separation of concerns.
+
+> **Note:** The `legacy/` runtime has been archived and removed from the main tree.
+> References in this document to files under `legacy/` refer to the archived snapshot.
+> Restore the legacy runtime from the release asset (`v0.0.0-legacy-archive-2025-12-14`) or extract the snapshot
+> into `legacy/` if you need to run the legacy integration steps locally.
 
 ## Goals
 - Add ADR as an optional local provider for research tasks.
@@ -9,14 +15,22 @@ This document outlines how to integrate Auto-Deep-Research (ADR) as an optional 
 
 ## Recommended Approach (Blackbox HTTP Provider)
 1. Add `ADR_BASE_URL` env variable and optional `ENABLE_ADR`.
-2. Add a small adapter at `legacy/jarvis/integrations/auto_deep_research/bridge.py` that wraps ADR HTTP API: `generate`, `health_check`.
-3. Update `legacy/jarvis/mcp/client.py` to support `adr` server: add to `self.servers` and add private method `_generate_adr_response` that uses `self._request_with_retry` to `ADR_BASE_URL/api/generate` and returns text.
-4. Add `auto-deep-research` ModelMetadata in `ModelRouter` with strengths `['research','web_research','document_analysis']`.
-5. Update `legacy/jarvis/agents/research_agent.py` to prefer `task_type='research'` when routing to `ModelRouter`, and optionally use `force_local` when ADR is enabled.
+2. Add a small adapter at `legacy/jarvis/integrations/auto_deep_research/bridge.py` that wraps the ADR HTTP API.
+  Implement the `generate` and `health_check` helper methods.
+3. Update `legacy/jarvis/mcp/client.py` to support an `adr` server (add it to `self.servers`).
+  Add a private method `_generate_adr_response` that calls
+  `ADR_BASE_URL/api/generate` via `self._request_with_retry` and returns text.
+4. Add `auto-deep-research` ModelMetadata in `ModelRouter` with strengths
+  `['research', 'web_research', 'document_analysis']`.
+5. Update `legacy/jarvis/agents/research_agent.py` to prefer
+  `task_type='research'` when routing to `ModelRouter` and optionally use
+  `force_local` when ADR is enabled.
 6. Tests: Add unit tests and a small integration test in `tests/` that mocks ADR HTTP endpoints.
 
 ## Alternative: Submodule + Direct Import
-If you want ADR available as a Python package and not as an HTTP service, add it as a submodule and wrap a local API call or use ADR code directly via the adapter. However, keep the same optional behavior.
+If you want ADR available as a Python package and not as an HTTP service, add it
+as a submodule and wrap a local API call or use ADR code directly via the
+adapter. However, keep the same optional behavior.
 
 ## Deployment & Maintenance
 - Keep ADR as an optional submodule or service; never require it for Jarvis core to start.

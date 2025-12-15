@@ -8,7 +8,7 @@ Ensure comprehensive docstring coverage, type hints, and inline code comments th
 ### Phase 1: Analysis & Assessment
 - [ ] Analyze core modules (jarvis_core/)
 - [ ] Analyze main modules (jarvis/)
-- [ ] Analyze legacy code (legacy/)
+- [ ] Analyze archived legacy snapshot (see release `v0.0.0-legacy-archive-2025-12-14`)
 - [ ] Assess current documentation coverage
 - [ ] Identify priority files for documentation
 
@@ -24,9 +24,10 @@ Ensure comprehensive docstring coverage, type hints, and inline code comments th
 - [ ] Document monitoring and scoring
 - [ ] Document workflows and world model
 
-### Phase 4: Legacy Code (legacy/)
-- [ ] Document legacy modules (if still relevant)
-- [ ] Add migration notes where needed
+### Phase 4: Legacy Code (archived)
+- [ ] Document legacy modules from the archived snapshot (see `CHANGELOG.md` and
+  release `v0.0.0-legacy-archive-2025-12-14`)
+- [ ] Add migration notes where needed (note the endpoints are deprecated in the OpenAPI spec)
 
 ### Phase 5: Testing & Utils
 - [ ] Document test utilities
