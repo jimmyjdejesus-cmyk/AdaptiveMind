@@ -9,7 +9,7 @@ Jarvis AI is now a unified multi-agent intelligence system that combines the adv
 ### 1. Configuration System
 - **Unified Config**: Both GUI and backend use `~/.jarvis/config.json`
 - **Environment Variables**: `.env` file support with automatic loading
-- **Migration Tool**: `legacy/scripts/migrate_config.py` for seamless migration
+-- **Migration Tool**: `legacy/scripts/migrate_config.py` for seamless migration (archived; restore `archive/legacy` to use)
 
 ### 2. Core Runtime
 - **New Agent Manager**: Multi-agent coordination and task management

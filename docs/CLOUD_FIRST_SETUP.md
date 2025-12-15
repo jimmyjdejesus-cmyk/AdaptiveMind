@@ -88,7 +88,7 @@ ollama run llama3:8b "Hello world"
 
 ### Test Cloud Connection:
 ```bash
-cd Jarvis_AI/legacy
+cd Jarvis_AI/legacy  # NOTE: `legacy/` has been archived to `archive/legacy`; restore it to use legacy scripts
 python -c "
 from jarvis.mcp.providers.openrouter import OpenRouterClient
 client = OpenRouterClient()

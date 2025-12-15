@@ -1,6 +1,8 @@
 Run Local Assistant (Quickstart)
 
-Follow these steps to get a local assistant up and running ASAP using Jarvis legacy runtime and Ollama as a local model provider.
+Follow these steps to get a local assistant up and running ASAP using the modern Jarvis runtime (recommended) with Ollama as a local model provider.
+
+Note: The legacy runtime has been archived to `archive/legacy`. If you specifically need the legacy runtime for migration or testing, see the restore instructions below.
 
 1) Install Ollama and fetch a local model
 
