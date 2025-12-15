@@ -88,7 +88,7 @@ ollama run llama3:8b "Hello world"
 
 ### Test Cloud Connection:
 ```bash
-cd Jarvis_AI/legacy
+cd Jarvis_AI/legacy  # NOTE: `legacy/` has been archived to `archive/legacy`; restore it to use legacy scripts
 python -c "
 from jarvis.mcp.providers.openrouter import OpenRouterClient
 client = OpenRouterClient()
@@ -186,7 +186,8 @@ COST_LIMITS = {
 COMPLEXITY_MODELS = {
     "high": "anthropic/claude-3-opus-20240229",  # Always use best for high complexity
     "medium": "openai/gpt-4o",                   # GPT-4o for medium tasks
-    "low": "meta-llama/llama-3.1-8b-instruct:free"  # Free for simple tasks
+   "low": "meta-llama/llama-3.1-8b-instruct:free"
+# Free for simple tasks
 }
 ```
 
@@ -194,4 +195,5 @@ COMPLEXITY_MODELS = {
 
 **🎉 You're now running Jarvis AI with cloud-first intelligence!**
 
-The system will automatically choose the best model for each task while keeping costs under control and maintaining reliability through local fallbacks.
+The system will automatically choose the best model for each task while keeping costs under control.
+It also maintains reliability through local fallbacks.

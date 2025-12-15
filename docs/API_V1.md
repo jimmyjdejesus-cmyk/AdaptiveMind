@@ -42,10 +42,10 @@ GET `/agents/bridge/list`
 GET `/memory/stats`
 - 200: stats object
 
-POST `/memory/sync/to-legacy`
+POST `/memory/sync/to-legacy` (DEPRECATED)
 - 200: sync result
 
-POST `/memory/sync/from-legacy`
+POST `/memory/sync/from-legacy` (DEPRECATED)
 - 200: load result
 
 POST `/memory/migrate`

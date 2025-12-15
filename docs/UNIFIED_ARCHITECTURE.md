@@ -2,14 +2,17 @@
 
 ## Overview
 
-Jarvis AI is now a unified multi-agent intelligence system that combines the advanced capabilities of the new agent framework with the robust legacy orchestration system. This document describes the unified architecture and how all components work together.
+Jarvis AI is a unified multi-agent intelligence system that combines the advanced capabilities of the
+new agent framework with the legacy orchestration system. This document describes the unified
+architecture and how the components work together.
 
 ## Architecture Components
 
 ### 1. Configuration System
 - **Unified Config**: Both GUI and backend use `~/.jarvis/config.json`
 - **Environment Variables**: `.env` file support with automatic loading
-- **Migration Tool**: `legacy/scripts/migrate_config.py` for seamless migration
+- **Migration Tool**: `legacy/scripts/migrate_config.py` for seamless migration.
+  (Archived — restore from `archive/legacy` to use.)
 
 ### 2. Core Runtime
 - **New Agent Manager**: Multi-agent coordination and task management
@@ -119,7 +122,11 @@ API_PORT=8000
 
 #### Backend API
 ```bash
-python -m uvicorn legacy.app.main:app --host 127.0.0.1 --port 8000
+python -m uvicorn jarvis_core.server:build_app --factory --host 127.0.0.1 --port 8000
+```
+
+Note: The legacy runtime has been archived to `archive/legacy`. See `docs/MIGRATION_GUIDE.md` to
+restore it for testing if required.
 ```
 
 #### GUI Application

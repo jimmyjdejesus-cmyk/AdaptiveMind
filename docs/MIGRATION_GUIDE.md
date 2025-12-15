@@ -2,7 +2,8 @@
 
 ## Overview
 
-This guide helps you migrate from the legacy Jarvis AI system to the new unified architecture. The migration preserves all existing functionality while adding advanced multi-agent capabilities.
+This guide helps you migrate from the legacy Jarvis AI system to the new unified architecture. It preserves existing
+functionality while adding advanced multi-agent capabilities.
 
 ## Pre-Migration Checklist
 
@@ -47,9 +48,21 @@ This will:
 #### Memory Data
 ```bash
 # Start the backend
-python -m uvicorn legacy.app.main:app --host 127.0.0.1 --port 8000
+python -m uvicorn jarvis_core.server:build_app --factory --host 127.0.0.1 --port 8000
+```
 
-# In another terminal, migrate memory
+Note: The original `legacy/` runtime has been archived to `archive/legacy`.
+If you need to run the legacy system for migration testing, restore it first:
+
+```bash
+# git mv archive/legacy legacy
+# git commit -m "restore legacy for local migration testing"
+# uvicorn legacy.app.main:app --host 127.0.0.1 --port 8000
+```
+
+In another terminal, run the migration:
+
+```bash
 curl -X POST http://127.0.0.1:8000/api/memory/migrate
 ```
 

@@ -1,6 +1,10 @@
 Run Local Assistant (Quickstart)
 
-Follow these steps to get a local assistant up and running ASAP using Jarvis legacy runtime and Ollama as a local model provider.
+Follow these steps to get a local assistant up and running quickly using the modern Jarvis runtime
+(recommended). This guide assumes you have Ollama installed as the local model provider.
+
+Note: The legacy runtime has been archived to `archive/legacy`. If you need the legacy runtime
+for migration or testing, follow the restoration instructions below.
 
 1) Install Ollama and fetch a local model
 
@@ -22,8 +26,12 @@ pip install -r requirements-dev.txt
 3) Start the local server
 
 ```bash
-# Run legacy app (runs API with /api/v1/* endpoints)
-uvicorn legacy.app.main:app --reload --port 8000
+# The legacy runtime has been archived to `archive/legacy` as part of the repository cleanup.
+# To run the modern Jarvis runtime instead (recommended), start:
+uvicorn jarvis_core.server:build_app --factory --host 127.0.0.1 --port 8000
+
+# If you explicitly need to run the legacy runtime, restore it first:
+# git mv archive/legacy legacy && uvicorn legacy.app.main:app --reload --port 8000
 ```
 
 4) Test the local-only endpoint
@@ -31,11 +39,12 @@ uvicorn legacy.app.main:app --reload --port 8000
 ```bash
 curl -X POST http://localhost:8000/api/v1/local_chat \
   -H "Content-Type: application/json" \
-  -d '{"messages": [{"role": "user", "content": "What is Python?"}] }'
+  -d '{\n+    "messages": [{"role": "user", "content": "What is Python?"}]\n+  }'
 ```
 
-Expected: 200 OK with a JSON response containing the assistant reply. If the endpoint returns 503, ensure `ollama` is running and a model is pulled.
+Expected: 200 OK with a JSON response containing the assistant reply.
+If the endpoint returns 503, ensure `ollama` is running and a model is pulled.
 
 Notes
-* This uses `MCPJarvisAgent` with `force_local=True` so only local models are used.
-* If your `ollama` binary or service requires different host/port, set `OLLAMA_HOST` in the environment or in `legacy/.env`.
+* Uses `MCPJarvisAgent` with `force_local=True` to prefer local models.
+* If your `ollama` binary requires a non-default host/port, set `OLLAMA_HOST` in the environment.

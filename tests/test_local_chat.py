@@ -6,7 +6,11 @@ from fastapi.testclient import TestClient
 os.environ.setdefault("JARVIS_DISABLE_AUTH", "true")
 os.environ.setdefault("JARVIS_AUTH_SECRET", "test-secret")
 
-from legacy.app import main as legacy_main
+# Skip this test if the legacy runtime isn't available (we archived it)
+legacy_app = pytest.importorskip("legacy.app", reason="legacy runtime archived; enable if you need legacy tests")
+legacy_main = getattr(legacy_app, "main", None)
+if legacy_main is None:
+    pytest.skip("legacy.main not present in archived legacy package")
 
 
 @pytest.fixture
