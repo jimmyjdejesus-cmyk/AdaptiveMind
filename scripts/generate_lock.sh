@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Generate a reproducible requirements lock file from the top-level requirements
+# Uses pip-compile from pip-tools to pin transitive deps
+
+if ! command -v pip-compile >/dev/null 2>&1; then
+  echo "pip-compile not found; installing pip-tools temporarily"
+  python -m pip install --upgrade pip
+  python -m pip install pip-tools
+fi
+
+echo "Generating requirements.lock from requirements.txt"
+pip-compile --output-file=requirements.lock requirements.txt
+echo "requirements.lock generated"

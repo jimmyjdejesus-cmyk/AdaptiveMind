@@ -33,10 +33,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install pip requirements (verify VCS deps)
+      - name: Install pip requirements (prefer lockfile when available)
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          if [ -f requirements.lock ]; then
+            echo "Installing from requirements.lock"
+            python -m pip install -r requirements.lock
+          else
+            echo "Installing from requirements.txt"
+            python -m pip install -r requirements.txt
+          fi
 
       - name: Smoke test agent-scaling-laws
         run: |
