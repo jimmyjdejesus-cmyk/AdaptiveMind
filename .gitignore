@@ -85,3 +85,143 @@ agent_scaling_laws/
 # Temporary files
 *.tmp
 *.temp
+
+# Additional Python development tools
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+.pdm-python
+
+# UV package manager
+uv.lock
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Redis dump file
+dump.rdb
+
+# Neo4j data
+neo4j_data/
+neo4j_logs/
+
+# Configuration files with secrets
+secrets/
+config/secrets.yaml
+config/secrets.json
+config/.env.local
+
+# Test reports and outputs
+test_results/
+test_reports/
+*.testout
+*.test.xml
+
+# Performance and profiling
+*.prof
+*.pstats
+profile_results/
+
+# Documentation build outputs
+docs/_build/
+docs/build/
+site/
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Docker
+.dockerignore
+Dockerfile.local
+docker-compose.override.yml
+
+# Kubernetes
+*.kubeconfig
+kustomization.local.yaml
+
+# Cloud provider credentials
+.aws/
+.azure/
+.gcp/
+.gcloud/
+
+# Monitoring and metrics
+metrics/
+monitoring/
+grafana_data/
+prometheus_data/
+
+# Cache directories
+.cache/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+
+# Project-specific temporary files
+*.pid
+*.seed
+*.pid.lock
+.nyc_output
+
+# Application specific
+user_data/
+session_data/
+workspace/
+scratch/
+temp_data/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Lock files (keep requirements.txt but ignore others)
+# requirements.lock is already tracked
+*.lock.exclude
+
+# API testing artifacts
+postman_env/
+test_artifacts/
+
+# Development server files
+*.pid
+*.port
+
+# Local model configurations
+models/local/
+models/custom/
+*.model.json
+*.config.local.yaml
+
+# Sentence transformers cache
+sentence_transformers_cache/
+
+# Package manager locks (some might be needed)
+# yarn.lock - keep for Node.js projects
+# package-lock.json - keep for npm projects
