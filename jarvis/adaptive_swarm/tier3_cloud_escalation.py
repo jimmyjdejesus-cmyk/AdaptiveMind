@@ -609,7 +609,7 @@ class CloudEscalationManager:
 
 # Example usage
 if __name__ == "__main__":
-    from adaptive_swarm.tier2_swarm_factory_standalone import SwarmExecutionResult
+    from .tier2_swarm_factory_standalone import SwarmExecutionResult
     
     # Test escalation manager
     escalation_manager = CloudEscalationManager()
