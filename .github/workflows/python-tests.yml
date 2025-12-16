@@ -26,14 +26,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install pip requirements (from lockfile if present)
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.lock ]; then
-            python -m pip install -r requirements.lock
-          else
-            python -m pip install -r requirements.txt
-          fi
+        - name: Set up UV (package manager)
+          uses: astral-sh/setup-uv@v3
+
+        - name: Cache UV
+          uses: actions/cache@v4
+          with:
+            path: ~/.cache/uv
+            key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock','pyproject.toml') }}
+            restore-keys: |
+              ${{ runner.os }}-uv-
+
+        - name: Install dependencies using uv (prefer uv.lock)
+          run: |
+            uv sync --all-extras --dev --python $(which python) --no-progress
 
       # Dependency validation (including VCS installs) runs in the
       # `dependency-check` job earlier in this workflow.
