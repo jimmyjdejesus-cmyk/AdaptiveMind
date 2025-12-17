@@ -4,15 +4,19 @@ Copyright (c) 2025 Jimmy De Jesus (Bravetto)
 Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
 See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
-# J.A.R.V.I.S. — Local-first AI Runtime
+# AdaptiveMind — Intelligent AI Routing & Context Engine
 
-Jarvis_AI is a local-first multi-persona assistant that prioritizes verifiable truth, observability, and
-secure extensibility. It integrates a modern runtime (`apps/Jarvis_Local`) with a legacy compatibility layer
-so teams can migrate iteratively.
+**AdaptiveMind** (formerly Jarvis_AI) is a local-first multi-persona AI assistant that prioritizes verifiable truth, 
+observability, and secure extensibility. It features intelligent routing, adaptive context management, and a powerful 
+orchestration system for multi-agent AI workflows.
 
-Note: The example runtime formerly at `Jarvis_Local/` was moved to `apps/Jarvis_Local`.
-A compatibility shim remains at `Jarvis_Local/__init__.py` that emits a DeprecationWarning;
-please import `apps.Jarvis_Local` directly.
+> **Note:** This project was recently rebranded from "Jarvis" to "AdaptiveMind" to avoid trademark conflicts. 
+> The codebase now uses AdaptiveMind terminology throughout. Legacy references have been updated.
+
+**Repository Structure:**
+- Core framework: `adaptivemind_core/` and `adaptivemind/`
+- Example runtime: `apps/AdaptiveMind_Local/`
+- Agent Scaling Laws (submodule): `agent_scaling_laws/`
 
 The architecture supports a central Meta-Agent that orchestrates specialist LLMs, an adaptive routing
 pipeline, and a monitoring stack to support research workflows while protecting privacy.
@@ -43,11 +47,21 @@ uv sync --dev --all-extras --python $(which python)
 ### Running the API & UI
 
 ```bash
-uvicorn jarvis_core.server:build_app --factory --host 127.0.0.1 --port 8000
+uvicorn adaptivemind_core.server:build_app --factory --host 127.0.0.1 --port 8000
 ```
 
 The backend attempts to use a local Ollama instance (`OLLAMA_HOST`) and falls back to the
 contextual generator when unavailable.
+
+## License & Attribution
+
+Copyright © 2025 Jimmy De Jesus (Bravetto)
+
+Licensed under [Creative Commons Attribution 4.0 International (CC-BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+
+**Attribution Requirement:** When using or redistributing this framework, please include:
+
+> Powered by AdaptiveMind Framework - Copyright © 2025 Jimmy De Jesus - Licensed under CC-BY 4.0
 
 ## Running tests locally
 
