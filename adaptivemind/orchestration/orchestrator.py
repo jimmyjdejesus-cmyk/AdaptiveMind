@@ -42,14 +42,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from jarvis.agents.critics.constitutional_critic import ConstitutionalCritic
-from jarvis.agents.specialist_registry import (
+from adaptivemind.agents.critics.constitutional_critic import ConstitutionalCritic
+from adaptivemind.agents.specialist_registry import (
     create_specialist,
     get_specialist_registry,
 )
-from jarvis.memory.project_memory import ProjectMemory
-from jarvis.monitoring.performance import PerformanceTracker
-from jarvis.scoring.vickrey_auction import Candidate, run_vickrey_auction
+from adaptivemind.memory.project_memory import ProjectMemory
+from adaptivemind.monitoring.performance import PerformanceTracker
+from adaptivemind.scoring.vickrey_auction import Candidate, run_vickrey_auction
 from .message_bus import HierarchicalMessageBus
 from .path_memory import PathMemory
 from .semantic_cache import SemanticCache
@@ -86,7 +86,7 @@ if TYPE_CHECKING:  # pragma: no cover - used only for type hints
 logger = logging.getLogger(__name__)
 
 
-# Placeholder constant re-exported by jarvis.orchestration.__init__
+# Placeholder constant re-exported by adaptivemind.orchestration.__init__
 END = object()
 
 # ---------------------------------------------------------------------------

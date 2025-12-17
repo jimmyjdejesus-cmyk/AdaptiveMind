@@ -63,7 +63,7 @@ def load_config():
     
     try:
         # Try to import and load config
-        from jarvis_core.config import load_config, AppConfig, PersonaConfig
+        from adaptivemind_core.config import load_config, AppConfig, PersonaConfig
         
         try:
             config = load_config()
@@ -74,7 +74,7 @@ def load_config():
             print("Creating default configuration...")
             
             # Create default configuration
-            from jarvis_core.config import OllamaConfig, OpenRouterConfig, WindowsMLConfig, SecurityConfig, ContextPipelineConfig, MonitoringConfig
+            from adaptivemind_core.config import OllamaConfig, OpenRouterConfig, WindowsMLConfig, SecurityConfig, ContextPipelineConfig, MonitoringConfig
             
             config = AppConfig(
                 ollama=OllamaConfig(host="http://127.0.0.1:11434"),
@@ -94,7 +94,7 @@ def load_config():
         print("Trying minimal configuration...")
         
         # Create minimal working configuration
-        from jarvis_core.config import AppConfig, PersonaConfig
+        from adaptivemind_core.config import AppConfig, PersonaConfig
         
         default_persona = PersonaConfig(
             name="generalist",
@@ -123,7 +123,7 @@ def start_server():
     
     try:
         # Try to build the app
-        from jarvis_core.server import build_app
+        from adaptivemind_core.server import build_app
         app = build_app(config)
         print("✅ FastAPI application created")
     except Exception as e:

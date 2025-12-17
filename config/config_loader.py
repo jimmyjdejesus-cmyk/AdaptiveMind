@@ -16,7 +16,7 @@ See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
 """Enhanced config loader that provides robust configuration management.
 
-This module serves as the main configuration loading interface for the Jarvis
+This module serves as the main configuration loading interface for the AdaptiveMind
 application, providing comprehensive configuration management with validation,
 environment variable support, and intelligent defaults.
 """
@@ -33,7 +33,7 @@ from pydantic import ValidationError
 
 try:
     # Import the comprehensive configuration system
-    from jarvis_core.config import (
+    from adaptivemind_core.config import (
         AppConfig, 
         OllamaConfig, 
         OpenRouterConfig, 
@@ -88,8 +88,8 @@ def _discover_config_paths() -> list[Path]:
     candidates = [
         os.getenv("ADAPTIVEMIND_CONFIG"),
         os.getenv("ADAPTIVEMIND_HOME"),
-        os.path.join(os.path.expanduser("~"), ".jarvis", "config.json"),
-        os.path.join(os.path.expanduser("~"), ".config", "jarvis", "config.json"),
+        os.path.join(os.path.expanduser("~"), ".adaptivemind", "config.json"),
+        os.path.join(os.path.expanduser("~"), ".config", "adaptivemind", "config.json"),
         "config.json",
         "adaptivemind_config.json"
     ]

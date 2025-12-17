@@ -8,7 +8,7 @@
 
 
 
-from jarvis.monitoring.performance import PerformanceTracker
+from adaptivemind.monitoring.performance import PerformanceTracker
 
 
 def test_retry_counts_for_success_and_failure():

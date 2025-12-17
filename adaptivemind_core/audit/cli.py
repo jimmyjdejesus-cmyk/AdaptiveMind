@@ -132,7 +132,7 @@ def print_audit_summary(report) -> None:
         report: AuditReport to display
     """
     print("\n" + "="*80)
-    print("🔍 JARVIS AI AUDIT REPORT")
+    print("🔍 ADAPTIVEMIND AI AUDIT REPORT")
     print("="*80)
     
     # Summary

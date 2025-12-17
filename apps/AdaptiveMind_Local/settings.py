@@ -29,7 +29,7 @@ ACTIVE_MODEL_NAME = VERIFIER_MODEL
 def get_active_model_path() -> str:
 	"""Return a model path that tests can resolve.
 
-	Prefer the explicit `apps/Jarvis_Local/active_model.cfg` (located next to
+	Prefer the explicit `apps/AdaptiveMind_Local/active_model.cfg` (located next to
 	this file) if present, otherwise return the declared `ACTIVE_MODEL_NAME`.
 	"""
 	cfg_path = Path(__file__).resolve().parent / "active_model.cfg"

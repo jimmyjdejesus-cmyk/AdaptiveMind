@@ -12,7 +12,7 @@ import asyncio
 import sys
 import types
 
-from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
+from adaptivemind.orchestration.orchestrator import MultiAgentOrchestrator
 
 
 # Mock external dependencies for isolated testing

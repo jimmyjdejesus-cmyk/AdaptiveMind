@@ -8,7 +8,7 @@
 
 
 
-"""Main Jarvis Application module providing the core coordinator for AI operations.
+"""Main AdaptiveMind Application module providing the core coordinator for AI operations.
 
 This module contains the AdaptiveMindApplication class which serves as the main coordinator
 that wires together configuration, routing, monitoring, and all backend services.
@@ -39,7 +39,7 @@ logger = get_logger(__name__)
 class AdaptiveMindApplication:
     """Main coordinator that wires configuration, routing, and monitoring.
     
-    The AdaptiveMindApplication class serves as the central coordinator for all Jarvis
+    The AdaptiveMindApplication class serves as the central coordinator for all AdaptiveMind
     operations. It initializes and manages:
     - Configuration management via AppConfig
     - Multiple LLM backends (Ollama, OpenRouter, WindowsML, Fallback)

@@ -12,8 +12,8 @@
 import sys
 import os
 import time
-from apps.Jarvis_Local.settings import ACTIVE_MODEL_NAME, get_active_model_path
-from apps.Jarvis_Local.logger_config import log
+from apps.AdaptiveMind_Local.settings import ACTIVE_MODEL_NAME, get_active_model_path
+from apps.AdaptiveMind_Local.logger_config import log
 
 print(f"Testing model loading for: {ACTIVE_MODEL_NAME}")
 print(f"Model path: {get_active_model_path()}")
@@ -26,7 +26,7 @@ model_path = get_active_model_path()
 if os.path.isabs(model_path) or os.path.exists(model_path):
     abs_path = os.path.abspath(model_path)
 else:
-    candidate = os.path.abspath(os.path.join("apps", "Jarvis_Local", model_path))
+    candidate = os.path.abspath(os.path.join("apps", "AdaptiveMind_Local", model_path))
     if os.path.exists(candidate):
         abs_path = candidate
     else:

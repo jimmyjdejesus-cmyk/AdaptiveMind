@@ -8,7 +8,7 @@
 
 
 
-"""Structured logging configuration and utilities for Jarvis Core.
+"""Structured logging configuration and utilities for AdaptiveMind Core.
 
 This module provides centralized logging configuration for the AdaptiveMind application
 with structured JSON output, automatic configuration, and trace-friendly formatting.
@@ -87,7 +87,7 @@ def configure_logging(log_level: str | int = "INFO", log_path: Optional[str] = N
             "disable_existing_loggers": False,
             "formatters": {
                 "json": {
-                    "()": "jarvis_core.logger.JsonFormatter",
+                    "()": "adaptivemind_core.logger.JsonFormatter",
                 }
             },
             "handlers": handlers,
@@ -144,7 +144,7 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(data, ensure_ascii=False)
 
 
-def get_logger(name: str = "jarvis") -> logging.Logger:
+def get_logger(name: str = "adaptivemind") -> logging.Logger:
     """Get a module-level logger configured for the AdaptiveMind runtime.
     
     Automatically configures logging if not already done, using environment

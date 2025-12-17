@@ -8,8 +8,8 @@
 
 
 
-from Jarvis_Local.agents.base_agent.agent import BaseAgent
-from Jarvis_Local.logger_config import log
+from AdaptiveMind_Local.agents.base_agent.agent import BaseAgent
+from AdaptiveMind_Local.logger_config import log
 # This prompt could benefit from abstracting the language to a variable, e.g. `programming_language` 
 
 class CodingAgent(BaseAgent):

@@ -96,7 +96,7 @@ ollama run llama3:8b "Hello world"
 ```bash
 cd Jarvis_AI/legacy  # NOTE: `legacy/` has been archived to `archive/legacy`; restore it to use legacy scripts
 python -c "
-from jarvis.mcp.providers.openrouter import OpenRouterClient
+from adaptivemind.mcp.providers.openrouter import OpenRouterClient
 client = OpenRouterClient()
 result = client.generate('Write hello world in Python')
 print('Cloud test result:', result[:100])
@@ -119,7 +119,7 @@ curl -X POST http://localhost:8000/api/v1/chat \
 
 ### Test Cost Tracking:
 ```python
-from jarvis.mcp.providers.openrouter import OpenRouterClient
+from adaptivemind.mcp.providers.openrouter import OpenRouterClient
 client = OpenRouterClient()
 status = client.get_cost_status()
 print(f"Current cost: ${status['current_cost']:.2f}")

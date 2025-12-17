@@ -320,15 +320,15 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
         temperature = request.get("temperature", 0.7)
         max_tokens = request.get("max_tokens", 512)
 
-        # Convert OpenAI format to Jarvis format
+        # Convert OpenAI format to AdaptiveMind format
         persona = model if model in app.config.personas else "generalist"
 
-        # Estimate prompt tokens if not provided by Jarvis
+        # Estimate prompt tokens if not provided by AdaptiveMind
         prompt_text = " ".join([msg.get("content", "") for msg in messages if isinstance(msg, dict)])
         estimated_prompt_tokens = len(prompt_text) // 4  # Rough approximation: ~4 chars per token
 
         try:
-            # Call Jarvis chat
+            # Call AdaptiveMind chat
             payload = app.chat(
                 persona=persona,
                 messages=messages,
@@ -336,7 +336,7 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
                 max_tokens=max_tokens,
             )
 
-            # Convert Jarvis response to OpenAI format
+            # Convert AdaptiveMind response to OpenAI format
             created = int(time.time())
             choice = {
                 "index": 0,

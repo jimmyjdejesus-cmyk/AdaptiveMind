@@ -9,8 +9,8 @@
 
 
 # agents/specialists/cloud_agent.py
-from Jarvis_Local.agents.base_agent.agent import BaseAgent
-from Jarvis_Local.tools.mcp_client import MCPClient
+from AdaptiveMind_Local.agents.base_agent.agent import BaseAgent
+from AdaptiveMind_Local.tools.mcp_client import MCPClient
 
 class CloudAgent(BaseAgent):
     def __init__(self):

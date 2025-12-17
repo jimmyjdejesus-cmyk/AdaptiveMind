@@ -16,14 +16,14 @@ from typing import Any, Dict, TypedDict
 from langgraph.graph import END, StateGraph
 # from langgraph.checkpoints import SqliteSaver
 # Temporarily removed to resolve import error
-from jarvis.critics import (
+from adaptivemind.critics import (
     BlueTeamCritic,
     CriticVerdict,
     RedTeamCritic,
     WhiteGate,
 )
-from jarvis.orchestration.pruning import PruningEvaluator
-from jarvis.orchestration.team_agents import OrchestratorAgent, TeamMemberAgent
+from adaptivemind.orchestration.pruning import PruningEvaluator
+from adaptivemind.orchestration.team_agents import OrchestratorAgent, TeamMemberAgent
 
 
 class TeamWorkflowState(TypedDict, total=False):

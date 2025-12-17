@@ -32,7 +32,7 @@ from typing import Dict, Any, List, Optional, Union, Literal
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from jarvis.orchestration.orchestrator import MultiAgentOrchestrator
+from adaptivemind.orchestration.orchestrator import MultiAgentOrchestrator
 from agent_scaling_laws.architectures import SingleAgent, CentralizedMultiAgent, DecentralizedMultiAgent
 from agent_scaling_laws.metrics import CoordinationMetrics, compute_all_metrics
 

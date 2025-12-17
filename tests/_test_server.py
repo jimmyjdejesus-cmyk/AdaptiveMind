@@ -15,8 +15,8 @@ integration tests can connect to ws://127.0.0.1:8000/ws/pytest_client.
 """
 import os
 import uvicorn
-from jarvis_core.server import build_app
-from jarvis_core.config import AppConfig, MonitoringConfig, PersonaConfig
+from adaptivemind_core.server import build_app
+from adaptivemind_core.config import AppConfig, MonitoringConfig, PersonaConfig
 
 
 def make_app():

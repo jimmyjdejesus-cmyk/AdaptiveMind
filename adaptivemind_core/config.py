@@ -289,7 +289,7 @@ def _config_env_paths() -> List[Path]:
     candidates: List[str] = [
         os.getenv("ADAPTIVEMIND_CONFIG"),
         os.getenv("ADAPTIVEMIND_HOME"),
-        os.path.join(os.path.expanduser("~"), ".adaptivemind"),
+        os.path.join(os.path.expanduser("~"), ".jarvis"),
     ]
     paths: List[Path] = []
     for candidate in candidates:

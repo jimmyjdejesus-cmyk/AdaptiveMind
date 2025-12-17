@@ -14,11 +14,11 @@ Copyright (c) 2025 Jimmy De Jesus (Bravetto)
 Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
 See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
-"""Compatibility shim for the moved `Jarvis_Local` package.
+"""Compatibility shim for legacy Jarvis_Local imports.
 
-This module re-exports the real package under `apps.Jarvis_Local`
-and emits a DeprecationWarning so older code still importing
-`Jarvis_Local` continues to work.
+This module maintains backward compatibility by re-exporting the AdaptiveMind_Local package.
+Code importing `Jarvis_Local` will receive a deprecation warning and should migrate to
+`apps.AdaptiveMind_Local`.
 """
 from __future__ import annotations
 
@@ -26,10 +26,15 @@ import importlib
 import warnings
 from types import ModuleType
 
-warnings.warn("`Jarvis_Local` moved to `apps.Jarvis_Local` - import that package instead",
-              DeprecationWarning, stacklevel=2)
+warnings.warn(
+    "The `Jarvis_Local` import path is deprecated. "
+    "Please use `apps.AdaptiveMind_Local` instead. "
+    "This compatibility shim will be removed in a future version.",
+    DeprecationWarning, 
+    stacklevel=2
+)
 
-_mod = importlib.import_module("apps.Jarvis_Local")
+_mod = importlib.import_module("apps.AdaptiveMind_Local")
 
 # Re-export attributes from the real module so `import Jarvis_Local` behaves like before
 for _name, _val in vars(_mod).items():

@@ -16,15 +16,15 @@ See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
 #!/usr/bin/env python3
 """
-Simple standalone HTTP server for Jarvis demonstration.
+Simple standalone HTTP server for AdaptiveMind demonstration.
 This bypasses all FastAPI middleware issues by using Python's built-in HTTP server.
 """
 
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from jarvis_core.app import AdaptiveMindApplication
-from jarvis_core.config import load_config
+from adaptivemind_core.app import AdaptiveMindApplication
+from adaptivemind_core.config import load_config
 
 class AdaptiveMindHandler(BaseHTTPRequestHandler):
     def __init__(self, *args, jarvis_app=None, **kwargs):
@@ -155,7 +155,7 @@ def create_handler_class(jarvis_app):
     return BoundHandler
 
 def run_server(host="127.0.0.1", port=8000):
-    """Run the standalone Jarvis server"""
+    """Run the standalone AdaptiveMind server"""
     print("🤖 Starting AdaptiveMind Local Assistant...")
     print("=" * 50)
     
@@ -351,7 +351,7 @@ _INDEX_HTML = """
         
         <button onclick="sendChat()" id="sendBtn">🚀 Send Message</button>
         
-        <pre id="output">Ready to chat with Jarvis! 💭</pre>
+        <pre id="output">Ready to chat with AdaptiveMind! 💭</pre>
     </div>
 
     <script>

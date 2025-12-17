@@ -9,7 +9,7 @@
 
 
 # agents/specialists/research_specialist/agent.py
-from Jarvis_Local.agents.base_agent.agent import BaseAgent
+from AdaptiveMind_Local.agents.base_agent.agent import BaseAgent
 
 class ResearchAgent(BaseAgent):
     def __init__(self):

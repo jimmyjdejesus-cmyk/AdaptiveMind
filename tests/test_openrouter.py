@@ -39,7 +39,7 @@ def test_openrouter_connection():
         return False
 
     try:
-        from jarvis.mcp.providers.openrouter import OpenRouterClient
+        from adaptivemind.mcp.providers.openrouter import OpenRouterClient
 
         print("✅ OpenRouter client imported successfully")
 
@@ -76,8 +76,8 @@ def test_model_router():
     print("\n🧪 Testing Model Router Integration...")
 
     try:
-        from jarvis.mcp.model_router import ModelRouter
-        from jarvis.mcp.client import MCPClient
+        from adaptivemind.mcp.model_router import ModelRouter
+        from adaptivemind.mcp.client import MCPClient
 
         print("✅ Model router imported successfully")
 

@@ -155,8 +155,8 @@ class ContractTestSuite:
         
     @pytest.fixture
     def test_client(self):
-        from jarvis_core import build_app
-        from jarvis_core.config import AppConfig, MonitoringConfig, PersonaConfig
+        from adaptivemind_core import build_app
+        from adaptivemind_core.config import AppConfig, MonitoringConfig, PersonaConfig
         
         config = AppConfig(
             personas={

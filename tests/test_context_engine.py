@@ -8,8 +8,8 @@
 
 
 
-from jarvis_core.config import AppConfig, PersonaConfig
-from jarvis_core.context.engine import ContextEngine
+from adaptivemind_core.config import AppConfig, PersonaConfig
+from adaptivemind_core.context.engine import ContextEngine
 
 
 def test_context_includes_persona_and_messages(tmp_path):

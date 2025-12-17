@@ -16,16 +16,16 @@ See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
 #!/usr/bin/env python3
 """
-Working Jarvis demonstration with fixed router.
-This script demonstrates a fully functional Jarvis assistant.
+Working AdaptiveMind demonstration with fixed router.
+This script demonstrates a fully functional AdaptiveMind assistant.
 """
 
 import json
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from jarvis_core.app import AdaptiveMindApplication
-from jarvis_core.config import load_config
-from jarvis_core.routing.router_fixed import AdaptiveLLMRouter
+from adaptivemind_core.app import AdaptiveMindApplication
+from adaptivemind_core.config import load_config
+from adaptivemind_core.routing.router_fixed import AdaptiveLLMRouter
 
 class AdaptiveMindDemoHandler(BaseHTTPRequestHandler):
     def __init__(self, *args, jarvis_app=None, **kwargs):
@@ -122,11 +122,11 @@ def create_handler_class(jarvis_app):
     return BoundHandler
 
 def run_demo_server():
-    """Run the working Jarvis demonstration server"""
-    print("🤖 Starting Working Jarvis Demonstration...")
+    """Run the working AdaptiveMind demonstration server"""
+    print("🤖 Starting Working AdaptiveMind Demonstration...")
     print("=" * 60)
     
-    # Initialize Jarvis with fixed configuration
+    # Initialize AdaptiveMind with fixed configuration
     config = load_config()
     jarvis_app = AdaptiveMindApplication(config=config)
     

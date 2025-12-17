@@ -9,10 +9,10 @@
 
 
 
-Copyright (c) 2025 Jimmy De Jesus (Bravetto)
+# Copyright (c) 2025 Jimmy De Jesus (Bravetto)
 
-Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
-See https://creativecommons.org/licenses/by/4.0/ for license terms.
+# Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
+# See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
 import importlib
 import warnings
@@ -31,7 +31,7 @@ def test_jarvis_local_import_emits_deprecation():
         # Check for the specific warning message
         found_warning = False
         for w in rec:
-            if issubclass(w.category, DeprecationWarning) and "`Jarvis_Local` moved to `apps.Jarvis_Local`" in str(w.message):
+            if issubclass(w.category, DeprecationWarning) and "`Jarvis_Local` moved to `apps.AdaptiveMind_Local`" in str(w.message):
                 found_warning = True
                 break
                 
@@ -42,5 +42,5 @@ def test_jarvis_local_import_emits_deprecation():
         assert hasattr(Jarvis_Local, "__file__") or hasattr(Jarvis_Local, "__path__")
 
 def test_apps_jarvis_local_import():
-    import apps.Jarvis_Local
-    assert apps.Jarvis_Local is not None
+    import apps.AdaptiveMind_Local
+    assert apps.AdaptiveMind_Local is not None

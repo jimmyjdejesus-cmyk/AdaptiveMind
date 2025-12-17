@@ -19,8 +19,8 @@ import pytest
 import time
 from unittest.mock import Mock, patch, MagicMock
 from fastapi.testclient import TestClient
-from jarvis_core.server import build_app
-from jarvis_core.config import AppConfig
+from adaptivemind_core.server import build_app
+from adaptivemind_core.config import AppConfig
 
 
 class TestOpenAICompatibility:

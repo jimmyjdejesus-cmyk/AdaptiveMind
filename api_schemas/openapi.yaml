@@ -18,7 +18,7 @@ info:
     All endpoints require authentication via the `X-API-Key` header. Set `ADAPTIVEMIND_DISABLE_AUTH=true` to bypass authentication locally.
     
     ## Endpoint Categories
-    - **Core API** (`/api/v1/*`): Main Jarvis functionality
+    - **Core API** (`/api/v1/*`): Main AdaptiveMind functionality
     - **Management API** (`/api/v1/management/*`): System configuration and persona management
     - **OpenAI-Compatible** (`/v1/*`): Drop-in replacement for OpenAI API clients
   version: "1.0.0"
@@ -497,7 +497,7 @@ paths:
       summary: OpenAI-compatible chat completions
       description: |
         Drop-in replacement for OpenAI's chat completions API.
-        The `model` parameter is mapped to a Jarvis persona if it exists, otherwise defaults to "generalist".
+        The `model` parameter is mapped to an AdaptiveMind persona if it exists, otherwise defaults to "generalist".
       tags: [OpenAI Compatible]
       requestBody:
         required: true
@@ -554,7 +554,7 @@ paths:
                   - id: "llama3.2:latest"
                     object: "model"
                     created: 1702648475
-                    owned_by: "jarvis"
+                    owned_by: "adaptivemind"
 
 components:
   securitySchemes:
@@ -1080,7 +1080,7 @@ components:
                 type: integer
               owned_by:
                 type: string
-                default: "jarvis"
+                default: "adaptivemind"
       required:
         - object
         - data
