@@ -5,6 +5,7 @@ from adaptivemind_core.audit.models import (
     AuditFinding,
     AuditReport,
     ScanConfiguration,
+    ScanDepth,
     AuditCategory,
     SeverityLevel,
 )  # noqa: F401
