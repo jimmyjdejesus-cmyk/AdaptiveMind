@@ -82,7 +82,9 @@ class OpenAIModel(BaseModel):
     id: str
     object: str = "model"
     created: int
-    owned_by: str = "adaptivemind"
+    # Keep 'jarvis' as the owned_by value for OpenAI-compatible API responses
+    # to preserve backward compatibility with existing clients/tests.
+    owned_by: str = "jarvis"
 
 
 class OpenAIModelsResponse(BaseModel):
@@ -191,7 +193,17 @@ class ConfigSaveResponse(BaseModel):
 
 
 def build_app(config: Optional[AppConfig] = None) -> FastAPI:
-    jarvis_app = AdaptiveMindApplication(config=config)
+    # Allow tests and external code to patch the legacy `jarvis_core.server`
+    # AdaptiveMindApplication symbol; resolve dynamically so that mocking
+    # `jarvis_core.server.AdaptiveMindApplication` affects app construction.
+    try:
+        import importlib
+        legacy = importlib.import_module("jarvis_core.server")
+        AppClass = getattr(legacy, "AdaptiveMindApplication", AdaptiveMindApplication)
+    except Exception:
+        AppClass = AdaptiveMindApplication
+
+    jarvis_app = AppClass(config=config)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -531,11 +543,14 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
     def openai_models(app: AdaptiveMindApplication = Depends(_app_dependency)):
         import time
         # For now, return hardcoded models
+        # Keep 'owned_by' as 'jarvis' for OpenAI-compatible responses to
+        # preserve backward compatibility with clients/tests expecting the
+        # historical value.
         data = [{
             "id": "llama3.2:latest",
             "object": "model",
             "created": int(time.time()),
-            "owned_by": "adaptivemind"
+            "owned_by": "jarvis"
         }]
         return {
             "object": "list",

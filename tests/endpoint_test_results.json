@@ -1,0 +1,91 @@
+{
+  "health": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "status": "ok",
+      "available_models": [
+        "contextual-fallback"
+      ]
+    },
+    "headers": {
+      "Server": "BaseHTTP/0.6 Python/3.11.14",
+      "Date": "Wed, 17 Dec 2025 22:05:15 GMT",
+      "Content-Type": "application/json",
+      "Content-Length": "75",
+      "Access-Control-Allow-Origin": "*"
+    },
+    "description": "Health check endpoint",
+    "timestamp": 1766009115.8562639
+  },
+  "models": {
+    "status_code": 404,
+    "success": false,
+    "response": {
+      "error": "Not Found"
+    },
+    "headers": {
+      "Server": "BaseHTTP/0.6 Python/3.11.14",
+      "Date": "Wed, 17 Dec 2025 22:05:15 GMT",
+      "Content-Type": "application/json",
+      "Content-Length": "26",
+      "Access-Control-Allow-Origin": "*"
+    },
+    "description": "List available models",
+    "timestamp": 1766009115.857924
+  },
+  "personas": {
+    "status_code": 404,
+    "success": false,
+    "response": {
+      "error": "Not Found"
+    },
+    "headers": {
+      "Server": "BaseHTTP/0.6 Python/3.11.14",
+      "Date": "Wed, 17 Dec 2025 22:05:15 GMT",
+      "Content-Type": "application/json",
+      "Content-Length": "26",
+      "Access-Control-Allow-Origin": "*"
+    },
+    "description": "List configured personas",
+    "timestamp": 1766009115.859339
+  },
+  "chat_basic": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "content": "Persona focus: ## Persona\nMost recent user request: Hello, how are you?\nKey context terms: are, persona, you, a, research\nResponse: Based on the available local context, here is a structured summary and recommended next steps.\n- Context Window Size: 23 tokens (approx.)\n- Suggested Actions: Verify facts, consult linked research snippets, and prepare citations before responding.\n- Safety: Ensure API usage complies with configured policies and redact sensitive data.",
+      "model": "contextual-fallback",
+      "tokens": 70,
+      "diagnostics": {}
+    },
+    "headers": {
+      "Server": "BaseHTTP/0.6 Python/3.11.14",
+      "Date": "Wed, 17 Dec 2025 22:05:15 GMT",
+      "Content-Type": "application/json",
+      "Content-Length": "563",
+      "Access-Control-Allow-Origin": "*"
+    },
+    "description": "Basic chat completion",
+    "timestamp": 1766009115.861099
+  },
+  "chat_complex": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "content": "Persona focus: ## Persona\nMost recent user request: Tell me more about it.\nKey context terms: is, the, capital, of, persona\nResponse: Based on the available local context, here is a structured summary and recommended next steps.\n- Context Window Size: 38 tokens (approx.)\n- Suggested Actions: Verify facts, consult linked research snippets, and prepare citations before responding.\n- Safety: Ensure API usage complies with configured policies and redact sensitive data.",
+      "model": "contextual-fallback",
+      "tokens": 71,
+      "diagnostics": {}
+    },
+    "headers": {
+      "Server": "BaseHTTP/0.6 Python/3.11.14",
+      "Date": "Wed, 17 Dec 2025 22:05:15 GMT",
+      "Content-Type": "application/json",
+      "Content-Length": "565",
+      "Access-Control-Allow-Origin": "*"
+    },
+    "description": "Complex chat with context",
+    "timestamp": 1766009115.862498
+  }
+}

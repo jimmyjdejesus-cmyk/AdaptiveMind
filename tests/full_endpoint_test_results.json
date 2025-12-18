@@ -1,0 +1,442 @@
+{
+  "health": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "status": "ok",
+      "available_models": [
+        "ollama",
+        "contextual-fallback"
+      ]
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "67",
+      "content-type": "application/json"
+    },
+    "description": "Health check endpoint",
+    "timestamp": 1766073015.704372,
+    "method": "GET",
+    "endpoint": "/health"
+  },
+  "models": {
+    "status_code": 200,
+    "success": true,
+    "response": [
+      "ollama",
+      "contextual-fallback"
+    ],
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "32",
+      "content-type": "application/json"
+    },
+    "description": "List available models",
+    "timestamp": 1766073015.707119,
+    "method": "GET",
+    "endpoint": "/api/v1/models"
+  },
+  "personas": {
+    "status_code": 200,
+    "success": true,
+    "response": [
+      {
+        "name": "generalist",
+        "description": "Balanced assistant persona",
+        "max_context_window": 4096,
+        "routing_hint": "general"
+      }
+    ],
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "117",
+      "content-type": "application/json"
+    },
+    "description": "List configured personas",
+    "timestamp": 1766073015.709854,
+    "method": "GET",
+    "endpoint": "/api/v1/personas"
+  },
+  "chat_basic": {
+    "status_code": 500,
+    "success": false,
+    "response": {
+      "detail": "Chat request failed"
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "32",
+      "content-type": "application/json"
+    },
+    "description": "Basic chat completion",
+    "timestamp": 1766073015.713711,
+    "method": "POST",
+    "endpoint": "/api/v1/chat"
+  },
+  "chat_complex": {
+    "status_code": 500,
+    "success": false,
+    "response": {
+      "detail": "Chat request failed"
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "32",
+      "content-type": "application/json"
+    },
+    "description": "Complex chat with context",
+    "timestamp": 1766073015.7155619,
+    "method": "POST",
+    "endpoint": "/api/v1/chat"
+  },
+  "monitoring_metrics": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "history": [
+        {
+          "request_count": 0,
+          "average_latency_ms": 0.0,
+          "max_latency_ms": 0.0,
+          "tokens_generated": 0,
+          "context_tokens": 0,
+          "personas_used": {},
+          "timestamp": 1766072994.55075
+        }
+      ]
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "167",
+      "content-type": "application/json"
+    },
+    "description": "Get metrics history",
+    "timestamp": 1766073015.7173262,
+    "method": "GET",
+    "endpoint": "/api/v1/monitoring/metrics"
+  },
+  "monitoring_traces": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "traces": []
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "13",
+      "content-type": "application/json"
+    },
+    "description": "Get request traces",
+    "timestamp": 1766073015.718812,
+    "method": "GET",
+    "endpoint": "/api/v1/monitoring/traces"
+  },
+  "system_status": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "status": "healthy",
+      "uptime_seconds": 51.17583107948303,
+      "version": "1.0.0",
+      "active_backends": [
+        "ollama",
+        "contextual-fallback"
+      ],
+      "active_personas": [],
+      "config_hash": "7d8fda481bc6fa64"
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "178",
+      "content-type": "application/json"
+    },
+    "description": "Get system status",
+    "timestamp": 1766073015.720702,
+    "method": "GET",
+    "endpoint": "/api/v1/management/system/status"
+  },
+  "routing_config_get": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "allowed_personas": [],
+      "enable_adaptive_routing": true
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "54",
+      "content-type": "application/json"
+    },
+    "description": "Get routing configuration",
+    "timestamp": 1766073015.722005,
+    "method": "GET",
+    "endpoint": "/api/v1/management/routing/config"
+  },
+  "routing_config_put": {
+    "status_code": 400,
+    "success": false,
+    "response": {
+      "detail": "Persona 'test-persona' does not exist"
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "50",
+      "content-type": "application/json"
+    },
+    "description": "Update routing configuration",
+    "timestamp": 1766073015.7236679,
+    "method": "PUT",
+    "endpoint": "/api/v1/management/config/routing"
+  },
+  "backends_list": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "backends": [
+        {
+          "name": "ollama",
+          "type": "ollama",
+          "is_available": true,
+          "last_checked": 1766073015.724878,
+          "config": {}
+        },
+        {
+          "name": "openrouter",
+          "type": "openrouter",
+          "is_available": false,
+          "last_checked": 1766073015.724881,
+          "config": {}
+        },
+        {
+          "name": "windowsml",
+          "type": "windowsml",
+          "is_available": false,
+          "last_checked": 1766073015.72489,
+          "config": {}
+        },
+        {
+          "name": "contextual-fallback",
+          "type": "contextualfallbackllm",
+          "is_available": true,
+          "last_checked": 1766073015.7248929,
+          "config": {}
+        }
+      ]
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "454",
+      "content-type": "application/json"
+    },
+    "description": "List backends",
+    "timestamp": 1766073015.725316,
+    "method": "GET",
+    "endpoint": "/api/v1/management/backends"
+  },
+  "backend_test": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "latency_ms": 0.00095367431640625,
+      "error": null
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "62",
+      "content-type": "application/json"
+    },
+    "description": "Test backend connectivity",
+    "timestamp": 1766073015.727007,
+    "method": "POST",
+    "endpoint": "/api/v1/management/backends/ollama/test"
+  },
+  "context_config_get": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "extra_documents_dir": null,
+      "enable_semantic_chunking": true,
+      "max_combined_context_tokens": 8192
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "95",
+      "content-type": "application/json"
+    },
+    "description": "Get context configuration",
+    "timestamp": 1766073015.728318,
+    "method": "GET",
+    "endpoint": "/api/v1/management/context/config"
+  },
+  "context_config_put": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "extra_documents_dir": null,
+      "enable_semantic_chunking": true,
+      "max_combined_context_tokens": 8192
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "95",
+      "content-type": "application/json"
+    },
+    "description": "Update context configuration",
+    "timestamp": 1766073015.730884,
+    "method": "PUT",
+    "endpoint": "/api/v1/management/config/context"
+  },
+  "security_status": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "api_keys_count": 0,
+      "audit_log_enabled": false
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "46",
+      "content-type": "application/json"
+    },
+    "description": "Get security status",
+    "timestamp": 1766073015.732985,
+    "method": "GET",
+    "endpoint": "/api/v1/management/security/status"
+  },
+  "persona_create": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "name": "test-persona",
+      "description": "Test persona for endpoint testing",
+      "system_prompt": "You are a helpful test assistant.",
+      "max_context_window": 2048,
+      "routing_hint": "test",
+      "is_active": true
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "190",
+      "content-type": "application/json"
+    },
+    "description": "Create new persona",
+    "timestamp": 1766073015.7357152,
+    "method": "POST",
+    "endpoint": "/api/v1/management/personas"
+  },
+  "persona_update": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "name": "test-persona",
+      "description": "Updated test persona description",
+      "system_prompt": "You are a helpful test assistant with updated instructions.",
+      "max_context_window": 2048,
+      "routing_hint": "test",
+      "is_active": true
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "215",
+      "content-type": "application/json"
+    },
+    "description": "Update persona",
+    "timestamp": 1766073015.737459,
+    "method": "PUT",
+    "endpoint": "/api/v1/management/personas/test-persona"
+  },
+  "openai_chat": {
+    "status_code": 500,
+    "success": false,
+    "response": "Internal Server Error",
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "21",
+      "content-type": "text/plain; charset=utf-8"
+    },
+    "description": "OpenAI-compatible chat completions",
+    "timestamp": 1766073015.746055,
+    "method": "POST",
+    "endpoint": "/v1/chat/completions"
+  },
+  "openai_models": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "object": "list",
+      "data": [
+        {
+          "id": "llama3.2:latest",
+          "object": "model",
+          "created": 1766073015,
+          "owned_by": "jarvis"
+        }
+      ]
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "109",
+      "content-type": "application/json"
+    },
+    "description": "OpenAI-compatible models list",
+    "timestamp": 1766073015.747691,
+    "method": "GET",
+    "endpoint": "/v1/models"
+  },
+  "config_save": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "config_hash": "62095714ce57270d",
+      "message": "Configuration saved successfully (in-memory only for now)"
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "119",
+      "content-type": "application/json"
+    },
+    "description": "Save configuration",
+    "timestamp": 1766073015.749145,
+    "method": "POST",
+    "endpoint": "/api/v1/management/config/save"
+  },
+  "persona_delete": {
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "message": "Persona 'test-persona' deleted successfully"
+    },
+    "headers": {
+      "date": "Thu, 18 Dec 2025 15:50:15 GMT",
+      "server": "uvicorn",
+      "content-length": "57",
+      "content-type": "application/json"
+    },
+    "description": "Delete test persona",
+    "timestamp": 1766073015.75071,
+    "method": "DELETE",
+    "endpoint": "/api/v1/management/personas/test-persona"
+  }
+}

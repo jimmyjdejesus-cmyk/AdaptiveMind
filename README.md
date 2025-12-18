@@ -17,6 +17,8 @@ orchestration system for multi-agent AI workflows.
 - Core framework: `adaptivemind_core/` and `adaptivemind/`
 - Example runtime: `apps/AdaptiveMind_Local/`
 - Agent Scaling Laws (submodule): `agent_scaling_laws/`
+- Scripts and utilities: `scripts/` (organized demo, debug, and server management tools)
+- Compatibility layer: `jarvis_core/` (legacy import compatibility shim)
 
 The architecture supports a central Meta-Agent that orchestrates specialist LLMs, an adaptive routing
 pipeline, and a monitoring stack to support research workflows while protecting privacy.

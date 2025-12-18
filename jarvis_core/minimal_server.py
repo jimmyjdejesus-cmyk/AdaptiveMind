@@ -26,7 +26,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from jarvis_core.app import AdaptiveMindApplication
-from jarvis_core.config import load_config
+from adaptivemind_core.config import load_config
 
 # Request/Response Models
 class ChatRequest(BaseModel):

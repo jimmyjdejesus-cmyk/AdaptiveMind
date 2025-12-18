@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Dict, Iterator, List
+from typing import Dict, Iterator
 
 import requests
 
@@ -30,33 +30,21 @@ class OllamaBackend(LLMBackend):
         self._timeout = timeout
         self._last_health_check: float = 0.0
         self._health_cache: bool = False
-        self._models_cache: List[str] = []
 
     def is_available(self) -> bool:
-        """Check if Ollama backend is available."""
         now = time.time()
         if now - self._last_health_check < 10:
             return self._health_cache
-        
         try:
             response = requests.get(f"{self._host}/api/tags", timeout=self._timeout)
             response.raise_for_status()
             data = response.json()
             models = {entry.get("name") for entry in data.get("models", [])}
-            self._health_cache = len(models) > 0  # At least one model available
-            self._models_cache = list(models)
+            self._health_cache = self._model in models
         except Exception:
             self._health_cache = False
-            self._models_cache = []
-        
         self._last_health_check = now
         return self._health_cache
-
-    def get_available_models(self) -> List[str]:
-        """Get list of all available models from Ollama."""
-        if not self._models_cache:
-            self.is_available()  # This will populate the cache
-        return self._models_cache.copy()
 
     def generate(self, request: GenerationRequest) -> GenerationResponse:
         payload: Dict[str, object] = {
