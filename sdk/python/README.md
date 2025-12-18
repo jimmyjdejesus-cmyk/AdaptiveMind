@@ -1,4 +1,3 @@
-
 Copyright (c) 2025 Jimmy De Jesus (Bravetto)
 
 Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
@@ -17,9 +16,9 @@ pip install -e ./sdk/python
 ## Quickstart
 
 ```python
-from jarvis_sdk import JarvisClient
+from adaptivemind_sdk import AdaptiveMindClient
 
-client = JarvisClient(base_url="http://127.0.0.1:8000", api_key="YOUR_API_KEY")
+client = AdaptiveMindClient(base_url="http://127.0.0.1:8000", api_key="YOUR_API_KEY")
 print(client.health())
 print(client.models())
 
