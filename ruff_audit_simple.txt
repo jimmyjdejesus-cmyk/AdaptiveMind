@@ -1,0 +1,73 @@
+1995	W293  	[-] blank-line-with-whitespace
+ 772	T201  	[ ] print
+ 751	E501  	[ ] line-too-long
+ 387	UP006 	[*] non-pep585-annotation
+ 271	W291  	[-] trailing-whitespace
+ 162	BLE001	[ ] blind-except
+ 139	D212  	[*] multi-line-summary-first-line
+ 120	I001  	[*] unsorted-imports
+ 119	UP045 	[*] non-pep604-annotation-optional
+ 106	F401  	[-] unused-import
+  97	UP035 	[-] deprecated-import
+  69	F541  	[*] f-string-missing-placeholders
+  65	D102  	[ ] undocumented-public-method
+  45	B008  	[ ] function-call-in-default-argument
+  41	D415  	[ ] missing-terminal-punctuation
+  40	B904  	[ ] raise-without-from-inside-except
+  31	D101  	[ ] undocumented-public-class
+  28	RUF010	[*] explicit-f-string-type-conversion
+  25	D103  	[ ] undocumented-public-function
+  20	W292  	[*] missing-newline-at-end-of-file
+  18	UP015 	[*] redundant-open-modes
+  15	F841  	[ ] unused-variable
+  14	E402  	[ ] module-import-not-at-top-of-file
+  13	RUF013	[ ] implicit-optional
+  11	FBT002	[ ] boolean-default-value-positional-argument
+  10	RUF022	[*] unsorted-dunder-all
+   9	D200  	[ ] unnecessary-multiline-docstring
+   8	FBT001	[ ] boolean-type-hint-positional-argument
+   8	FBT003	[ ] boolean-positional-value-in-call
+   8	S113  	[ ] request-without-timeout
+   7	F811  	[*] redefined-while-unused
+   7	W191  	[ ] tab-indentation
+   6	D205  	[ ] missing-blank-line-after-summary
+   6	N806  	[ ] non-lowercase-variable-in-function
+   6	SIM108	[ ] if-else-block-instead-of-if-exp
+   5	RUF100	[*] unused-noqa
+   5	S110  	[ ] try-except-pass
+   4	B007  	[ ] unused-loop-control-variable
+   4	B905  	[ ] zip-without-explicit-strict
+   4	D202  	[*] blank-line-after-function
+   4	S607  	[ ] start-process-with-partial-path
+   4	SIM105	[ ] suppressible-exception
+   3	RUF005	[ ] collection-literal-concatenation
+   3	S112  	[ ] try-except-continue
+   3	SIM102	[ ] collapsible-if
+   3	UP037 	[*] quoted-annotation
+   2	      	[ ] invalid-syntax
+   2	D106  	[ ] undocumented-public-nested-class
+   2	E722  	[ ] bare-except
+   2	N818  	[ ] error-suffix-on-exception-name
+   2	RUF001	[ ] ambiguous-unicode-character-string
+   2	RUF012	[ ] mutable-class-default
+   2	S104  	[ ] hardcoded-bind-all-interfaces
+   2	S310  	[ ] suspicious-url-open-usage
+   2	SIM103	[ ] needless-bool
+   2	SIM113	[ ] enumerate-for-loop
+   1	B026  	[ ] star-arg-unpacking-after-keyword-arg
+   1	C401  	[ ] unnecessary-generator-set
+   1	C416  	[ ] unnecessary-comprehension
+   1	D105  	[ ] undocumented-magic-method
+   1	D206  	[ ] docstring-tab-indentation
+   1	E701  	[ ] multiple-statements-on-one-line-colon
+   1	N801  	[ ] invalid-class-name
+   1	N802  	[ ] invalid-function-name
+   1	N807  	[ ] dunder-function-name
+   1	N999  	[ ] invalid-module-name
+   1	RUF059	[ ] unused-unpacked-variable
+   1	S605  	[ ] start-process-with-a-shell
+   1	SIM117	[ ] multiple-with-statements
+   1	SIM118	[ ] in-dict-keys
+   1	UP036 	[ ] outdated-version-block
+Found 5506 errors.
+[*] 2665 fixable with the `--fix` option (1418 hidden fixes can be enabled with the `--unsafe-fixes` option).

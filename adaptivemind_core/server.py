@@ -635,7 +635,8 @@ if __name__ == "__main__":
     import os
     
     port = int(os.getenv("ADAPTIVEMIND_PORT", 8000))
-    host = os.getenv("ADAPTIVEMIND_HOST", "0.0.0.0")
+    # SECURITY FIX: Default to localhost for production safety
+    host = os.getenv("ADAPTIVEMIND_HOST", "127.0.0.1")
     
     # Initialize config
     from .config import load_config

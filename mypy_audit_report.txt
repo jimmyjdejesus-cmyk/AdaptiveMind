@@ -1,0 +1,2 @@
+adaptivemind/adaptive_swarm/adaptive_swarm_system.py:216:31: error: Invalid syntax. Perhaps you forgot a comma?  [syntax]
+Found 1 error in 1 file (errors prevented further checking)

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdaptiveMind - Intelligent AI Routing & Context Engine Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --dark-bg: #0f172a;
+            --dark-surface: #1e293b;
+            --dark-card: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #475569;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--dark-surface);
+            border-radius: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+        }
+
+        .hero {
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-surface) 100%);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--dark-surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            padding: 4rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        }
+
+        .card {
+            background: var(--dark-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary-color);
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            background-color: var(--dark-surface);
+            margin: 5% auto;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: var(--text-secondary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: var(--text-primary);
+        }
+
+        .code-block {
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        pre {
+            margin: 0;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+        }
+
+        .chat-interface {
+            background: var(--dark-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--dark-bg);
+            border-radius: 8px;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .chat-message.user {
+            background: var(--primary-color);
+            color: white;
+            margin-left: 2rem;
+        }
+
+        .chat-message.assistant {
+            background: var(--dark-card);
+            color: var(--text-primary);
+            margin-right: 2rem;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">AdaptiveMind</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#api">API</a></li>
+                <li><a href="#monitoring">Monitoring</a></li>
+                <li><a href="#getting-started">Getting Started</a></li>
+            </ul>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>Online</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>AdaptiveMind</h1>
+            <p>Intelligent AI Routing & Context Engine - A unified multi-agent intelligence system that combines advanced AI orchestration with legacy compatibility</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="#features" class="btn btn-primary">
+                    <i class="fas fa-play"></i>
+                    Explore Features
+                </a>
+                <a href="#getting-started" class="btn btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Get Started
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+        <div class="container">
+            <h2>Core Features</h2>
+            <div class="grid grid-2">
+                <!-- Multi-Agent System -->
+                <div class="card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Multi-Agent System</h3>
+                    <p>Specialized agents working together: Research, Coding, Curiosity, and Benchmark agents with advanced collaboration capabilities.</p>
+                    <button class="btn btn-primary btn-small" onclick="showAgentDemo()">
+                        <i class="fas fa-eye"></i>
+                        View Demo
+                    </button>
+                </div>
+
+                <!-- Streaming Chat -->
+                <div class="card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Streaming Chat Interface</h3>
+                    <p>Real-time conversation with AI models including streaming responses and adaptive routing between Ollama, WindowsML, and fallback models.</p>
+                    <button class="btn btn-primary btn-small" onclick="showChatDemo()">
+                        <i class="fas fa-eye"></i>
+                        View Demo
+                    </button>
+                </div>
+
+                <!-- Context Engineering -->
+                <div class="card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Context Engineering Pipeline</h3>
+                    <p>Automatic persona prompts, conversation history, research snippets, and semantic document chunking for enhanced AI interactions.</p>
+                    <button class="btn btn-primary btn-small" onclick="showContextDemo()">
+                        <i class="fas fa-eye"></i>
+                        View Demo
+                    </button>
+                </div>
+
+                <!-- Adaptive Routing -->
+                <div class="card">
+                    <div class="feature-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h3>Adaptive Routing</h3>
+                    <p>Intelligent routing between Ollama, WindowsML, and fallback models based on task complexity and performance metrics.</p>
+                    <button class="btn btn-primary btn-small" onclick="showRoutingDemo()">
+                        <i class="fas fa-eye"></i>
+                        View Demo
+                    </button>
+                </div>
+
+                <!-- Security Monitoring -->
+                <div class="card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Security & Monitoring</h3>
+                    <p>Enterprise-grade security controls, audit logging, and real-time monitoring with comprehensive metrics and alerts.</p>
+                    <button class="btn btn-primary btn-small" onclick="showSecurityDemo()">
+                        <i class="fas fa-eye"></i>
+                        View Demo
+                    </button>
+                </div>
+
+                <!-- Memory & Knowledge -->
+                <div class="card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Memory & Knowledge Graph</h3>
+                    <p>Persistent memory management with knowledge graph integration for contextual understanding and learning.</p>
+                    <button class="btn btn-primary btn-small" onclick="showMemoryDemo()">
+                        <i class="fas fa-eye"></i>
+                        View Demo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="section">
+        <div class="container">
+            <h2>System Architecture</h2>
+            <div class="card">
+                <h3>Unified Multi-Agent Architecture</h3>
+                <p>AdaptiveMind features a sophisticated layered architecture that seamlessly integrates new agent capabilities with legacy systems through bridge components.</p>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; margin: 2rem 0;">
+                    <div style="background: var(--dark-surface); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; margin: 0.5rem; text-align: center; min-width: 150px;">Agent Manager</div>
+                    <div style="background: var(--dark-surface); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; margin: 0.5rem; text-align: center; min-width: 150px;">Ollama Client</div>
+                    <div style="background: var(--dark-surface); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; margin: 0.5rem; text-align: center; min-width: 150px;">Memory Bridge</div>
+                    <div style="background: var(--dark-surface); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; margin: 0.5rem; text-align: center; min-width: 150px;">Security Bridge</div>
+                    <div style="background: var(--dark-surface); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; margin: 0.5rem; text-align: center; min-width: 150px;">API Layer</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Section -->
+    <section id="api" class="section">
+        <div class="container">
+            <h2>API Explorer</h2>
+            <div class="card">
+                <h3>Core Endpoints</h3>
+                <div style="background: var(--dark-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin: 1rem 0;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <span style="background: var(--success-color); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">GET</span>
+                        <span style="font-family: 'Courier New', monospace;">/api/v1/health</span>
+                    </div>
+                    <div style="background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.85rem;">
+                        {"status": "healthy", "agents": 4, "models": 3, "timestamp": "2025-12-18T22:49:34Z"}
+                    </div>
+                </div>
+            </div>
+        </div

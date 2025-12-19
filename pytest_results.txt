@@ -1,0 +1,2 @@
+./.venv/bin/pytest: line 2: syntax error near unexpected token `c'
+./.venv/bin/pytest: line 2: `Copyright (c) 2025 Jimmy De Jesus (Bravetto)'
