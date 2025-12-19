@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import textwrap
 from collections import Counter
-from typing import Sequence
+from collections.abc import Sequence
 
 from .base import GenerationRequest, GenerationResponse, LLMBackend
 
@@ -22,7 +22,7 @@ class ContextualFallbackLLM(LLMBackend):
 
     name = "contextual-fallback"
 
-    def is_available(self) -> bool:  # noqa: D401 - interface requirement
+    def is_available(self) -> bool:
         return True
 
     def generate(self, request: GenerationRequest) -> GenerationResponse:

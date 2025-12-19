@@ -11,9 +11,10 @@
 """Orchestrates multi-agent teams using LangGraph."""
 
 import asyncio
-from typing import Any, Dict, TypedDict
+from typing import Any, TypedDict
 
 from langgraph.graph import END, StateGraph
+
 # from langgraph.checkpoints import SqliteSaver
 # Temporarily removed to resolve import error
 from adaptivemind.critics import (
@@ -28,9 +29,9 @@ from adaptivemind.orchestration.team_agents import OrchestratorAgent, TeamMember
 
 class TeamWorkflowState(TypedDict, total=False):
     objective: str
-    context: Dict[str, Any]
-    team_outputs: Dict[str, Any]
-    critics: Dict[str, Any]
+    context: dict[str, Any]
+    team_outputs: dict[str, Any]
+    critics: dict[str, Any]
     next_team: str
     halt: bool
 
@@ -80,7 +81,7 @@ class MultiTeamOrchestrator:
 
     def _run_team(
         self, team: TeamMemberAgent, state: TeamWorkflowState
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Helper function to run a single team member."""
         logger = getattr(team, "log", lambda *a, **k: None)
         if self.evaluator and self.evaluator.should_prune(team.team):
@@ -117,7 +118,7 @@ class MultiTeamOrchestrator:
 
     async def _run_team_async(
         self, team: TeamMemberAgent, state: TeamWorkflowState
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute a team in a background thread for parallel coordination."""
         if self.evaluator and self.evaluator.should_prune(team.team):
             logger = getattr(team, "log", lambda *a, **k: None)
@@ -214,8 +215,8 @@ class MultiTeamOrchestrator:
 
     @staticmethod
     def _oracle_judge(
-        yellow_output: Dict[str, Any], green_output: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        yellow_output: dict[str, Any], green_output: dict[str, Any]
+    ) -> dict[str, Any]:
         """Evaluate team outputs and select the winner based on a score."""
 
         def _score(output: Any) -> float:

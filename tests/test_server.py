@@ -24,16 +24,14 @@ without the dependency issues of the full Jarvis implementation.
 
 import json
 import time
-import asyncio
 from datetime import datetime
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
-import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse
 
 
 class TestAPIHandler(BaseHTTPRequestHandler):
     """HTTP request handler for test server."""
-    
+
     # In-memory storage for testing
     personas = {
         "generalist": {
@@ -51,26 +49,26 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             "routing_hint": "research"
         }
     }
-    
+
     allowed_personas = ["generalist", "researcher"]
-    
+
     def do_OPTIONS(self):
         """Handle CORS preflight requests."""
         self.send_response(200)
         self.send_cors_headers()
         self.end_headers()
-    
+
     def send_cors_headers(self):
         """Send CORS headers."""
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-API-Key')
-    
+
     def do_GET(self):
         """Handle GET requests."""
         parsed_path = urlparse(self.path)
         path = parsed_path.path
-        
+
         try:
             if path == "/health":
                 self.handle_health()
@@ -97,13 +95,13 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             else:
                 self.send_error(404, "Not Found")
         except Exception as e:
-            self.send_error(500, f"Internal Server Error: {str(e)}")
-    
+            self.send_error(500, f"Internal Server Error: {e!s}")
+
     def do_POST(self):
         """Handle POST requests."""
         parsed_path = urlparse(self.path)
         path = parsed_path.path
-        
+
         try:
             if path == "/api/v1/chat":
                 self.handle_chat()
@@ -118,13 +116,13 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             else:
                 self.send_error(404, "Not Found")
         except Exception as e:
-            self.send_error(500, f"Internal Server Error: {str(e)}")
-    
+            self.send_error(500, f"Internal Server Error: {e!s}")
+
     def do_PUT(self):
         """Handle PUT requests."""
         parsed_path = urlparse(self.path)
         path = parsed_path.path
-        
+
         try:
             if path == "/api/v1/management/config/routing":
                 self.handle_update_routing_config()
@@ -136,13 +134,13 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             else:
                 self.send_error(404, "Not Found")
         except Exception as e:
-            self.send_error(500, f"Internal Server Error: {str(e)}")
-    
+            self.send_error(500, f"Internal Server Error: {e!s}")
+
     def do_DELETE(self):
         """Handle DELETE requests."""
         parsed_path = urlparse(self.path)
         path = parsed_path.path
-        
+
         try:
             if path.startswith("/api/v1/management/personas/"):
                 persona_name = path.split("/")[-1]
@@ -150,19 +148,19 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             else:
                 self.send_error(404, "Not Found")
         except Exception as e:
-            self.send_error(500, f"Internal Server Error: {str(e)}")
-    
+            self.send_error(500, f"Internal Server Error: {e!s}")
+
     def handle_health(self):
         """Health check endpoint."""
         self.send_json_response({
             "status": "ok",
             "available_models": ["ollama", "openrouter", "test"]
         })
-    
+
     def handle_models(self):
         """List models endpoint."""
         self.send_json_response(["ollama", "openrouter", "test-model"])
-    
+
     def handle_personas(self):
         """List personas endpoint."""
         personas_list = []
@@ -171,20 +169,20 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             persona_copy["is_active"] = name in self.allowed_personas
             personas_list.append(persona_copy)
         self.send_json_response(personas_list)
-    
+
     def handle_chat(self):
         """Chat completion endpoint."""
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
-        
+
         try:
             data = json.loads(post_data.decode('utf-8'))
-            
+
             # Validate persona
             if data.get('persona') not in self.personas:
                 self.send_error(400, f"Persona '{data.get('persona')}' not found")
                 return
-            
+
             # Mock response
             response = {
                 "content": f"Test response from {data.get('persona', 'generalist')} persona. This is a mock response for API testing.",
@@ -193,10 +191,10 @@ class TestAPIHandler(BaseHTTPRequestHandler):
                 "diagnostics": {"backend": "test", "response_time_ms": 123.45}
             }
             self.send_json_response(response)
-            
+
         except json.JSONDecodeError:
             self.send_error(400, "Invalid JSON")
-    
+
     def handle_metrics(self):
         """Metrics endpoint."""
         self.send_json_response({
@@ -211,7 +209,7 @@ class TestAPIHandler(BaseHTTPRequestHandler):
                 }
             ]
         })
-    
+
     def handle_traces(self):
         """Traces endpoint."""
         self.send_json_response({
@@ -225,7 +223,7 @@ class TestAPIHandler(BaseHTTPRequestHandler):
                 }
             ]
         })
-    
+
     def handle_system_status(self):
         """System status endpoint."""
         self.send_json_response({
@@ -236,33 +234,33 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             "active_personas": self.allowed_personas,
             "config_hash": "abc123def456"
         })
-    
+
     def handle_routing_config(self):
         """Routing config endpoint."""
         self.send_json_response({
             "allowed_personas": self.allowed_personas,
             "enable_adaptive_routing": True
         })
-    
+
     def handle_update_routing_config(self):
         """Update routing config endpoint."""
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
-        
+
         try:
             data = json.loads(post_data.decode('utf-8'))
-            
+
             if "allowed_personas" in data:
                 self.allowed_personas = data["allowed_personas"]
-            
+
             self.send_json_response({
                 "allowed_personas": self.allowed_personas,
                 "enable_adaptive_routing": data.get("enable_adaptive_routing", True)
             })
-            
+
         except json.JSONDecodeError:
             self.send_error(400, "Invalid JSON")
-    
+
     def handle_backends(self):
         """List backends endpoint."""
         self.send_json_response({
@@ -283,7 +281,7 @@ class TestAPIHandler(BaseHTTPRequestHandler):
                 }
             ]
         })
-    
+
     def handle_backend_test(self):
         """Test backend endpoint."""
         self.send_json_response({
@@ -291,7 +289,7 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             "latency_ms": 45.2,
             "error": None
         })
-    
+
     def handle_context_config(self):
         """Context config endpoint."""
         self.send_json_response({
@@ -299,12 +297,12 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             "enable_semantic_chunking": True,
             "max_combined_context_tokens": 8192
         })
-    
+
     def handle_update_context_config(self):
         """Update context config endpoint."""
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
-        
+
         try:
             data = json.loads(post_data.decode('utf-8'))
             self.send_json_response({
@@ -314,27 +312,27 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             })
         except json.JSONDecodeError:
             self.send_error(400, "Invalid JSON")
-    
+
     def handle_security_status(self):
         """Security status endpoint."""
         self.send_json_response({
             "api_keys_count": 0,
             "audit_log_enabled": False
         })
-    
+
     def handle_create_persona(self):
         """Create persona endpoint."""
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
-        
+
         try:
             data = json.loads(post_data.decode('utf-8'))
-            
+
             persona_name = data.get("name")
             if persona_name in self.personas:
                 self.send_error(400, "Persona already exists")
                 return
-            
+
             persona = {
                 "name": persona_name,
                 "description": data.get("description", ""),
@@ -343,54 +341,54 @@ class TestAPIHandler(BaseHTTPRequestHandler):
                 "routing_hint": data.get("routing_hint", "general"),
                 "is_active": True
             }
-            
+
             self.personas[persona_name] = persona
             self.allowed_personas.append(persona_name)
-            
+
             self.send_json_response(persona)
-            
+
         except json.JSONDecodeError:
             self.send_error(400, "Invalid JSON")
-    
+
     def handle_update_persona(self, persona_name):
         """Update persona endpoint."""
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
-        
+
         try:
             data = json.loads(post_data.decode('utf-8'))
-            
+
             if persona_name not in self.personas:
                 self.send_error(404, "Persona not found")
                 return
-            
+
             persona = self.personas[persona_name]
             for key, value in data.items():
                 if key in ["description", "system_prompt", "max_context_window", "routing_hint"]:
                     persona[key] = value
-            
+
             persona["is_active"] = persona_name in self.allowed_personas
             self.send_json_response(persona)
-            
+
         except json.JSONDecodeError:
             self.send_error(400, "Invalid JSON")
-    
+
     def handle_delete_persona(self, persona_name):
         """Delete persona endpoint."""
         if persona_name not in self.personas:
             self.send_error(404, "Persona not found")
             return
-        
+
         if persona_name in ["generalist", "researcher"]:
             self.send_error(400, "Cannot delete default personas")
             return
-        
+
         del self.personas[persona_name]
         if persona_name in self.allowed_personas:
             self.allowed_personas.remove(persona_name)
-        
+
         self.send_json_response({"message": f"Persona '{persona_name}' deleted successfully"})
-    
+
     def handle_save_config(self):
         """Save config endpoint."""
         self.send_json_response({
@@ -398,15 +396,15 @@ class TestAPIHandler(BaseHTTPRequestHandler):
             "config_hash": "abc123def456",
             "message": "Configuration saved successfully"
         })
-    
+
     def handle_openai_chat(self):
         """OpenAI-compatible chat completions endpoint."""
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
-        
+
         try:
-            data = json.loads(post_data.decode('utf-8'))
-            
+            json.loads(post_data.decode('utf-8'))
+
             # Mock OpenAI response
             response = {
                 "id": f"chatcmpl-{int(time.time())}",
@@ -429,12 +427,12 @@ class TestAPIHandler(BaseHTTPRequestHandler):
                     "total_tokens": 25
                 }
             }
-            
+
             self.send_json_response(response)
-            
+
         except json.JSONDecodeError:
             self.send_error(400, "Invalid JSON")
-    
+
     def handle_openai_models(self):
         """OpenAI-compatible models endpoint."""
         self.send_json_response({
@@ -448,37 +446,31 @@ class TestAPIHandler(BaseHTTPRequestHandler):
                 }
             ]
         })
-    
+
     def send_json_response(self, data):
         """Send JSON response."""
         response_body = json.dumps(data, indent=2).encode('utf-8')
-        
+
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.send_cors_headers()
         self.send_header('Content-Length', str(len(response_body)))
         self.end_headers()
         self.wfile.write(response_body)
-    
+
     def log_message(self, format, *args):
         """Override to customize logging."""
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {format % args}")
 
 
 def start_test_server(port=8000):
     """Start the test server."""
     server_address = ('', port)
     httpd = HTTPServer(server_address, TestAPIHandler)
-    
-    print(f"🚀 Test server starting on port {port}")
-    print(f"🔗 Health check: http://127.0.0.1:{port}/health")
-    print(f"📖 API docs: http://127.0.0.1:{port}/docs")
-    print("✅ Server ready for API testing")
-    
+
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n👋 Test server stopped")
         httpd.shutdown()
 
 

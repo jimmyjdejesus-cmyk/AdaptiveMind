@@ -12,7 +12,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from adaptivemind_core import build_app
-from adaptivemind_core.config import AppConfig, MonitoringConfig, PersonaConfig, SecurityConfig
+from adaptivemind_core.config import (
+    AppConfig,
+    MonitoringConfig,
+    PersonaConfig,
+    SecurityConfig,
+)
 
 
 @pytest.fixture(scope="module")

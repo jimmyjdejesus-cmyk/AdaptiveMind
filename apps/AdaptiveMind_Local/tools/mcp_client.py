@@ -9,9 +9,11 @@
 
 
 # tools/mcp_client.py
-from .key_manager import load_api_key
 from openai import OpenAI
+
 from ..logger_config import log
+from .key_manager import load_api_key
+
 
 class MCPClient:
     def __init__(self):
@@ -23,13 +25,13 @@ class MCPClient:
             self.client = OpenAI(api_key=self.api_key)
 
     def is_configured(self):
-        """Check if the client is ready to make calls"""
+        """Check if the client is ready to make calls."""
         return self.client is not None
 
     def invoke(self, prompt, system_prompt="You are a helpful assistant.", model="gpt-4o"):
         if not self.is_configured():
             return "error: OpenAI API key not configured, please add it.", 0
-        
+
         log.info(f"MCP Client: Invoking cloud model '{model}'...")
         try:
             completion = self.client.chat.completions.create(

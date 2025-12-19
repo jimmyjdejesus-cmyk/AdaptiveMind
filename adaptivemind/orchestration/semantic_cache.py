@@ -9,7 +9,8 @@
 
 
 from __future__ import annotations
-from typing import Any, Dict
+
+from typing import Any
 
 
 class SemanticCache:
@@ -17,7 +18,7 @@ class SemanticCache:
     Provides a get/set API for storing computed semantic entries.
     """
     def __init__(self):
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
 
     def get(self, key: str) -> Any:
         return self._cache.get(key)

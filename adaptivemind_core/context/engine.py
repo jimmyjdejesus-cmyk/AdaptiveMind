@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import itertools
 import re
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence
 
 from ..config import AppConfig, PersonaConfig
 from ..logger import get_logger
@@ -37,7 +37,7 @@ class ContextEngine:
         self._config = config
 
     def build_context(self, persona: PersonaConfig, messages: Sequence[dict], external_context: Iterable[str] | None = None) -> str:
-        sections: List[ContextSection] = [
+        sections: list[ContextSection] = [
             ContextSection("Persona", persona.system_prompt),
             self._conversation_section(messages),
         ]
@@ -61,11 +61,11 @@ class ContextEngine:
         cleaned = [self._sanitize(snippet) for snippet in snippets if snippet.strip()]
         return ContextSection("Research", "\n".join(cleaned))
 
-    def _document_sections(self) -> List[ContextSection]:
+    def _document_sections(self) -> list[ContextSection]:
         directory = self._config.context_pipeline.extra_documents_dir
         if not directory or not directory.exists():
             return []
-        sections: List[ContextSection] = []
+        sections: list[ContextSection] = []
         for path in itertools.islice(sorted(directory.glob("**/*.txt")), 0, 5):
             try:
                 with path.open("r", encoding="utf-8") as handle:
@@ -76,8 +76,8 @@ class ContextEngine:
             sections.append(ContextSection(title=f"Doc:{path.stem}", body=self._sanitize(content)))
         return sections
 
-    def _truncate(self, sections: Sequence[ContextSection], max_tokens: int) -> List[ContextSection]:
-        result: List[ContextSection] = []
+    def _truncate(self, sections: Sequence[ContextSection], max_tokens: int) -> list[ContextSection]:
+        result: list[ContextSection] = []
         running_total = 0
         for section in sections:
             tokens = section.token_length()

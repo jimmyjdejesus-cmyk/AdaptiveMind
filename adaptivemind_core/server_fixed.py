@@ -16,17 +16,15 @@
 
 from __future__ import annotations
 
-import json
 import os
-from typing import List, Optional, Dict, Any
-from datetime import datetime
-
 from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel, ValidationError
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel
 
 from .app import AdaptiveMindApplication
 from .config import AppConfig
@@ -35,7 +33,7 @@ from .logger import get_logger
 logger = get_logger(__name__)
 
 
-def create_error_response(error: str, message: str, status_code: int, details: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+def create_error_response(error: str, message: str, status_code: int, details: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Create a standardized error response."""
     return {
         "error": error,
@@ -46,7 +44,7 @@ def create_error_response(error: str, message: str, status_code: int, details: O
     }
 
 
-def build_app(config: Optional[AppConfig] = None) -> FastAPI:
+def build_app(config: AppConfig | None = None) -> FastAPI:
     jarvis_app = AdaptiveMindApplication(config=config)
 
     @asynccontextmanager
@@ -70,7 +68,7 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
                 "message": error["msg"],
                 "type": error["type"]
             })
-        
+
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content=create_error_response(
@@ -125,14 +123,14 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
         content: str
 
     class ChatRequest(BaseModel):
-        messages: List[Message]
+        messages: list[Message]
         persona: str = "generalist"
         temperature: float = 0.7
         max_tokens: int = 512
 
     class HealthResponse(BaseModel):
         status: str
-        available_models: List[str]
+        available_models: list[str]
 
     # Core endpoints
     @fastapi_app.get("/health")
@@ -150,11 +148,11 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
         return _OLLAMA_UI_HTML
 
     @fastapi_app.get("/api/v1/models")
-    def models(app: AdaptiveMindApplication = Depends(_app_dependency)) -> List[str]:
+    def models(app: AdaptiveMindApplication = Depends(_app_dependency)) -> list[str]:
         return app.models()
 
     @fastapi_app.get("/api/v1/personas")
-    def personas(app: AdaptiveMindApplication = Depends(_app_dependency)) -> List[dict]:
+    def personas(app: AdaptiveMindApplication = Depends(_app_dependency)) -> list[dict]:
         try:
             return app.personas()
         except Exception as e:
@@ -167,7 +165,7 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
         # Validate persona exists
         if request.persona not in app.config.personas:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Persona '{request.persona}' not found. Available: {list(app.config.personas.keys())}"
             )
 
@@ -465,16 +463,17 @@ _OLLAMA_UI_HTML = """
 __all__ = ["build_app"]
 
 if __name__ == "__main__":
-    import uvicorn
     import os
-    
+
+    import uvicorn
+
     port = int(os.getenv("ADAPTIVEMIND_PORT", 8000))
     host = os.getenv("ADAPTIVEMIND_HOST", "0.0.0.0")
-    
+
     # Initialize config
     from .config import load_config
     config = load_config()
-    
+
     app = build_app(config)
-    
+
     uvicorn.run(app, host=host, port=port)

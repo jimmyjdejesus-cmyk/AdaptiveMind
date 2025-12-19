@@ -16,8 +16,6 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
-
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
@@ -37,12 +35,12 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    messages: List[Message]
+    messages: list[Message]
     persona: str = Field("generalist", description="Persona to route the request")
     temperature: float = Field(0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(512, ge=32, le=4096)
-    metadata: Optional[dict] = None
-    external_context: Optional[List[str]] = None
+    metadata: dict | None = None
+    external_context: list[str] | None = None
 
 
 class ChatResponse(BaseModel):
@@ -54,12 +52,12 @@ class ChatResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
-    available_models: List[str]
+    available_models: list[str]
 
 
 class OpenAIChatRequest(BaseModel):
     model: str = "adaptivemind-default"
-    messages: List[Message]
+    messages: list[Message]
     temperature: float = 0.7
     max_tokens: int = Field(512, ge=32, le=4096)
     stream: bool = False
@@ -70,11 +68,11 @@ class OpenAIChatResponse(BaseModel):
     object: str = "chat.completion"
     created: int
     model: str
-    choices: List[dict]
+    choices: list[dict]
     usage: dict
 
 
-def build_app(config: Optional[AppConfig] = None) -> FastAPI:
+def build_app(config: AppConfig | None = None) -> FastAPI:
     jarvis_app = AdaptiveMindApplication(config=config)
 
     @asynccontextmanager
@@ -109,8 +107,8 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
     def index() -> str:
         return _INDEX_HTML
 
-    @fastapi_app.get("/api/v1/models", response_model=List[str])
-    def models(app: AdaptiveMindApplication = Depends(_app_dependency)) -> List[str]:
+    @fastapi_app.get("/api/v1/models", response_model=list[str])
+    def models(app: AdaptiveMindApplication = Depends(_app_dependency)) -> list[str]:
         return app.models()
 
     @fastapi_app.post("/api/v1/chat", response_model=ChatResponse)
@@ -137,7 +135,7 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
         import time
 
         persona = request.model if request.model in app.config.personas else "generalist"
-        
+
         try:
             payload = app.chat(
                 persona=persona,
@@ -229,14 +227,14 @@ _INDEX_HTML = """
                 statusEl.className = 'status degraded';
             }
         }
-        
+
         async function sendChat() {
             const prompt = document.getElementById('prompt').value;
             if (!prompt.trim()) return;
-            
+
             const output = document.getElementById('output');
             output.textContent = 'Thinking...';
-            
+
             try {
                 const response = await fetch('/api/v1/chat', {
                     method: 'POST',
@@ -246,19 +244,19 @@ _INDEX_HTML = """
                         messages: [{ role: 'user', content: prompt }]
                     })
                 });
-                
+
                 if (!response.ok) {
                     output.textContent = 'Error: ' + response.status + ' ' + response.statusText;
                     return;
                 }
-                
+
                 const data = await response.json();
                 output.textContent = data.content + '\\n\\nTokens: ' + data.tokens + '\\nModel: ' + data.model;
             } catch (error) {
                 output.textContent = 'Error: ' + error.message;
             }
         }
-        
+
         checkHealth();
         setInterval(checkHealth, 30000); // Check every 30 seconds
     </script>

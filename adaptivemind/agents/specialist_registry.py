@@ -6,12 +6,13 @@ normally lives under the apps or is provided by test fixtures.
 """
 from __future__ import annotations
 
-from typing import Dict, Callable, Any
+from collections.abc import Callable
+from typing import Any
 
-_SPECIALIST_REGISTRY: Dict[str, Callable[..., Any]] = {}
+_SPECIALIST_REGISTRY: dict[str, Callable[..., Any]] = {}
 
 
-def get_specialist_registry() -> Dict[str, Callable[..., Any]]:
+def get_specialist_registry() -> dict[str, Callable[..., Any]]:
     """Return a copy of the specialist registry."""
     return dict(_SPECIALIST_REGISTRY)
 

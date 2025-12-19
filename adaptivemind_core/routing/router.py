@@ -12,13 +12,18 @@ from __future__ import annotations
 
 import time
 import uuid
-from typing import Dict, Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 
 from ..config import AppConfig, PersonaConfig
+from ..context.engine import ContextEngine
+from ..llm.base import (
+    GenerationChunk,
+    GenerationRequest,
+    GenerationResponse,
+    LLMBackend,
+)
 from ..logger import get_logger
 from ..monitoring.metrics import MetricsRegistry, TraceCollector, TraceRecord
-from ..context.engine import ContextEngine
-from ..llm.base import GenerationChunk, GenerationRequest, GenerationResponse, LLMBackend
 
 logger = get_logger(__name__)
 
@@ -40,7 +45,7 @@ class AdaptiveLLMRouter:
         self._metrics = metrics
         self._traces = traces
 
-    def available_personas(self) -> Dict[str, PersonaConfig]:
+    def available_personas(self) -> dict[str, PersonaConfig]:
         return self._config.personas
 
     def select_backend(self, persona: PersonaConfig) -> LLMBackend:
@@ -57,7 +62,7 @@ class AdaptiveLLMRouter:
         messages: Sequence[dict],
         temperature: float = 0.7,
         max_tokens: int = 512,
-        metadata: Dict[str, str] | None = None,
+        metadata: dict[str, str] | None = None,
         external_context: Iterable[str] | None = None,
     ) -> GenerationResponse:
         allowed = None
@@ -115,7 +120,7 @@ class AdaptiveLLMRouter:
         messages: Sequence[dict],
         temperature: float = 0.7,
         max_tokens: int = 512,
-        metadata: Dict[str, str] | None = None,
+        metadata: dict[str, str] | None = None,
         external_context: Iterable[str] | None = None,
     ) -> Iterator[GenerationChunk]:
         allowed = None

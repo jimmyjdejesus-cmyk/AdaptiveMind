@@ -15,7 +15,7 @@ Checks:
  - No trailing whitespace
  - No tabs
  - Max line length 120
- - Files under docs/ and README.md
+ - Files under docs/ and README.md.
 """
 import sys
 from pathlib import Path
@@ -30,7 +30,7 @@ args = parser.parse_args()
 if args.paths:
     paths = [Path(p) for p in args.paths]
 else:
-    paths = list(ROOT.glob('docs/**/*.md')) + [ROOT / 'README.md']
+    paths = [*list(ROOT.glob('docs/**/*.md')), ROOT / 'README.md']
 errors = []
 for p in paths:
     try:
@@ -47,6 +47,4 @@ for p in paths:
             errors.append(f'{p}:{i}: line too long ({len(line)} chars)')
 
 if errors:
-    print('\n'.join(errors))
     sys.exit(1)
-print('OK')

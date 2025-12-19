@@ -11,24 +11,23 @@
 # Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
 # See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
-"""
-AdaptiveMind AI Audit System
+"""AdaptiveMind AI Audit System.
 
 A comprehensive audit system for security vulnerabilities, performance bottlenecks,
 code quality issues, dependency risks, API compliance, and architectural patterns.
 """
 
-from .models import AuditFinding, AuditReport, ScanConfiguration
 from .engine import AuditEngine
-from .scanner import SecurityScanner, CodeQualityScanner, DependencyScanner
+from .models import AuditFinding, AuditReport, ScanConfiguration
+from .scanner import CodeQualityScanner, DependencyScanner, SecurityScanner
 
 __version__ = "1.0.0"
 __all__ = [
-    "AuditFinding",
-    "AuditReport", 
-    "ScanConfiguration",
     "AuditEngine",
-    "SecurityScanner",
-    "CodeQualityScanner", 
-    "DependencyScanner"
+    "AuditFinding",
+    "AuditReport",
+    "CodeQualityScanner",
+    "DependencyScanner",
+    "ScanConfiguration",
+    "SecurityScanner"
 ]

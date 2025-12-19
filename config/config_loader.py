@@ -25,63 +25,61 @@ from __future__ import annotations
 
 import json
 import os
-from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import ValidationError
 
 try:
     # Import the comprehensive configuration system
     from adaptivemind_core.config import (
-        AppConfig, 
-        OllamaConfig, 
-        OpenRouterConfig, 
-        WindowsMLConfig, 
-        SecurityConfig, 
-        PersonaConfig,
+        AppConfig,
         ContextPipelineConfig,
-        MonitoringConfig
+        MonitoringConfig,
+        OllamaConfig,
+        OpenRouterConfig,
+        PersonaConfig,
+        SecurityConfig,
+        WindowsMLConfig,
     )
     COMPREHENSIVE_CONFIG_AVAILABLE = True
 except ImportError:
     # Fallback to basic types if comprehensive config is not available
     from typing import TypedDict
-    
+
     class BasicConfig(TypedDict):
-        ollama: Dict[str, Any]
-        openrouter: Dict[str, Any]  
-        windowsml: Dict[str, Any]
-        security: Dict[str, Any]
-        personas: Dict[str, Any]
-        context_pipeline: Dict[str, Any]
-        monitoring: Dict[str, Any]
+        ollama: dict[str, Any]
+        openrouter: dict[str, Any]
+        windowsml: dict[str, Any]
+        security: dict[str, Any]
+        personas: dict[str, Any]
+        context_pipeline: dict[str, Any]
+        monitoring: dict[str, Any]
         allowed_personas: list
         enable_research_features: bool
-    
+
     COMPREHENSIVE_CONFIG_AVAILABLE = False
 
 
-def _load_json_config(path: Path) -> Dict[str, Any]:
+def _load_json_config(path: Path) -> dict[str, Any]:
     """Load and parse JSON configuration file.
-    
+
     Args:
         path: Path to JSON configuration file
-        
+
     Returns:
         Parsed configuration dictionary
     """
     try:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
-        print(f"Warning: Could not load config from {path}: {e}")
+    except (FileNotFoundError, json.JSONDecodeError, PermissionError):
         return {}
 
 
 def _discover_config_paths() -> list[Path]:
     """Discover configuration file paths from standard locations.
-    
+
     Returns:
         List of discovered configuration file paths
     """
@@ -93,12 +91,12 @@ def _discover_config_paths() -> list[Path]:
         "config.json",
         "adaptivemind_config.json"
     ]
-    
+
     paths = []
     for candidate in candidates:
         if not candidate:
             continue
-            
+
         path = Path(candidate)
         if path.is_file():
             paths.append(path)
@@ -106,13 +104,13 @@ def _discover_config_paths() -> list[Path]:
             config_file = path / "config.json"
             if config_file.exists():
                 paths.append(config_file)
-    
+
     return paths
 
 
-def _create_default_config() -> Dict[str, Any]:
+def _create_default_config() -> dict[str, Any]:
     """Create a default configuration dictionary.
-    
+
     Returns:
         Default configuration with sensible defaults
     """
@@ -161,12 +159,12 @@ def _create_default_config() -> Dict[str, Any]:
     }
 
 
-def _apply_env_overrides(config: Dict[str, Any]) -> Dict[str, Any]:
+def _apply_env_overrides(config: dict[str, Any]) -> dict[str, Any]:
     """Apply environment variable overrides to configuration.
-    
+
     Args:
         config: Base configuration dictionary
-        
+
     Returns:
         Configuration with environment overrides applied
     """
@@ -175,41 +173,41 @@ def _apply_env_overrides(config: Dict[str, Any]) -> Dict[str, Any]:
         config.setdefault("ollama", {})["host"] = host
     if model := os.getenv("OLLAMA_MODEL"):
         config.setdefault("ollama", {})["model"] = model
-        
+
     # OpenRouter overrides
     if api_key := os.getenv("OPENROUTER_API_KEY"):
         config.setdefault("openrouter", {})["api_key"] = api_key
-        
+
     # Security overrides
     if api_keys := os.getenv("ADAPTIVEMIND_API_KEYS"):
         keys = [k.strip() for k in api_keys.split(",") if k.strip()]
         config.setdefault("security", {})["api_keys"] = keys
-        
+
     # Default persona override
     if default_persona := os.getenv("ADAPTIVEMIND_DEFAULT_PERSONA"):
         config["allowed_personas"] = [default_persona]
-        
+
     return config
 
 
-def load_config(explicit_path: Optional[str] = None) -> Dict[str, Any]:
+def load_config(explicit_path: str | None = None) -> dict[str, Any]:
     """Load configuration from multiple sources with intelligent fallbacks.
-    
+
     Configuration loading priority:
     1. Explicit file path (if provided)
     2. Environment variable file paths
     3. Standard config file locations
     4. Environment variable overrides
     5. Default configuration
-    
+
     Args:
         explicit_path: Optional explicit path to configuration file
-        
+
     Returns:
         Configuration dictionary with all sources merged
     """
     config = _create_default_config()
-    
+
     # Load from explicit path if provided
     if explicit_path:
         path = Path(explicit_path).expanduser().resolve()
@@ -223,49 +221,48 @@ def load_config(explicit_path: Optional[str] = None) -> Dict[str, Any]:
             if file_config:
                 config.update(file_config)
                 break  # Use first found config file
-    
+
     # Apply environment variable overrides
     config = _apply_env_overrides(config)
-    
+
     # If comprehensive config is available, validate and return as AppConfig
     if COMPREHENSIVE_CONFIG_AVAILABLE:
         try:
             validated_config = AppConfig.model_validate(config)
             return validated_config.model_dump()
-        except ValidationError as e:
-            print(f"Warning: Configuration validation failed: {e}")
-            print("Using partial configuration with defaults")
-    
+        except ValidationError:
+            pass
+
     return config
 
 
 # Export the comprehensive config loader if available
 if COMPREHENSIVE_CONFIG_AVAILABLE:
-    def load_app_config(explicit_path: Optional[str] = None) -> AppConfig:
+    def load_app_config(explicit_path: str | None = None) -> AppConfig:
         """Load configuration as a validated AppConfig object.
-        
+
         Args:
             explicit_path: Optional explicit path to configuration file
-            
+
         Returns:
             Validated AppConfig instance
-            
+
         Raises:
             ValidationError: If configuration validation fails
         """
         config_dict = load_config(explicit_path)
         return AppConfig.model_validate(config_dict)
 else:
-    def load_app_config(explicit_path: Optional[str] = None) -> Dict[str, Any]:
+    def load_app_config(explicit_path: str | None = None) -> dict[str, Any]:
         """Fallback loader when comprehensive config is not available.
-        
+
         Args:
             explicit_path: Optional explicit path to configuration file
-            
+
         Returns:
             Configuration dictionary
         """
         return load_config(explicit_path)
 
 
-__all__ = ["load_config", "load_app_config"]
+__all__ = ["load_app_config", "load_config"]

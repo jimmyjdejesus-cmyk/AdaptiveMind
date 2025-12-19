@@ -10,7 +10,8 @@
 
 from AdaptiveMind_Local.agents.base_agent.agent import BaseAgent
 from AdaptiveMind_Local.logger_config import log
-# This prompt could benefit from abstracting the language to a variable, e.g. `programming_language` 
+
+# This prompt could benefit from abstracting the language to a variable, e.g. `programming_language`
 
 class CodingAgent(BaseAgent):
     def __init__(self):
@@ -20,4 +21,4 @@ class CodingAgent(BaseAgent):
             "efficient, and correct code."
         )
         super().__init__(system_prompt=system_prompt)
-        log.info(f"CodingAgent initialized.")
+        log.info("CodingAgent initialized.")

@@ -20,8 +20,9 @@ from __future__ import annotations
 
 import threading
 import time
+from collections.abc import Iterable, Iterator
 from dataclasses import asdict
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
+from typing import Any
 
 from .config import AppConfig, load_config
 from .context.engine import ContextEngine
@@ -38,7 +39,7 @@ logger = get_logger(__name__)
 
 class AdaptiveMindApplication:
     """Main coordinator that wires configuration, routing, and monitoring.
-    
+
     The AdaptiveMindApplication class serves as the central coordinator for all AdaptiveMind
     operations. It initializes and manages:
     - Configuration management via AppConfig
@@ -47,14 +48,14 @@ class AdaptiveMindApplication:
     - Context processing and semantic chunking
     - Metrics collection and tracing
     - Background harvesting of performance metrics
-    
+
     This class provides the primary API for:
     - Chat operations (both sync and streaming)
     - Persona management (create, update, delete)
     - System monitoring and health checks
     - Backend testing and status
     - Configuration management
-    
+
     Attributes:
         config: Application configuration containing all settings
         metrics: Registry for collecting and tracking performance metrics
@@ -67,21 +68,21 @@ class AdaptiveMindApplication:
         _start_time: Application startup timestamp
     """
 
-    def __init__(self, config: Optional[AppConfig] = None):
+    def __init__(self, config: AppConfig | None = None):
         """Initialize the AdaptiveMind application with all components.
-        
+
         Args:
             config: Optional AppConfig instance. If None, loads default config
                    from standard locations (env vars, config files, etc.)
         """
         self._start_time = time.time()
         self.config = config or load_config()
-        
+
         # Initialize core components
         self.metrics = MetricsRegistry()
         self.traces = TraceCollector()
         self.context_engine = ContextEngine(self.config)
-        
+
         # Build and configure backend services
         self.backends = self._build_backends()
         self.router = AdaptiveLLMRouter(
@@ -91,24 +92,24 @@ class AdaptiveMindApplication:
             metrics=self.metrics,
             traces=self.traces,
         )
-        
+
         # Initialize background metrics harvesting
-        self._harvester_thread: Optional[threading.Thread] = None
+        self._harvester_thread: threading.Thread | None = None
         self._stop_harvest = threading.Event()
-        
+
         # Start metrics harvesting if enabled in configuration
         if self.config.monitoring.enable_metrics_harvest:
             self._start_harvest_loop()
 
-    def _build_backends(self) -> List:
+    def _build_backends(self) -> list:
         """Build and configure all available LLM backends.
-        
+
         Creates instances of all configured backends:
         - OllamaBackend for local model hosting
         - OpenRouterBackend for cloud-based models
         - WindowsMLBackend for local ONNX models
         - ContextualFallbackLLM for fallback operations
-        
+
         Returns:
             List of configured backend instances
         """
@@ -134,7 +135,7 @@ class AdaptiveMindApplication:
 
     def _start_harvest_loop(self) -> None:
         """Start the background metrics harvesting loop.
-        
+
         Runs a daemon thread that periodically harvests and logs metrics
         at the configured interval. The loop continues until the stop
         event is set or the application shuts down.
@@ -147,7 +148,7 @@ class AdaptiveMindApplication:
             while not self._stop_harvest.wait(interval):
                 # Collect metrics snapshot
                 snapshot = self.metrics.harvest()
-                
+
                 # Log detailed metrics for monitoring
                 logger.info(
                     "Metrics harvested",
@@ -167,7 +168,7 @@ class AdaptiveMindApplication:
 
     def shutdown(self) -> None:
         """Gracefully shutdown the AdaptiveMind application.
-        
+
         Stops the metrics harvesting loop and waits for the harvester
         thread to finish. Called automatically during application cleanup.
         """
@@ -180,18 +181,18 @@ class AdaptiveMindApplication:
     def chat(
         self,
         persona: str,
-        messages: List[Dict[str, Any]],
+        messages: list[dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int = 512,
-        metadata: Optional[Dict[str, Any]] = None,
-        external_context: Optional[Iterable[str]] = None,
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+        external_context: Iterable[str] | None = None,
+    ) -> dict[str, Any]:
         """Generate a chat response using the specified persona.
-        
+
         Routes the chat request to the appropriate backend based on the persona
         configuration and current system load. Processes messages through the
         context pipeline and returns structured response data.
-        
+
         Args:
             persona: Name of the persona to use for generation
             messages: List of message dictionaries with 'role' and 'content' keys
@@ -199,7 +200,7 @@ class AdaptiveMindApplication:
             max_tokens: Maximum number of tokens to generate
             metadata: Optional metadata to include with the request
             external_context: Optional iterable of external context strings
-            
+
         Returns:
             Dict containing:
             - content: Generated response text
@@ -242,17 +243,17 @@ class AdaptiveMindApplication:
     def stream_chat(
         self,
         persona: str,
-        messages: List[Dict[str, Any]],
+        messages: list[dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int = 512,
-        metadata: Optional[Dict[str, Any]] = None,
-        external_context: Optional[Iterable[str]] = None,
-    ) -> Iterator[Dict[str, Any]]:
+        metadata: dict[str, Any] | None = None,
+        external_context: Iterable[str] | None = None,
+    ) -> Iterator[dict[str, Any]]:
         """Stream a chat response incrementally.
-        
+
         Similar to chat() but yields response chunks as they become available,
         enabling real-time streaming responses for better user experience.
-        
+
         Args:
             persona: Name of the persona to use for generation
             messages: List of message dictionaries with 'role' and 'content' keys
@@ -260,7 +261,7 @@ class AdaptiveMindApplication:
             max_tokens: Maximum number of tokens to generate
             metadata: Optional metadata to include with the request
             external_context: Optional iterable of external context strings
-            
+
         Yields:
             Dict chunks containing:
             - content: Incremental response text
@@ -285,12 +286,12 @@ class AdaptiveMindApplication:
                 "diagnostics": chunk.diagnostics or {},
             }
 
-    def personas(self) -> List[Dict[str, Any]]:
+    def personas(self) -> list[dict[str, Any]]:
         """Get all configured personas.
-        
+
         Returns a list of all personas currently configured in the system,
         including their descriptions and operational parameters.
-        
+
         Returns:
             List of persona dictionaries containing name, description,
             max_context_window, and routing_hint
@@ -305,37 +306,37 @@ class AdaptiveMindApplication:
             for persona in self.config.personas.values()
         ]
 
-    def models(self) -> List[str]:
+    def models(self) -> list[str]:
         """Get list of available model backends.
-        
+
         Returns the names of all LLM backends that are currently available
         and operational.
-        
+
         Returns:
             List of available backend model names
         """
         return [backend.name for backend in self.backends if backend.is_available()]
 
-    def traces_latest(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def traces_latest(self, limit: int = 50) -> list[dict[str, Any]]:
         """Get the latest request traces for debugging.
-        
+
         Retrieves recent request traces showing the routing decisions,
         timing, and diagnostic information for troubleshooting.
-        
+
         Args:
             limit: Maximum number of traces to return
-            
+
         Returns:
             List of trace dictionaries with request details and timing
         """
         return [asdict(trace) for trace in self.traces.latest(limit)]
 
-    def metrics_snapshot(self) -> List[Dict[str, Any]]:
+    def metrics_snapshot(self) -> list[dict[str, Any]]:
         """Get current metrics snapshot.
-        
+
         Returns performance metrics collected since the last harvest,
         including request counts, latency statistics, and token usage.
-        
+
         Returns:
             List of metrics snapshots with performance data
         """
@@ -343,13 +344,13 @@ class AdaptiveMindApplication:
 
     # Management API methods ---------------------------------------------
 
-    def system_status(self) -> Dict[str, Any]:
+    def system_status(self) -> dict[str, Any]:
         """Get comprehensive system status and health information.
-        
+
         Returns detailed information about the current system state including
         uptime, active components, configuration hash for change detection,
         and overall health status.
-        
+
         Returns:
             Dict containing:
             - status: Overall system health ("healthy", "degraded", "unhealthy")
@@ -359,8 +360,8 @@ class AdaptiveMindApplication:
             - active_personas: List of currently allowed personas
             - config_hash: Hash of current configuration for change detection
         """
-        import time
         import hashlib
+        import time
 
         # Calculate config hash for change detection
         config_str = self.config.model_dump_json()
@@ -375,12 +376,12 @@ class AdaptiveMindApplication:
             "config_hash": config_hash,
         }
 
-    def get_routing_config(self) -> Dict[str, Any]:
+    def get_routing_config(self) -> dict[str, Any]:
         """Get current routing and persona configuration.
-        
+
         Returns the current routing settings including which personas are
         allowed and whether adaptive routing is enabled.
-        
+
         Returns:
             Dict containing:
             - allowed_personas: List of personas that can be used for routing
@@ -391,12 +392,12 @@ class AdaptiveMindApplication:
             "enable_adaptive_routing": True,  # TODO: make configurable
         }
 
-    def list_backends(self) -> List[Dict[str, Any]]:
+    def list_backends(self) -> list[dict[str, Any]]:
         """Get status information for all configured backends.
-        
+
         Returns detailed status for each configured backend including
         availability, type, and configuration summary.
-        
+
         Returns:
             List of backend status dicts containing:
             - name: Backend name identifier
@@ -418,12 +419,12 @@ class AdaptiveMindApplication:
         ]
         return backends
 
-    def get_context_config(self) -> Dict[str, Any]:
+    def get_context_config(self) -> dict[str, Any]:
         """Get current context pipeline configuration.
-        
+
         Returns the configuration for the context processing pipeline,
         including document loading, semantic chunking, and token limits.
-        
+
         Returns:
             Dict containing:
             - extra_documents_dir: Optional directory for additional documents
@@ -436,12 +437,12 @@ class AdaptiveMindApplication:
             "max_combined_context_tokens": self.config.context_pipeline.max_combined_context_tokens,
         }
 
-    def get_security_status(self) -> Dict[str, Any]:
+    def get_security_status(self) -> dict[str, Any]:
         """Get security configuration and status information.
-        
+
         Returns information about the security configuration including
         API key management and audit logging status.
-        
+
         Returns:
             Dict containing:
             - api_keys_count: Number of configured API keys
@@ -454,21 +455,21 @@ class AdaptiveMindApplication:
 
     # Phase 2: Mutation methods ---------------------------------------------
 
-    def create_persona(self, persona_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_persona(self, persona_data: dict[str, Any]) -> dict[str, Any]:
         """Create a new persona configuration.
-        
+
         Creates a new persona with the provided configuration data and
         adds it to the allowed personas list. Validates that the persona
         name doesn't already exist and that all required fields are present.
-        
+
         Args:
             persona_data: Dictionary containing persona configuration with
                          keys: name, description, system_prompt, max_context_window,
                          routing_hint
-            
+
         Returns:
             Dict representing the created persona with all configuration fields
-            
+
         Raises:
             ValueError: If persona name already exists or required fields are missing
         """
@@ -486,20 +487,20 @@ class AdaptiveMindApplication:
 
         return self._persona_to_dict(name, persona_config)
 
-    def update_persona(self, name: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    def update_persona(self, name: str, updates: dict[str, Any]) -> dict[str, Any]:
         """Update an existing persona configuration.
-        
+
         Modifies the configuration of an existing persona with the provided
         updates. Only updates fields that are not None in the updates dict.
-        
+
         Args:
             name: Name of the persona to update
             updates: Dictionary containing fields to update (any combination of
                     description, system_prompt, max_context_window, routing_hint)
-                    
+
         Returns:
             Dict representing the updated persona configuration
-            
+
         Raises:
             ValueError: If persona doesn't exist or update field is invalid
         """
@@ -517,16 +518,16 @@ class AdaptiveMindApplication:
 
     def delete_persona(self, name: str) -> bool:
         """Delete a persona configuration.
-        
+
         Removes a persona from the configuration and from the allowed
         personas list. Logs a warning about the deletion.
-        
+
         Args:
             name: Name of the persona to delete
-            
+
         Returns:
             True if deletion was successful
-            
+
         Raises:
             ValueError: If persona doesn't exist
         """
@@ -547,21 +548,21 @@ class AdaptiveMindApplication:
 
         return True
 
-    def update_routing_config(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    def update_routing_config(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Update routing configuration.
-        
+
         Modifies the routing configuration including which personas are
         allowed for routing requests. Validates that all personas exist
         before updating the allowed list.
-        
+
         Args:
             updates: Dictionary containing routing configuration updates:
                     - allowed_personas: List of persona names to allow
                     - enable_adaptive_routing: Boolean (currently placeholder)
-                    
+
         Returns:
             Dict containing the updated routing configuration
-            
+
         Raises:
             ValueError: If any specified persona doesn't exist
         """
@@ -578,19 +579,19 @@ class AdaptiveMindApplication:
 
         return self.get_routing_config()
 
-    def update_context_config(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    def update_context_config(self, updates: dict[str, Any]) -> dict[str, Any]:
         """Update context pipeline configuration.
-        
+
         Modifies the configuration for the context processing pipeline
         including document directories, semantic chunking settings, and
         token limits.
-        
+
         Args:
             updates: Dictionary containing context configuration updates:
                     - extra_documents_dir: Path to additional documents directory
                     - enable_semantic_chunking: Whether to enable semantic chunking
                     - max_combined_context_tokens: Maximum tokens for context
-            
+
         Returns:
             Dict containing the updated context configuration
         """
@@ -608,21 +609,21 @@ class AdaptiveMindApplication:
 
         return self.get_context_config()
 
-    def test_backend(self, name: str) -> Dict[str, Any]:
+    def test_backend(self, name: str) -> dict[str, Any]:
         """Test connectivity and availability of a backend.
-        
+
         Performs a connectivity test on the specified backend to determine
         if it's operational and measure response latency.
-        
+
         Args:
             name: Name of the backend to test
-            
+
         Returns:
             Dict containing:
             - success: Boolean indicating if backend is available
             - latency_ms: Response time in milliseconds
             - error: Error message if test failed, None if successful
-            
+
         Raises:
             ValueError: If backend name is not found
         """
@@ -650,13 +651,13 @@ class AdaptiveMindApplication:
                 "error": str(e)
             }
 
-    def save_config(self) -> Dict[str, Any]:
+    def save_config(self) -> dict[str, Any]:
         """Save current configuration to persistent storage.
-        
+
         Currently creates a hash of the current configuration for validation
         purposes. Full persistent storage implementation would require writing
         to the configuration file, which is complex in a running system.
-        
+
         Returns:
             Dict containing:
             - success: Boolean indicating if save operation succeeded
@@ -679,19 +680,19 @@ class AdaptiveMindApplication:
             return {
                 "success": False,
                 "config_hash": "",
-                "message": f"Failed to save configuration: {str(e)}"
+                "message": f"Failed to save configuration: {e!s}"
             }
 
-    def _persona_to_dict(self, name: str, persona) -> Dict[str, Any]:
+    def _persona_to_dict(self, name: str, persona) -> dict[str, Any]:
         """Convert persona configuration to dictionary response format.
-        
+
         Internal helper method that transforms a PersonaConfig object
         into the standard response format including active status.
-        
+
         Args:
             name: Name of the persona
             persona: PersonaConfig object to convert
-            
+
         Returns:
             Dict containing persona data in response format
         """

@@ -18,13 +18,18 @@ from __future__ import annotations
 
 import time
 import uuid
-from typing import Dict, Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 
 from ..config import AppConfig, PersonaConfig
+from ..context.engine import ContextEngine
+from ..llm.base import (
+    GenerationChunk,
+    GenerationRequest,
+    GenerationResponse,
+    LLMBackend,
+)
 from ..logger import get_logger
 from ..monitoring.metrics import MetricsRegistry, TraceCollector, TraceRecord
-from ..context.engine import ContextEngine
-from ..llm.base import GenerationChunk, GenerationRequest, GenerationResponse, LLMBackend
 
 logger = get_logger(__name__)
 
@@ -46,7 +51,7 @@ class AdaptiveLLMRouter:
         self._metrics = metrics
         self._traces = traces
 
-    def available_personas(self) -> Dict[str, PersonaConfig]:
+    def available_personas(self) -> dict[str, PersonaConfig]:
         return self._config.personas
 
     def select_backend(self, persona: PersonaConfig) -> LLMBackend:
@@ -63,17 +68,17 @@ class AdaptiveLLMRouter:
         messages: Sequence[dict],
         temperature: float = 0.7,
         max_tokens: int = 512,
-        metadata: Dict[str, str] | None = None,
+        metadata: dict[str, str] | None = None,
         external_context: Iterable[str] | None = None,
     ) -> GenerationResponse:
         # Check if persona exists first (always required)
         if persona_name not in self._config.personas:
             raise ValueError(f"Persona '{persona_name}' not found")
-        
+
         # Check allowed_personas only if it's explicitly set (not empty)
         if self._config.allowed_personas and persona_name not in self._config.allowed_personas:
             raise ValueError(f"Persona '{persona_name}' is not enabled")
-        
+
         persona = self._config.personas[persona_name]
         context = self._context_engine.build_context(persona, messages, external_context)
         backend = self.select_backend(persona)
@@ -119,17 +124,17 @@ class AdaptiveLLMRouter:
         messages: Sequence[dict],
         temperature: float = 0.7,
         max_tokens: int = 512,
-        metadata: Dict[str, str] | None = None,
+        metadata: dict[str, str] | None = None,
         external_context: Iterable[str] | None = None,
     ) -> Iterator[GenerationChunk]:
         # Check if persona exists first (always required)
         if persona_name not in self._config.personas:
             raise ValueError(f"Persona '{persona_name}' not found")
-        
+
         # Check allowed_personas only if it's explicitly set (not empty)
         if self._config.allowed_personas and persona_name not in self._config.allowed_personas:
             raise ValueError(f"Persona '{persona_name}' is not enabled")
-        
+
         persona = self._config.personas[persona_name]
         context = self._context_engine.build_context(persona, messages, external_context)
         backend = self.select_backend(persona)

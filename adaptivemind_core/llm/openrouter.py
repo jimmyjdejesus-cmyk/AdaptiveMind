@@ -10,13 +10,10 @@
 
 from __future__ import annotations
 
-import os
-from typing import Any, Dict, Optional
-
 import httpx
 
-from .base import GenerationRequest, GenerationResponse, LLMBackend
 from ..logger import get_logger
+from .base import GenerationRequest, GenerationResponse, LLMBackend
 
 logger = get_logger(__name__)
 
@@ -48,7 +45,7 @@ class OpenRouterBackend(LLMBackend):
         # If context is provided, prepend it to the system prompt or first user message
         system_content = f"You are acting as the '{request.persona}' persona.\n\nContext:\n{request.context}"
         messages.append({"role": "system", "content": system_content})
-        
+
         # Append conversation history
         for msg in request.messages:
             messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
@@ -69,11 +66,11 @@ class OpenRouterBackend(LLMBackend):
                 )
                 response.raise_for_status()
                 data = response.json()
-                
+
                 content = data["choices"][0]["message"]["content"]
                 usage = data.get("usage", {})
                 total_tokens = usage.get("total_tokens", 0)
-                
+
                 return GenerationResponse(
                     content=content,
                     tokens=total_tokens,

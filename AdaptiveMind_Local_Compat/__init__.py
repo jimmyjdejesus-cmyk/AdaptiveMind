@@ -30,7 +30,7 @@ warnings.warn(
     "The `Jarvis_Local` import path is deprecated. "
     "Please use `apps.AdaptiveMind_Local` instead. "
     "This compatibility shim will be removed in a future version.",
-    DeprecationWarning, 
+    DeprecationWarning,
     stacklevel=2
 )
 

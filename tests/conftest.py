@@ -10,17 +10,16 @@
 
 """Shared pytest fixtures for the test suite."""
 
-import sys
-import types
 import os
-from pathlib import Path
-from enum import Enum
-from unittest.mock import MagicMock, Mock
-import os
-import pytest
 import subprocess
-import time
 import sys
+import time
+import types
+from enum import Enum
+from pathlib import Path
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 # Stub external dependencies
 neo4j_module = types.ModuleType("neo4j")
@@ -94,7 +93,7 @@ keyring_errors_module.NoKeyringError = NoKeyringError
 sys.modules.setdefault("keyring.errors", keyring_errors_module)
 
 try:
-    import pydantic  # type: ignore
+    pass  # type: ignore
 except Exception:
     # Minimal fallback when pydantic is not available in the test
     # environment (keeps tests fast and avoids hard dependency in some dev setups).

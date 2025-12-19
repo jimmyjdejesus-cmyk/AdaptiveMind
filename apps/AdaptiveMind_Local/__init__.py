@@ -13,7 +13,7 @@
 # Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
 # See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
-"""apps.AdaptiveMind_Local package
+"""apps.AdaptiveMind_Local package.
 
 This is the relocated example runtime formerly located at the repository root
 under `Jarvis_Local/`. Import paths inside the repository have been updated to

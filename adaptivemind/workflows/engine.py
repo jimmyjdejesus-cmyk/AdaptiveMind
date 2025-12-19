@@ -9,8 +9,9 @@
 
 
 from __future__ import annotations
+
 from enum import Enum
-from typing import Dict, Any
+from typing import Any
 
 
 class WorkflowStatus(Enum):
@@ -20,5 +21,5 @@ class WorkflowStatus(Enum):
     FAILED = "failed"
 
 
-def evaluate_workflow(dag: Any) -> Dict[str, Any]:
+def evaluate_workflow(dag: Any) -> dict[str, Any]:
     return {"status": WorkflowStatus.PENDING}

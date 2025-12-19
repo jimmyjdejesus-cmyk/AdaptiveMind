@@ -16,6 +16,7 @@
 
 from AdaptiveMind_Local.agents.base_agent.agent import BaseAgent
 
+
 class MetaAgent(BaseAgent):
     def __init__(self):
         system_prompt = "You are J.A.R.V.I.S., a highly capable and intelligent AI assistant."

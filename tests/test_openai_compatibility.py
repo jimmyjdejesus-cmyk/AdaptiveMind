@@ -15,12 +15,13 @@ Tests the OpenAI-compatible endpoints (/v1/chat/completions and /v1/models)
 to ensure they work correctly with OpenAI SDK and other OpenAI-compatible clients.
 """
 
-import pytest
 import time
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
+import pytest
 from fastapi.testclient import TestClient
+
 from adaptivemind_core.server import build_app
-from adaptivemind_core.config import AppConfig
 
 
 class TestOpenAICompatibility:
@@ -370,7 +371,7 @@ class TestOpenAICompatibility:
 
     def test_openai_response_timing(self, client):
         """Test response timing and ID generation"""
-        start_time = time.time()
+        time.time()
 
         response = client.post(
             "/v1/chat/completions",
@@ -381,7 +382,7 @@ class TestOpenAICompatibility:
             headers={"X-API-Key": "test-api-key"}
         )
 
-        end_time = time.time()
+        time.time()
 
         assert response.status_code == 200
         data = response.json()

@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
-"""
-Fixed AdaptiveMind AI Server Startup Script with Correct Model Configuration
-"""
+"""Fixed AdaptiveMind AI Server Startup Script with Correct Model Configuration."""
 
 import os
 import sys
-import uvicorn
 from pathlib import Path
+
+import uvicorn
+
 
 def setup_environment():
     """Setup environment and check dependencies."""
-    print("🔧 Setting up Fixed AdaptiveMind AI environment...")
-    
     # Add current directory to Python path
     current_dir = Path(__file__).parent
     sys.path.insert(0, str(current_dir))
-    
+
     return True
 
 def load_fixed_config():
     """Load configuration with correct Ollama model."""
-    print("📋 Loading fixed configuration...")
-    
     try:
-        from adaptivemind_core.config import AppConfig, OllamaConfig, OpenRouterConfig, WindowsMLConfig, SecurityConfig, ContextPipelineConfig, MonitoringConfig
-        
+        from adaptivemind_core.config import (
+            AppConfig,
+            ContextPipelineConfig,
+            MonitoringConfig,
+            OllamaConfig,
+            OpenRouterConfig,
+            SecurityConfig,
+            WindowsMLConfig,
+        )
+
         config = AppConfig(
             ollama=OllamaConfig(
                 host="http://127.0.0.1:11434",
@@ -50,51 +54,42 @@ def load_fixed_config():
             allowed_personas=["generalist"],
             enable_research_features=False
         )
-        print("✅ Fixed configuration created with qwen3:0.6b model")
         return config
-        
-    except Exception as e:
-        print(f"❌ Configuration error: {e}")
+
+    except Exception:
         import traceback
         traceback.print_exc()
         sys.exit(1)
 
 def start_fixed_server():
     """Start the fixed AdaptiveMind AI server."""
-    print("🚀 Starting Fixed AdaptiveMind AI Server...")
-    
     setup_environment()
     config = load_fixed_config()
-    
+
     try:
         from adaptivemind_core.server import build_app
         app = build_app(config)
-        print("✅ FastAPI application created with fixed configuration")
-    except Exception as e:
-        print(f"❌ Failed to build application: {e}")
+    except Exception:
         import traceback
         traceback.print_exc()
         sys.exit(1)
-    
+
     # Start server
     port = int(os.getenv("ADAPTIVEMIND_PORT", "8000"))
     host = os.getenv("ADAPTIVEMIND_HOST", "127.0.0.1")
-    
-    print(f"🌐 Starting fixed server on {host}:{port}")
-    print(f"🔗 Health check: http://{host}:{port}/health")
-    
+
+
     try:
         uvicorn.run(
-            app, 
-            host=host, 
+            app,
+            host=host,
             port=port,
             log_level="info",
             access_log=True
         )
     except KeyboardInterrupt:
-        print("\n👋 Fixed server stopped by user")
-    except Exception as e:
-        print(f"❌ Fixed server error: {e}")
+        pass
+    except Exception:
         import traceback
         traceback.print_exc()
 

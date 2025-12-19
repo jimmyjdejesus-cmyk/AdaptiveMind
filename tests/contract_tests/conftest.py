@@ -14,11 +14,11 @@ Contract Testing Configuration and Fixtures
 This module provides pytest fixtures and configuration for contract testing.
 """
 
-import pytest
 import asyncio
 import os
-from typing import Dict, Any
 from pathlib import Path
+
+import pytest
 
 from .test_api_contracts import APIContractTester
 from .test_performance_contracts import PerformanceContractTester

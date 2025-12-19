@@ -2,18 +2,17 @@
 from __future__ import annotations
 
 from adaptivemind_core.audit.models import (
+    AuditCategory,
     AuditFinding,
     AuditReport,
     ScanConfiguration,
-    ScanDepth,
-    AuditCategory,
     SeverityLevel,
-)  # noqa: F401
+)
 
 __all__ = [
+    "AuditCategory",
     "AuditFinding",
     "AuditReport",
     "ScanConfiguration",
-    "AuditCategory",
     "SeverityLevel",
 ]

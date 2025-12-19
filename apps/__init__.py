@@ -6,7 +6,7 @@
 # More info: https://github.com/[username]/adaptivemind
 # License: https://creativecommons.org/licenses/by/4.0/
 
-"""AdaptiveMind Framework Apps Package
+"""AdaptiveMind Framework Apps Package.
 
 This package hosts example runtimes and apps, such as `apps.AdaptiveMind_Local`.
 """

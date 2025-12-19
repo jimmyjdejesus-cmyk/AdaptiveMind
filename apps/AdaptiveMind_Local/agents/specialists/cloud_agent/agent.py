@@ -12,14 +12,14 @@
 from AdaptiveMind_Local.agents.base_agent.agent import BaseAgent
 from AdaptiveMind_Local.tools.mcp_client import MCPClient
 
+
 class CloudAgent(BaseAgent):
     def __init__(self):
         super().__init__(system_prompt="You are a powerful cloud-based specialist.")
         try:
             self.mcp_client = MCPClient()
-        except Exception as e:
+        except Exception:
             self.mcp_client = None
-            print(f"CloudAgent: MCP client not available - {e}")
 
     def invoke(self, prompt, history=None):
         if not self.mcp_client or not self.mcp_client.is_configured():

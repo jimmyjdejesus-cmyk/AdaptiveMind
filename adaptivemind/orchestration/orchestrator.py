@@ -17,7 +17,7 @@ caching, and result synthesis capabilities.
 
 Key Components:
 - MultiAgentOrchestrator: Main coordinator for specialist agents
-- OrchestratorTemplate: Base interface for orchestrator implementations  
+- OrchestratorTemplate: Base interface for orchestrator implementations
 - StepContext/StepResult: Execution context and result structures
 - DynamicOrchestrator: Placeholder for dynamic workflow testing
 
@@ -40,7 +40,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from adaptivemind.agents.critics.constitutional_critic import ConstitutionalCritic
 from adaptivemind.agents.specialist_registry import (
@@ -50,6 +50,7 @@ from adaptivemind.agents.specialist_registry import (
 from adaptivemind.memory.project_memory import ProjectMemory
 from adaptivemind.monitoring.performance import PerformanceTracker
 from adaptivemind.scoring.vickrey_auction import Candidate, run_vickrey_auction
+
 from .message_bus import HierarchicalMessageBus
 from .path_memory import PathMemory
 from .semantic_cache import SemanticCache
@@ -58,10 +59,10 @@ from .semantic_cache import SemanticCache
 @dataclass
 class AgentSpec:
     """Minimal agent specification for dynamic workflow testing.
-    
+
     Defines a simple agent specification used primarily for testing
     arbitrary workflow patterns with the DynamicOrchestrator.
-    
+
     Attributes:
         name: Unique identifier for the agent
         orchestrator: Optional orchestrator instance for this agent
@@ -72,7 +73,7 @@ class AgentSpec:
 
 class DynamicOrchestrator:
     """Placeholder dynamic orchestrator for workflow testing.
-    
+
     Provides a simple placeholder implementation for testing dynamic
     workflow patterns and agent specifications. Currently serves as
     a base class for experimental orchestration approaches.
@@ -97,11 +98,11 @@ END = object()
 @dataclass
 class StepContext:
     """Execution context for a single DAG step in orchestration workflow.
-    
+
     Contains all necessary information for executing a single step in
     a directed acyclic graph (DAG) orchestration workflow, including
     request details, constraints, and execution parameters.
-    
+
     Attributes:
         request: The user request or task to execute
         allowed_specialists: Optional list of permitted specialist agents
@@ -116,38 +117,38 @@ class StepContext:
         timeout: Optional timeout in seconds for step execution
     """
     request: str
-    allowed_specialists: Optional[List[str]] = None
-    tools: Optional[List[str]] = None
-    budgets: Optional[Dict[str, Any]] = None
-    retry_policy: Optional[Dict[str, Any]] = None
-    prune_policy: Optional[Dict[str, Any]] = None
-    auction_policy: Optional[Dict[str, Any]] = None
+    allowed_specialists: list[str] | None = None
+    tools: list[str] | None = None
+    budgets: dict[str, Any] | None = None
+    retry_policy: dict[str, Any] | None = None
+    prune_policy: dict[str, Any] | None = None
+    auction_policy: dict[str, Any] | None = None
     recursion_depth: int = 0
-    user_context: Optional[str] = None
+    user_context: str | None = None
     context: Any | None = None
-    timeout: Optional[float] = None
+    timeout: float | None = None
 
 
 @dataclass
 class StepResult:
     """Result of executing a single step in the orchestration workflow.
-    
+
     Contains the output data, execution metadata, and workflow tracking
     information for a completed step execution.
-    
+
     Attributes:
         data: Dictionary containing step execution results
         run_id: Unique identifier for the execution run
         depth: Depth of this step in the workflow DAG
     """
-    data: Dict[str, Any]
+    data: dict[str, Any]
     run_id: str
     depth: int
 
 
 class OrchestratorTemplate:
     """Base interface for orchestrators used in DAG execution.
-    
+
     Defines the standard interface that all orchestrator implementations
     must follow for step-based workflow execution. Enables pluggable
     orchestration strategies while maintaining consistent execution semantics.
@@ -155,13 +156,13 @@ class OrchestratorTemplate:
 
     async def run_step(self, step_ctx: StepContext) -> StepResult:
         """Execute a single step in the orchestration workflow.
-        
+
         Args:
             step_ctx: Execution context containing request and constraints
-            
+
         Returns:
             StepResult containing execution results and metadata
-            
+
         Raises:
             NotImplementedError: If not implemented by subclass
         """
@@ -181,11 +182,11 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
         mcp_client: Any,
         monitor: Any | None = None,
         knowledge_graph: Any | None = None,
-        specialists: Optional[Dict[str, Any]] = None,
+        specialists: dict[str, Any] | None = None,
         *,
         message_bus: HierarchicalMessageBus | None = None,
-        budgets: Optional[Dict[str, Any]] = None,
-        memory: Optional[ProjectMemory] = None,
+        budgets: dict[str, Any] | None = None,
+        memory: ProjectMemory | None = None,
         performance_tracker: PerformanceTracker | None = None,
     ) -> None:
         self.mcp_client = mcp_client
@@ -202,11 +203,11 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
         else:
             self.specialists = specialists
         self.semantic_cache = SemanticCache()
-        self.child_orchestrators: Dict[str, "SubOrchestrator"] = {}
+        self.child_orchestrators: dict[str, SubOrchestrator] = {}
         self.collaboration_patterns = defaultdict(int)
         self.task_history = []
         self.active_collaborations = {}
-        self.exploration_stats: List[Dict[str, float]] = []
+        self.exploration_stats: list[dict[str, float]] = []
         self.message_bus = message_bus or HierarchicalMessageBus()
         self.budgets = budgets or {}
         self.performance_tracker = performance_tracker or PerformanceTracker()
@@ -217,9 +218,9 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
         event: str,
         payload: Any,
         *,
-        run_id: Optional[str] = None,
-        step_id: Optional[str] = None,
-        parent_id: Optional[str] = None,
+        run_id: str | None = None,
+        step_id: str | None = None,
+        parent_id: str | None = None,
     ) -> None:
         """Publish an event to the hierarchical message bus."""
         await self.message_bus.publish(
@@ -287,7 +288,7 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
             data=data, run_id=run_id or "", depth=step_ctx.recursion_depth
         )
 
-    def list_child_orchestrators(self) -> List[str]:
+    def list_child_orchestrators(self) -> list[str]:
         """List identifiers of active child orchestrators."""
         return list(self.child_orchestrators.keys())
 
@@ -298,7 +299,7 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
         *,
         context: Any | None = None,
         user_context: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute a task using a registered child orchestrator."""
         orchestrator = self.child_orchestrators.get(name)
         if orchestrator is None:
@@ -311,7 +312,7 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
         )
 
     def spawn_child_orchestrator(
-        self, parent_run_id: str, spec: Dict[str, Any]
+        self, parent_run_id: str, spec: dict[str, Any]
     ):
         """Spawn a child orchestrator inheriting the parent's context."""
         child = self.create_child_orchestrator(parent_run_id, spec)
@@ -320,8 +321,8 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
             event: str,
             payload: Any,
             *,
-            run_id: Optional[str] = None,
-            step_id: Optional[str] = None,
+            run_id: str | None = None,
+            step_id: str | None = None,
         ):
             await self.log_event(
                 f"child.{parent_run_id}.{event}",
@@ -337,8 +338,8 @@ class MultiAgentOrchestrator(OrchestratorTemplate):
         return child
 
     async def _analyze_request_complexity(
-        self, request: str, code: str = None
-    ) -> Dict[str, Any]:
+        self, request: str, code: str | None = None
+    ) -> dict[str, Any]:
         """Analyze a request to determine complexity and specialists needed."""
         prompt = f"""
 Analyze the user request and list required specialists with complexity.
@@ -384,7 +385,7 @@ JSON Response:
         user_context: str | None = None,
         context: Any | None = None,
         novelty_boost: float = 0.0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Coordinate multiple specialists to handle complex request."""
         analysis = await self._analyze_request_complexity(request, code)
         analysis["coordination_type"] = self._determine_coordination_type(
@@ -444,10 +445,10 @@ JSON Response:
         *,
         context: Any | None = None,
         user_context: str | None = None,
-        models: List[str] | None = None,
+        models: list[str] | None = None,
         timeout: int = 60,
         retries: int = 3,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute a task with the requested specialist.
 
         The specialist's ``process_task`` method is executed with
@@ -494,7 +495,7 @@ JSON Response:
             f"Unknown specialist or orchestrator: {specialist_type}"
         )
 
-    def create_child_orchestrator(self, name: str, spec: Dict[str, Any]):
+    def create_child_orchestrator(self, name: str, spec: dict[str, Any]):
         """Create and register a child :class:`SubOrchestrator`."""
         from .sub_orchestrator import (
             SubOrchestrator,
@@ -509,9 +510,9 @@ JSON Response:
         return self.child_orchestrators.pop(name, None) is not None
 
     def _determine_coordination_type(
-        self, specialists: List[str], complexity: str
+        self, specialists: list[str], complexity: str
     ) -> str:
-        """Determine how specialists should be coordinated"""
+        """Determine how specialists should be coordinated."""
         if len(specialists) <= 1:
             return "single"
         elif len(specialists) == 2 and complexity in ["low", "medium"]:
@@ -521,8 +522,8 @@ JSON Response:
         else:
             return "parallel"
 
-    def _determine_collaboration_depth(self, specialists: List[str]) -> str:
-        """Determine depth of collaboration between specialists"""
+    def _determine_collaboration_depth(self, specialists: list[str]) -> str:
+        """Determine depth of collaboration between specialists."""
         if len(specialists) <= 1:
             return "none"
         elif len(specialists) == 2:
@@ -534,7 +535,7 @@ JSON Response:
 
     def _route_model_preferences(
         self, specialist, complexity: str
-    ) -> List[str]:
+    ) -> list[str]:
         """Determine model order based on resources and complexity."""
         models = list(specialist.preferred_models)
         local = [
@@ -558,12 +559,12 @@ JSON Response:
     async def _single_specialist_analysis(
         self,
         request: str,
-        analysis: Dict,
+        analysis: dict,
         path_memory: PathMemory,
         code: str | None,
         user_context: str | None,
         context: Any | None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         specialist_type = analysis["specialists_needed"][0]
         task = self._create_specialist_task(request, code, user_context)
         try:
@@ -606,16 +607,16 @@ JSON Response:
     async def _parallel_specialist_analysis(
         self,
         request: str,
-        analysis: Dict,
+        analysis: dict,
         path_memory: PathMemory,
         code: str | None,
         user_context: str | None,
         context: Any | None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         specialists_needed = analysis["specialists_needed"]
         task = self._create_specialist_task(request, code, user_context)
 
-        grouped: Dict[tuple, List[tuple]] = defaultdict(list)
+        grouped: dict[tuple, list[tuple]] = defaultdict(list)
         for specialist_type in specialists_needed:
             specialist = self.specialists[specialist_type]
             models = self._route_model_preferences(
@@ -645,7 +646,7 @@ JSON Response:
 
             specialist_results, successful_results = {}, []
             for (server, model, items), responses in zip(
-                group_info, batch_results
+                group_info, batch_results, strict=False
             ):
                 if isinstance(responses, Exception):
                     logger.error(f"Batch {server}/{model} failed: {responses}")
@@ -669,7 +670,7 @@ JSON Response:
                     continue
 
                 for (specialist_type, specialist, _, _), response in zip(
-                    items, responses
+                    items, responses, strict=False
                 ):
                     result = specialist.process_model_response(
                         response, model, task
@@ -722,12 +723,12 @@ JSON Response:
     async def _sequential_specialist_analysis(
         self,
         request: str,
-        analysis: Dict,
+        analysis: dict,
         path_memory: PathMemory,
         code: str | None,
         user_context: str | None,
         context: Any | None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         specialists_needed = analysis["specialists_needed"]
         shared_context = [] if context is None else [context]
         specialist_results = {}
@@ -807,7 +808,7 @@ JSON Response:
             return self._create_error_response(str(e), request)
 
     def _create_specialist_task(
-        self, request: str, code: str = None, user_context: str = None
+        self, request: str, code: str | None = None, user_context: str | None = None
     ) -> str:
         task_parts = [request]
         if code:
@@ -817,7 +818,7 @@ JSON Response:
         return "\n".join(task_parts)
 
     async def _synthesize_parallel_results(
-        self, original_request: str, results: List[Dict]
+        self, original_request: str, results: list[dict]
     ) -> str:
         if not results:
             return "No successful analysis results to synthesize."
@@ -850,7 +851,7 @@ JSON Response:
             return self._create_fallback_synthesis(results)
 
     async def _synthesize_sequential_results(
-        self, original_request: str, results: Dict[str, Dict]
+        self, original_request: str, results: dict[str, dict]
     ) -> str:
         prompt = (
             "**SEQUENTIAL MULTI-SPECIALIST ANALYSIS SYNTHESIS**\n\n"
@@ -878,7 +879,7 @@ JSON Response:
             logger.error(f"Sequential synthesis failed: {e}")
             return self._create_fallback_synthesis(list(results.values()))
 
-    def _create_fallback_synthesis(self, results: List[Dict]) -> str:
+    def _create_fallback_synthesis(self, results: list[dict]) -> str:
         synthesis = "## Multi-Specialist Analysis Summary\n\n"
         for res in results:
             specialist = res.get("specialist", "unknown")
@@ -900,7 +901,7 @@ JSON Response:
         )
         return synthesis
 
-    def _calculate_overall_confidence(self, results: List[Dict]) -> float:
+    def _calculate_overall_confidence(self, results: list[dict]) -> float:
         if not results:
             return 0.0
         confidences = [r.get("confidence", 0.5) for r in results]
@@ -909,7 +910,7 @@ JSON Response:
             base_confidence += min(0.1 * (len(results) - 1), 0.3)
         return min(base_confidence, 1.0)
 
-    def _create_simple_response(self, request: str) -> Dict[str, Any]:
+    def _create_simple_response(self, request: str) -> dict[str, Any]:
         return {
             "type": "simple",
             "complexity": "low",
@@ -924,7 +925,7 @@ JSON Response:
 
     def _create_error_response(
         self, error_msg: str, request: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return {
             "type": "error",
             "complexity": "unknown",
@@ -940,7 +941,7 @@ JSON Response:
 
     def _create_specialist_error(
         self, specialist_type: str, error_msg: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return {
             "specialist": specialist_type,
             "response": f"Analysis failed: {error_msg}",
@@ -950,7 +951,7 @@ JSON Response:
             "error": True,
         }
 
-    def get_specialist_status(self) -> Dict[str, Any]:
+    def get_specialist_status(self) -> dict[str, Any]:
         status = {
             name: spec.get_specialization_info()
             for name, spec in self.specialists.items()
@@ -964,9 +965,9 @@ JSON Response:
             "collaboration_patterns": dict(self.collaboration_patterns),
         }
 
-    async def health_check_specialists(self) -> Dict[str, Any]:
+    async def health_check_specialists(self) -> dict[str, Any]:
         health_results = {}
-        for name, specialist in self.specialists.items():
+        for name, _specialist in self.specialists.items():
             try:
                 result = await self.dispatch_specialist(
                     name, "Health check test"

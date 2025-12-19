@@ -13,10 +13,12 @@
 Starts a Uvicorn server hosting the default AdaptiveMind app so websocket
 integration tests can connect to ws://127.0.0.1:8000/ws/pytest_client.
 """
-import os
+import contextlib
+
 import uvicorn
-from adaptivemind_core.server import build_app
+
 from adaptivemind_core.config import AppConfig, MonitoringConfig, PersonaConfig
+from adaptivemind_core.server import build_app
 
 
 def make_app():
@@ -38,6 +40,7 @@ if __name__ == "__main__":
     # Add a lightweight testing websocket endpoint to support the websocket
     # integration tests which expect /ws/pytest_client to respond to ping.
     import json
+
     from fastapi import WebSocket
 
     app = make_app()
@@ -55,9 +58,7 @@ if __name__ == "__main__":
                 if msg.get("type") == "ping":
                     await websocket.send_text(json.dumps({"type": "pong"}))
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 await websocket.close()
-            except Exception:
-                pass
 
     uvicorn.run(app, host="127.0.0.1", port=8000, log_level="warning")

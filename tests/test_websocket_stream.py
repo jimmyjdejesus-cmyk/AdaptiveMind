@@ -8,10 +8,10 @@
 
 
 
-import os
+import contextlib
 import json
-import time
-import pytest
+import os
+
 import websocket
 
 BASE_URL = os.getenv("ADAPTIVEMIND_TEST_BASE_URL", "http://127.0.0.1:8000").replace("http", "ws")
@@ -25,7 +25,5 @@ def test_websocket_ping_pong():
         msg = ws.recv()
         assert msg is not None
     finally:
-        try:
+        with contextlib.suppress(Exception):
             ws.close()
-        except Exception:
-            pass

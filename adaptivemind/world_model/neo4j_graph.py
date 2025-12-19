@@ -9,7 +9,8 @@
 
 
 from __future__ import annotations
-from typing import Any, Dict
+
+from typing import Any
 
 
 class Neo4jGraph:
@@ -19,7 +20,7 @@ class Neo4jGraph:
         self.password = password
         self.nodes = {}
 
-    def add_node(self, id: str, label: str, properties: Dict[str, Any] | None = None) -> None:
+    def add_node(self, id: str, label: str, properties: dict[str, Any] | None = None) -> None:
         self.nodes[id] = {"label": label, "properties": properties or {}}
 
     def query(self, query: str):

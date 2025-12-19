@@ -5,6 +5,7 @@ Listens on 127.0.0.1:8000 and responds to JSON ping messages on
 /ws/pytest_client with a JSON pong message.
 """
 import asyncio
+import contextlib
 import json
 import logging
 import signal
@@ -52,7 +53,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    try:
+    with contextlib.suppress(KeyboardInterrupt):
         asyncio.run(main())
-    except KeyboardInterrupt:
-        pass

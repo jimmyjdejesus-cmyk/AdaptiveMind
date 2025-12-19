@@ -15,6 +15,10 @@ This module provides comprehensive contract-based testing for the AdaptiveMind A
 including schema validation, business rule validation, and property-based testing.
 """
 
-from .test_api_contracts import APIContractTester, ContractTestSuite, PropertyBasedTester
+from .test_api_contracts import (
+    APIContractTester,
+    ContractTestSuite,
+    PropertyBasedTester,
+)
 
 __all__ = ['APIContractTester', 'ContractTestSuite', 'PropertyBasedTester']

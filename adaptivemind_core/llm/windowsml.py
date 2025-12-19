@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import platform
 from pathlib import Path
-from typing import Optional
 
 try:
     import onnxruntime as ort
@@ -32,10 +31,10 @@ class WindowsMLBackend(LLMBackend):
 
     name = "windowsml"
 
-    def __init__(self, model_path: Optional[Path], device_preference: str = "cpu"):
+    def __init__(self, model_path: Path | None, device_preference: str = "cpu"):
         self._model_path = model_path
         self._device_preference = device_preference
-        self._session: Optional["ort.InferenceSession"] = None
+        self._session: ort.InferenceSession | None = None
 
     def is_available(self) -> bool:
         if ort is None:
@@ -50,7 +49,7 @@ class WindowsMLBackend(LLMBackend):
         except Exception:
             return False
 
-    def _ensure_session(self) -> "ort.InferenceSession":
+    def _ensure_session(self) -> ort.InferenceSession:
         if self._session is not None:
             return self._session
         providers = ["CPUExecutionProvider"]

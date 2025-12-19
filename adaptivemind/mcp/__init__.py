@@ -10,4 +10,4 @@
 
 """MCP module shim for testing."""
 
-from .client import MCPClient, ModelRouter, MCPServerManager
+from .client import MCPClient, MCPServerManager, ModelRouter

@@ -11,10 +11,11 @@
 # agents/specialists/research_specialist/agent.py
 from AdaptiveMind_Local.agents.base_agent.agent import BaseAgent
 
+
 class ResearchAgent(BaseAgent):
     def __init__(self):
         system_prompt = """You are a powerful research specialist focused on accurate historical analysis and logical reasoning.
-        
+
 When presented with tricky questions or riddles:
 1. First identify key historical facts and context
 2. Consider the logical implications of counterfactual scenarios

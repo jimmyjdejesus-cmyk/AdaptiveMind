@@ -10,6 +10,7 @@
 
 # main.py
 import tkinter as tk
+
 from AdaptiveMind_Local.ui.main_window.app import MainWindow
 from logger_config import log
 

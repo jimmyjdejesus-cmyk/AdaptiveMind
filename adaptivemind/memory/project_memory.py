@@ -33,72 +33,72 @@ query capabilities.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class ProjectMemory:
     """Simple in-memory project memory storage for testing.
-    
+
     Provides a lightweight implementation of project memory functionality
     using in-memory dictionaries. This is primarily intended for testing
     and development scenarios where external storage dependencies should
     be avoided.
-    
+
     The class uses a simple key-value store where each key maps to a list
     of entries, allowing multiple items to be stored under the same key.
-    
+
     Example:
         >>> memory = ProjectMemory()
         >>> memory.add_entry("tasks", {"id": 1, "name": "Test task"})
         >>> memory.query("tasks")
         [{"id": 1, "name": "Test task"}]
-        
+
     Attributes:
         _store: Internal storage mapping keys to lists of entries
     """
 
     def __init__(self) -> None:
         """Initialize the ProjectMemory with empty storage.
-        
+
         Sets up the internal storage dictionary for managing project memory
         entries. No external initialization is required.
         """
         # Simple key -> list of entries storage
-        self._store: Dict[str, List[Dict[str, Any]]] = {}
+        self._store: dict[str, list[dict[str, Any]]] = {}
 
-    def add_entry(self, key: str, entry: Dict[str, Any]) -> None:
+    def add_entry(self, key: str, entry: dict[str, Any]) -> None:
         """Add a new entry to the project memory under the specified key.
-        
+
         Creates a new list for the key if it doesn't exist, then appends
         the entry to the list. This allows multiple entries to be stored
         under the same logical key.
-        
+
         Args:
             key: The storage key for organizing entries
             entry: Dictionary containing the entry data to store
         """
         self._store.setdefault(key, []).append(entry)
 
-    def query(self, key: str) -> List[Dict[str, Any]]:
+    def query(self, key: str) -> list[dict[str, Any]]:
         """Retrieve all entries stored under the specified key.
-        
+
         Returns a copy of the list of entries for the given key. If no
         entries exist for the key, returns an empty list.
-        
+
         Args:
             key: The storage key to query
-            
+
         Returns:
             List of entries stored under the key, or empty list if none exist
         """
         return list(self._store.get(key, []))
 
-    def clear(self, key: Optional[str] = None) -> None:
+    def clear(self, key: str | None = None) -> None:
         """Clear entries from the project memory.
-        
+
         If key is provided, removes all entries for that specific key.
         If key is None, clears all stored data.
-        
+
         Args:
             key: Optional specific key to clear. If None, clears all data.
         """

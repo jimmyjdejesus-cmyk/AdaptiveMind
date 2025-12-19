@@ -17,9 +17,9 @@ Simple test for OpenRouter client without MCP dependencies
 import os
 import sys
 
+
 def test_openrouter_client():
     """Test OpenRouter client directly"""
-    print("🧪 Testing OpenRouter Client...")
 
     # Set a dummy API key for testing (will fail but test structure)
     test_key = os.getenv("OPENROUTER_API_KEY", "sk-or-v1-test-key")
@@ -37,27 +37,18 @@ def test_openrouter_client():
         spec.loader.exec_module(openrouter_module)
         OpenRouterClient = openrouter_module.OpenRouterClient
 
-        print("✅ OpenRouter client imported successfully")
 
         # Test client initialization
         client = OpenRouterClient(api_key=test_key)
-        print("✅ OpenRouter client initialized")
 
         # Test model selection
-        low_model = client.get_model_for_complexity("low")
-        medium_model = client.get_model_for_complexity("medium")
-        high_model = client.get_model_for_complexity("high")
+        client.get_model_for_complexity("low")
+        client.get_model_for_complexity("medium")
+        client.get_model_for_complexity("high")
 
-        print("✅ Model selection working:")
-        print(f"   Low complexity: {low_model}")
-        print(f"   Medium complexity: {medium_model}")
-        print(f"   High complexity: {high_model}")
 
         # Test cost status
-        cost_status = client.get_cost_status()
-        print("✅ Cost tracking working:")
-        print(".2f")
-        print(".2f")
+        client.get_cost_status()
 
         # Test complexity classification (mock router)
         class MockRouter:
@@ -75,38 +66,26 @@ def test_openrouter_client():
             "Design a system architecture"
         ]
 
-        print("✅ Complexity classification working:")
         for prompt in test_prompts:
-            complexity = router._classify_complexity(prompt, "general")
-            print(f"   '{prompt}' -> {complexity}")
+            router._classify_complexity(prompt, "general")
 
         return True
 
-    except ImportError as e:
-        print(f"❌ Import error: {e}")
-        print("   Required dependencies may be missing. Try: pip install requests")
+    except ImportError:
         return False
 
-    except Exception as e:
-        print(f"❌ Test failed: {e}")
+    except Exception:
         return False
 
 def main():
     """Run the simple test"""
-    print("🚀 AdaptiveMind AI OpenRouter Simple Test")
-    print("=" * 40)
 
     success = test_openrouter_client()
 
-    print("\n" + "=" * 40)
     if success:
-        print("🎉 OpenRouter client implementation is working!")
-        print("\nTo test with real API:")
-        print("1. Get key from https://openrouter.ai/keys")
-        print("2. Set: export OPENROUTER_API_KEY=your-key-here")
-        print("3. Run: python3 test_openrouter.py")
+        pass
     else:
-        print("❌ Implementation has issues. Check errors above.")
+        pass
 
 if __name__ == "__main__":
     main()

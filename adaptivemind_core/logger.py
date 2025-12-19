@@ -30,23 +30,23 @@ import logging
 import logging.config
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 # Global flag to ensure logging is only configured once
 _LOGGER_CONFIGURED = False
 
 
-def configure_logging(log_level: str | int = "INFO", log_path: Optional[str] = None) -> None:
+def configure_logging(log_level: str | int = "INFO", log_path: str | None = None) -> None:
     """Configure central structured logging for the AdaptiveMind runtime.
-    
+
     Sets up JSON-formatted logging with both console and optional file handlers.
     Uses environment variables ADAPTIVEMIND_LOG_LEVEL and ADAPTIVEMIND_LOG_PATH for configuration.
     Implements singleton pattern to prevent multiple configurations.
-    
+
     Args:
         log_level: Logging level (e.g., "INFO", "DEBUG", 20). Defaults to "INFO"
         log_path: Optional path to log file. If provided, enables file logging
-        
+
     Note:
         This function is idempotent - calling it multiple times has no effect
         after the initial configuration.
@@ -61,7 +61,7 @@ def configure_logging(log_level: str | int = "INFO", log_path: Optional[str] = N
         level = level.upper()
 
     # Configure handlers - always include console, optionally add file
-    handlers: Dict[str, Dict[str, Any]] = {
+    handlers: dict[str, dict[str, Any]] = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "json",
@@ -102,11 +102,11 @@ def configure_logging(log_level: str | int = "INFO", log_path: Optional[str] = N
 
 class JsonFormatter(logging.Formatter):
     """JSON formatter for structured logging with trace-friendly fields.
-    
+
     Formats log records as JSON objects with standard fields (level, logger, message, time)
     plus any extra fields provided via the 'extra' parameter. Exception information
     is included when present. Designed for easy parsing by log aggregation systems.
-    
+
     Key features:
     - Consistent timestamp format (ISO-like)
     - Automatic inclusion of extra fields
@@ -114,12 +114,12 @@ class JsonFormatter(logging.Formatter):
     - Unicode-safe JSON encoding
     """
 
-    def format(self, record: logging.LogRecord) -> str:  # noqa: D401 - inherits docs
+    def format(self, record: logging.LogRecord) -> str:
         """Format log record as JSON string.
-        
+
         Args:
             record: LogRecord to format
-            
+
         Returns:
             JSON string representation of the log record
         """
@@ -129,34 +129,34 @@ class JsonFormatter(logging.Formatter):
             "message": record.getMessage(),
             "time": self.formatTime(record, datefmt="%Y-%m-%dT%H:%M:%S"),
         }
-        
+
         # Include exception information if present
         if record.exc_info:
             data["exc_info"] = self.formatException(record.exc_info)
-        
+
         # Extract and include extra fields that aren't part of standard LogRecord
         # This allows structured logging with custom context data
         standard_attrs = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__.keys())
         for key, value in record.__dict__.items():
             if key not in standard_attrs and key not in data:
                 data[key] = value
-                
+
         return json.dumps(data, ensure_ascii=False)
 
 
 def get_logger(name: str = "adaptivemind") -> logging.Logger:
     """Get a module-level logger configured for the AdaptiveMind runtime.
-    
+
     Automatically configures logging if not already done, using environment
     variables for configuration. Returns a logger instance configured with
     JSON formatting and appropriate handlers.
-    
+
     Args:
         name: Logger name, typically __name__ of the calling module
-        
+
     Returns:
         Configured logger instance with JSON formatting
-        
+
     Environment Variables:
         ADAPTIVEMIND_LOG_LEVEL: Logging level (default: "INFO")
         ADAPTIVEMIND_LOG_PATH: Optional path to log file
@@ -166,4 +166,4 @@ def get_logger(name: str = "adaptivemind") -> logging.Logger:
     return logging.getLogger(name)
 
 
-__all__ = ["configure_logging", "get_logger", "JsonFormatter"]
+__all__ = ["JsonFormatter", "configure_logging", "get_logger"]

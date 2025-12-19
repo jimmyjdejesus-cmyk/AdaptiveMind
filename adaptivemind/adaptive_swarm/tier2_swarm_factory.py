@@ -8,8 +8,7 @@
 
 
 
-"""
-Tier 2: Polymorphic Swarm Factory
+"""Tier 2: Polymorphic Swarm Factory.
 
 This module implements the second tier of the adaptive swarm system.
 It dynamically instantiates and manages agent architectures based on
@@ -24,16 +23,17 @@ Features:
 - Performance monitoring and metrics collection
 """
 
-import asyncio
-import json
 import logging
 import time
-from typing import Dict, Any, List, Optional, Union, Literal
-from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from typing import Any, Literal
 
-from adaptivemind.orchestration.orchestrator import MultiAgentOrchestrator
-from agent_scaling_laws.architectures import SingleAgent, CentralizedMultiAgent, DecentralizedMultiAgent
+from agent_scaling_laws.architectures import (
+    CentralizedMultiAgent,
+    DecentralizedMultiAgent,
+    SingleAgent,
+)
 from agent_scaling_laws.metrics import CoordinationMetrics, compute_all_metrics
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ ArchitectureType = Literal["single", "independent", "centralized", "decentralize
 @dataclass
 class SwarmExecutionResult:
     """Result of executing a task with the swarm architecture."""
-    
+
     success: bool
     output: Any
     tokens_used: int
@@ -54,24 +54,23 @@ class SwarmExecutionResult:
     overhead: float
     architecture: ArchitectureType
     execution_time: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class LocalSwarmFactory:
-    """
-    Polymorphic Swarm Factory for dynamic architecture instantiation.
-    
+    """Polymorphic Swarm Factory for dynamic architecture instantiation.
+
     Creates and manages different agent architectures based on scientific
     scaling laws optimization, maximizing performance while minimizing
     error amplification.
     """
-    
+
     def __init__(self, mcp_client=None, monitor=None, knowledge_graph=None):
         """Initialize the swarm factory."""
         self.mcp_client = mcp_client
         self.monitor = monitor
         self.knowledge_graph = knowledge_graph
-        
+
         # Base capability configuration for local agents
         self.base_capabilities = {
             "tokens_per_task": 1000,
@@ -80,7 +79,7 @@ class LocalSwarmFactory:
             "baseline_accuracy": 0.6,
             "model_capability": 0.6
         }
-        
+
         # Architecture performance targets from paper
         self.performance_targets = {
             "single": {
@@ -94,7 +93,7 @@ class LocalSwarmFactory:
                 "best_for_parallelizable": True
             },
             "decentralized": {
-                "target_efficiency": 1.092,  # 9.2% improvement  
+                "target_efficiency": 1.092,  # 9.2% improvement
                 "max_error_amplification": 1.5,  # More flexible but higher error
                 "best_for_dynamic": True
             },
@@ -104,32 +103,31 @@ class LocalSwarmFactory:
                 "best_for_simple_parallel": True
             }
         }
-        
+
         logger.info("LocalSwarmFactory initialized with scientific optimization")
-    
+
     def create_swarm(
-        self, 
-        architecture_type: ArchitectureType, 
+        self,
+        architecture_type: ArchitectureType,
         query: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
         max_agents: int = 5
     ) -> SwarmExecutionResult:
-        """
-        Create and execute task with specified architecture.
-        
+        """Create and execute task with specified architecture.
+
         Args:
             architecture_type: Recommended architecture from Tier 1
             query: Task to execute
             context: Optional context information
             max_agents: Maximum number of agents to spawn
-            
+
         Returns:
             SwarmExecutionResult with performance metrics
         """
         start_time = time.time()
-        
+
         logger.info(f"⚡ Spawning Tier 2 Architecture: {architecture_type.upper()}")
-        
+
         if architecture_type == "single":
             return self._execute_single_agent(query, context, start_time)
         elif architecture_type == "centralized":
@@ -142,16 +140,15 @@ class LocalSwarmFactory:
             return self._execute_hybrid_swarm(query, context, start_time, max_agents)
         else:
             raise ValueError(f"Unknown architecture type: {architecture_type}")
-    
+
     def _execute_single_agent(
-        self, 
-        query: str, 
-        context: Optional[Dict[str, Any]], 
+        self,
+        query: str,
+        context: dict[str, Any] | None,
         start_time: float
     ) -> SwarmExecutionResult:
-        """
-        Execute task with single agent (best for sequential tasks).
-        
+        """Execute task with single agent (best for sequential tasks).
+
         From paper: Sequential tasks degrade 39-70% with multi-agent.
         Single agent avoids this degradation.
         """
@@ -161,15 +158,15 @@ class LocalSwarmFactory:
                 agent_id="llama_solo",
                 capabilities=self.base_capabilities.copy()
             )
-            
+
             # Wrap query as callable task
             task_func = self._create_task_function(query, context)
-            
+
             # Execute task
             result = agent.execute_task(task_func, context)
-            
+
             execution_time = time.time() - start_time
-            
+
             # Calculate scientific metrics
             metrics = self._calculate_metrics(
                 task_progress=1.0 if result.success else 0.0,
@@ -180,7 +177,7 @@ class LocalSwarmFactory:
                 unique_actions=1,
                 total_actions=1
             )
-            
+
             return SwarmExecutionResult(
                 success=result.success,
                 output=result.output,
@@ -196,13 +193,13 @@ class LocalSwarmFactory:
                     "task_type": "sequential_optimized"
                 }
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             logger.error(f"Single agent execution failed: {e}")
             return SwarmExecutionResult(
                 success=False,
-                output=f"Execution failed: {str(e)}",
+                output=f"Execution failed: {e!s}",
                 tokens_used=0,
                 coordination_tokens=0,
                 error_amplification=1.0,
@@ -212,54 +209,53 @@ class LocalSwarmFactory:
                 execution_time=execution_time,
                 metadata={"error": str(e)}
             )
-    
+
     def _execute_centralized_swarm(
-        self, 
-        query: str, 
-        context: Optional[Dict[str, Any]], 
+        self,
+        query: str,
+        context: dict[str, Any] | None,
         start_time: float,
         max_agents: int
     ) -> SwarmExecutionResult:
-        """
-        Execute task with centralized multi-agent swarm (best for parallel tasks).
-        
+        """Execute task with centralized multi-agent swarm (best for parallel tasks).
+
         From paper: Centralized coordination provides 80.9% improvement for
         parallelizable tasks with only 4.4x error amplification.
         """
         try:
             # Determine optimal number of agents (3-5 for local deployment)
             num_agents = min(max_agents, 3)
-            
+
             # Create centralized swarm
             swarm = CentralizedMultiAgent(
                 agent_id="llama_hive",
                 num_agents=num_agents,
                 capabilities=self.base_capabilities.copy()
             )
-            
+
             # Decompose query into subtasks for parallel execution
             subtasks = self._decompose_query(query, num_agents)
-            
+
             # Execute parallel tasks
             task_funcs = [self._create_task_function(task, context) for task in subtasks]
             results = []
-            
-            for i, task_func in enumerate(task_funcs):
+
+            for _i, task_func in enumerate(task_funcs):
                 result = swarm.execute_task(task_func, context)
                 results.append(result)
-            
+
             execution_time = time.time() - start_time
-            
+
             # Calculate coordination metrics
             successful_results = [r for r in results if r.success]
             task_progress = len(successful_results) / len(results)
-            
+
             total_tokens = sum(r.tokens_used for r in results)
             coordination_overhead = sum(
-                self.base_capabilities["coordination_tokens_per_task"] 
+                self.base_capabilities["coordination_tokens_per_task"]
                 for _ in results
             )
-            
+
             # Scientific metrics calculation
             metrics = self._calculate_metrics(
                 task_progress=task_progress,
@@ -270,10 +266,10 @@ class LocalSwarmFactory:
                 unique_actions=len(successful_results),
                 total_actions=len(results)
             )
-            
+
             # Synthesize results
             synthesized_output = self._synthesize_results(successful_results, query)
-            
+
             return SwarmExecutionResult(
                 success=len(successful_results) > 0,
                 output=synthesized_output,
@@ -291,13 +287,13 @@ class LocalSwarmFactory:
                     "task_type": "parallel_optimized"
                 }
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             logger.error(f"Centralized swarm execution failed: {e}")
             return SwarmExecutionResult(
                 success=False,
-                output=f"Execution failed: {str(e)}",
+                output=f"Execution failed: {e!s}",
                 tokens_used=0,
                 coordination_tokens=0,
                 error_amplification=4.4,  # Paper value for centralized
@@ -307,17 +303,16 @@ class LocalSwarmFactory:
                 execution_time=execution_time,
                 metadata={"error": str(e)}
             )
-    
+
     def _execute_decentralized_swarm(
-        self, 
-        query: str, 
-        context: Optional[Dict[str, Any]], 
+        self,
+        query: str,
+        context: dict[str, Any] | None,
         start_time: float,
         max_agents: int
     ) -> SwarmExecutionResult:
-        """
-        Execute task with decentralized multi-agent swarm (best for dynamic tasks).
-        
+        """Execute task with decentralized multi-agent swarm (best for dynamic tasks).
+
         From paper: Decentralized coordination provides 9.2% improvement
         for dynamic tasks with moderate error amplification.
         """
@@ -328,15 +323,15 @@ class LocalSwarmFactory:
                 num_agents=max_agents,
                 capabilities=self.base_capabilities.copy()
             )
-            
+
             # Create task function
             task_func = self._create_task_function(query, context)
-            
+
             # Execute with decentralized coordination
             result = swarm.execute_task(task_func, context)
-            
+
             execution_time = time.time() - start_time
-            
+
             # Calculate metrics for decentralized execution
             metrics = self._calculate_metrics(
                 task_progress=1.0 if result.success else 0.0,
@@ -347,7 +342,7 @@ class LocalSwarmFactory:
                 unique_actions=1,
                 total_actions=1
             )
-            
+
             return SwarmExecutionResult(
                 success=result.success,
                 output=result.output,
@@ -363,13 +358,13 @@ class LocalSwarmFactory:
                     "task_type": "dynamic_optimized"
                 }
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             logger.error(f"Decentralized swarm execution failed: {e}")
             return SwarmExecutionResult(
                 success=False,
-                output=f"Execution failed: {str(e)}",
+                output=f"Execution failed: {e!s}",
                 tokens_used=0,
                 coordination_tokens=0,
                 error_amplification=2.0,  # Conservative estimate
@@ -379,24 +374,23 @@ class LocalSwarmFactory:
                 execution_time=execution_time,
                 metadata={"error": str(e)}
             )
-    
+
     def _execute_independent_swarm(
-        self, 
-        query: str, 
-        context: Optional[Dict[str, Any]], 
+        self,
+        query: str,
+        context: dict[str, Any] | None,
         start_time: float,
         max_agents: int
     ) -> SwarmExecutionResult:
-        """
-        Execute task with independent agents (high risk of error amplification).
-        
+        """Execute task with independent agents (high risk of error amplification).
+
         WARNING: From paper, independent agents have 17.2x error amplification.
         Only use for simple parallelizable tasks with low complexity.
         """
         try:
             # Only use for simple tasks to minimize risk
             num_agents = min(max_agents, 2)
-            
+
             # Create independent agents
             agents = [
                 SingleAgent(
@@ -405,17 +399,17 @@ class LocalSwarmFactory:
                 )
                 for i in range(num_agents)
             ]
-            
+
             # Execute independently
             task_func = self._create_task_function(query, context)
             results = []
-            
+
             with ThreadPoolExecutor(max_workers=num_agents) as executor:
                 future_to_agent = {
-                    executor.submit(agent.execute_task, task_func, context): agent 
+                    executor.submit(agent.execute_task, task_func, context): agent
                     for agent in agents
                 }
-                
+
                 for future in as_completed(future_to_agent):
                     try:
                         result = future.result(timeout=30)
@@ -425,21 +419,20 @@ class LocalSwarmFactory:
                         results.append(
                             type('Result', (), {
                                 'success': False,
-                                'output': f"Agent failed: {str(e)}",
+                                'output': f"Agent failed: {e!s}",
                                 'tokens_used': 0,
                                 'metadata': {'error': str(e)}
                             })()
                         )
-            
+
             execution_time = time.time() - start_time
-            
+
             # High error amplification risk for independent agents
             successful_results = [r for r in results if r.success]
             task_progress = len(successful_results) / len(results)
-            
+
             total_tokens = sum(r.tokens_used for r in results)
-            coordination_overhead = 0  # No coordination
-            
+
             # Scientific metrics with high error amplification
             metrics = self._calculate_metrics(
                 task_progress=task_progress,
@@ -450,13 +443,13 @@ class LocalSwarmFactory:
                 unique_actions=len(successful_results),
                 total_actions=len(results)
             )
-            
+
             # Apply paper's 17.2x amplification warning
             if metrics.error_amplification > 10.0:
                 logger.warning(f"High error amplification detected: {metrics.error_amplification:.1f}x")
-            
+
             synthesized_output = self._synthesize_results(successful_results, query)
-            
+
             return SwarmExecutionResult(
                 success=len(successful_results) > 0,
                 output=synthesized_output,
@@ -474,13 +467,13 @@ class LocalSwarmFactory:
                     "task_type": "independent_parallel_high_risk"
                 }
             )
-            
+
         except Exception as e:
             execution_time = time.time() - start_time
             logger.error(f"Independent swarm execution failed: {e}")
             return SwarmExecutionResult(
                 success=False,
-                output=f"Execution failed: {str(e)}",
+                output=f"Execution failed: {e!s}",
                 tokens_used=0,
                 coordination_tokens=0,
                 error_amplification=17.2,  # Paper value for independent
@@ -490,29 +483,28 @@ class LocalSwarmFactory:
                 execution_time=execution_time,
                 metadata={"error": str(e)}
             )
-    
+
     def _execute_hybrid_swarm(
-        self, 
-        query: str, 
-        context: Optional[Dict[str, Any]], 
+        self,
+        query: str,
+        context: dict[str, Any] | None,
         start_time: float,
         max_agents: int
     ) -> SwarmExecutionResult:
-        """
-        Execute task with hybrid architecture (complex tasks).
-        
+        """Execute task with hybrid architecture (complex tasks).
+
         Uses combination of single and multi-agent based on task complexity.
         """
         try:
             # For hybrid, we use a combination approach
             # Start with single agent, escalate if needed
             single_result = self._execute_single_agent(query, context, start_time)
-            
+
             # If single agent fails or is inefficient, try centralized
             if not single_result.success or single_result.efficiency < 0.8:
                 logger.info("Single agent insufficient, trying centralized swarm")
                 centralized_result = self._execute_centralized_swarm(query, context, start_time, max_agents)
-                
+
                 # Return the better result
                 if centralized_result.success and centralized_result.efficiency > single_result.efficiency:
                     return centralized_result
@@ -520,13 +512,13 @@ class LocalSwarmFactory:
                     return single_result
             else:
                 return single_result
-                
+
         except Exception as e:
             execution_time = time.time() - start_time
             logger.error(f"Hybrid swarm execution failed: {e}")
             return SwarmExecutionResult(
                 success=False,
-                output=f"Execution failed: {str(e)}",
+                output=f"Execution failed: {e!s}",
                 tokens_used=0,
                 coordination_tokens=0,
                 error_amplification=1.5,  # Conservative estimate
@@ -536,16 +528,16 @@ class LocalSwarmFactory:
                 execution_time=execution_time,
                 metadata={"error": str(e)}
             )
-    
-    def _create_task_function(self, query: str, context: Optional[Dict[str, Any]]):
+
+    def _create_task_function(self, query: str, context: dict[str, Any] | None):
         """Create a task function from query and context."""
-        def task_func(task_context: Dict[str, Any]):
+        def task_func(task_context: dict[str, Any]):
             # Simulate LLM task execution
             # In real implementation, this would call Ollama or other LLM
             return f"Processed: {query}"
         return task_func
-    
-    def _decompose_query(self, query: str, num_agents: int) -> List[str]:
+
+    def _decompose_query(self, query: str, num_agents: int) -> list[str]:
         """Decompose query into subtasks for parallel execution."""
         # Simple decomposition - in reality would be more sophisticated
         if "analyze" in query.lower() and "file" in query.lower():
@@ -554,22 +546,22 @@ class LocalSwarmFactory:
             return [f"Research aspect {i+1} of: {query}" for i in range(num_agents)]
         else:
             return [f"Process part {i+1} of: {query}" for i in range(num_agents)]
-    
-    def _synthesize_results(self, results: List, original_query: str) -> str:
+
+    def _synthesize_results(self, results: list, original_query: str) -> str:
         """Synthesize multiple results into coherent output."""
         if not results:
             return "No results to synthesize"
-        
+
         if len(results) == 1:
             return results[0].output
-        
+
         # Simple synthesis - combine results
         synthesis = f"## Synthesis of Results for: {original_query}\n\n"
         for i, result in enumerate(results, 1):
             synthesis += f"**Result {i}:** {result.output}\n\n"
-        
+
         return synthesis
-    
+
     def _calculate_metrics(
         self,
         task_progress: float,
@@ -592,14 +584,13 @@ class LocalSwarmFactory:
             total_actions=total_actions,
             baseline_tokens=100
         )
-    
+
     def get_performance_explanation(self, result: SwarmExecutionResult) -> str:
-        """
-        Generate human-readable performance explanation.
-        
+        """Generate human-readable performance explanation.
+
         Args:
             result: Swarm execution result
-            
+
         Returns:
             Performance analysis explanation
         """
@@ -620,7 +611,7 @@ class LocalSwarmFactory:
 
 **Risk Assessment:**
 """
-        
+
         # Risk assessment based on paper's findings
         if result.architecture == "independent" and result.error_amplification > 10:
             explanation += "- ⚠️ **HIGH RISK**: Independent agents detected high error amplification (17.2x)\n"
@@ -628,29 +619,25 @@ class LocalSwarmFactory:
             explanation += "- ✅ **LOW RISK**: Centralized coordination contains errors well (4.4x)\n"
         elif result.architecture == "single":
             explanation += "- ✅ **NO RISK**: Single agent avoids coordination errors\n"
-        
+
         explanation += f"""
 **Performance vs. Targets:**
 - Target Efficiency: {self.performance_targets[result.architecture]['target_efficiency']:.3f}
 - Achieved Efficiency: {result.efficiency:.3f}
 - Efficiency Gain: {((result.efficiency - 1.0) * 100):+.1f}%
 """
-        
+
         return explanation
 
 
 # Example usage
 if __name__ == "__main__":
     factory = LocalSwarmFactory()
-    
+
     # Test different architectures
     query = "Analyze these 5 python files and find bugs"
     architectures = ["single", "centralized", "decentralized", "independent"]
-    
+
     for arch in architectures:
-        print(f"\n{'='*50}")
-        print(f"Testing Architecture: {arch.upper()}")
-        print('='*50)
-        
+
         result = factory.create_swarm(arch, query)
-        print(factory.get_performance_explanation(result))

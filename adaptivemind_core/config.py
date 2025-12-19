@@ -30,17 +30,17 @@ import json
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class OllamaConfig(BaseModel):
     """Configuration for local Ollama model hosting.
-    
+
     Manages settings for connecting to and using local Ollama instances
     for running models locally without external API dependencies.
-    
+
     Attributes:
         host: Base URL for the local Ollama service
         model: Default Ollama model identifier to use
@@ -55,10 +55,10 @@ class OllamaConfig(BaseModel):
 
 class OpenRouterConfig(BaseModel):
     """Configuration for OpenRouter cloud-based model access.
-    
+
     Manages settings for connecting to OpenRouter which provides access
     to various commercial and open-source models via a unified API.
-    
+
     Attributes:
         api_key: OpenRouter API key for authentication
         model: Default OpenRouter model to use
@@ -73,17 +73,17 @@ class OpenRouterConfig(BaseModel):
 
 class WindowsMLConfig(BaseModel):
     """Configuration for WindowsML/ONNX Runtime acceleration.
-    
+
     Manages settings for local ONNX model inference using WindowsML
     or ONNX Runtime for accelerated inference on supported hardware.
-    
+
     Attributes:
         enabled: Whether to enable WindowsML fallback acceleration
         model_path: Path to ONNX model for local inference
         device_preference: Preferred execution provider (cpu, dml)
     """
     enabled: bool = Field(False, description="Enable WindowsML fallback acceleration")
-    model_path: Optional[Path] = Field(
+    model_path: Path | None = Field(
         default=None, description="Path to an ONNX model consumable by WindowsML/ONNX Runtime"
     )
     device_preference: str = Field(
@@ -93,7 +93,7 @@ class WindowsMLConfig(BaseModel):
 
     @field_validator("model_path", mode="before")
     @classmethod
-    def _expand_model_path(cls, value: Any) -> Optional[Path]:
+    def _expand_model_path(cls, value: Any) -> Path | None:
         """Expand and resolve model path from environment variables and ~."""
         if value in (None, ""):
             return None
@@ -102,30 +102,30 @@ class WindowsMLConfig(BaseModel):
 
 class SecurityConfig(BaseModel):
     """Configuration for security and access control.
-    
+
     Manages security-related settings including API key authentication
     and audit logging configuration.
-    
+
     Attributes:
         api_keys: List of static API keys allowed for API access
         audit_log_path: Optional path to persist security audit logs
     """
-    api_keys: List[str] = Field(default_factory=list, description="Static API keys allowed for API access")
-    audit_log_path: Optional[Path] = Field(default=None, description="Optional path to persist security audit logs")
+    api_keys: list[str] = Field(default_factory=list, description="Static API keys allowed for API access")
+    audit_log_path: Path | None = Field(default=None, description="Optional path to persist security audit logs")
 
     @field_validator("api_keys", mode="before")
     @classmethod
-    def _normalise_keys(cls, value: Any) -> List[str]:
+    def _normalise_keys(cls, value: Any) -> list[str]:
         """Normalize and validate API keys from various input formats.
-        
+
         Accepts API keys as:
         - List of strings
         - Comma-separated string
         - None/empty (returns empty list)
-        
+
         Returns:
             List of non-empty, trimmed API key strings
-            
+
         Raises:
             TypeError: If input is not a list or string
             ValueError: If any API key is empty after trimming
@@ -133,10 +133,10 @@ class SecurityConfig(BaseModel):
         if value in (None, ""):
             return []
         if isinstance(value, str):
-            value = [v for v in value.split(",")]
+            value = list(value.split(","))
         if not isinstance(value, list):
             raise TypeError("api_keys must be a list or comma separated string")
-        cleaned: List[str] = []
+        cleaned: list[str] = []
         for item in value:
             candidate = str(item).strip()
             if not candidate:
@@ -147,10 +147,10 @@ class SecurityConfig(BaseModel):
 
 class PersonaConfig(BaseModel):
     """Configuration for AI persona definitions.
-    
+
     Defines how different AI personas should behave, including their
     system prompts, context windows, and routing preferences.
-    
+
     Attributes:
         name: Unique identifier for the persona
         description: Human-readable description of persona behavior
@@ -167,16 +167,16 @@ class PersonaConfig(BaseModel):
 
 class ContextPipelineConfig(BaseModel):
     """Configuration for context processing pipeline.
-    
+
     Manages settings for document loading, semantic chunking, and
     context token management for retrieval-augmented generation.
-    
+
     Attributes:
         extra_documents_dir: Directory containing additional documents for context
         enable_semantic_chunking: Whether to split documents into semantic chunks
         max_combined_context_tokens: Maximum total tokens for combined context
     """
-    extra_documents_dir: Optional[Path] = Field(
+    extra_documents_dir: Path | None = Field(
         default=None, description="Optional directory of additional documents to inject into context"
     )
     enable_semantic_chunking: bool = Field(True, description="Split documents into semantic chunks")
@@ -184,7 +184,7 @@ class ContextPipelineConfig(BaseModel):
 
     @field_validator("extra_documents_dir", mode="before")
     @classmethod
-    def _expand_dir(cls, value: Any) -> Optional[Path]:
+    def _expand_dir(cls, value: Any) -> Path | None:
         """Expand and resolve document directory path."""
         if value in (None, ""):
             return None
@@ -193,10 +193,10 @@ class ContextPipelineConfig(BaseModel):
 
 class MonitoringConfig(BaseModel):
     """Configuration for system monitoring and metrics.
-    
+
     Manages settings for performance monitoring, metrics collection,
     and automated harvesting of system statistics.
-    
+
     Attributes:
         enable_metrics_harvest: Whether to enable metrics and trace harvesting
         harvest_interval_s: Interval in seconds between metric harvests
@@ -205,12 +205,12 @@ class MonitoringConfig(BaseModel):
     harvest_interval_s: float = Field(30.0, ge=5.0)
 
 
-def _default_personas() -> Dict[str, PersonaConfig]:
+def _default_personas() -> dict[str, PersonaConfig]:
     """Create default persona configurations.
-    
+
     Returns a dictionary containing the default 'generalist' persona
     configuration that provides balanced assistant behavior.
-    
+
     Returns:
         Dict mapping persona name to PersonaConfig object
     """
@@ -227,10 +227,10 @@ def _default_personas() -> Dict[str, PersonaConfig]:
 
 class AppConfig(BaseModel):
     """Main application configuration container.
-    
+
     Aggregates all configuration sections and provides validation
     for the complete AdaptiveMind application setup.
-    
+
     Attributes:
         ollama: Ollama backend configuration
         openrouter: OpenRouter backend configuration
@@ -246,24 +246,24 @@ class AppConfig(BaseModel):
     openrouter: OpenRouterConfig = Field(default_factory=OpenRouterConfig)
     windowsml: WindowsMLConfig = Field(default_factory=WindowsMLConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
-    personas: Dict[str, PersonaConfig] = Field(default_factory=_default_personas)
+    personas: dict[str, PersonaConfig] = Field(default_factory=_default_personas)
     context_pipeline: ContextPipelineConfig = Field(default_factory=ContextPipelineConfig)
     monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig)
-    allowed_personas: List[str] = Field(default_factory=list)
+    allowed_personas: list[str] = Field(default_factory=list)
     enable_research_features: bool = Field(True, description="Enable deep research workflows")
 
     @field_validator("allowed_personas", mode="after")
     @classmethod
-    def _default_allowed_personas(cls, value: List[str] | None, info: ValidationInfo) -> List[str]:
+    def _default_allowed_personas(cls, value: list[str] | None, info: ValidationInfo) -> list[str]:
         """Set default allowed personas from configured personas if not explicitly set.
-        
+
         If allowed_personas is not provided, automatically include all
         configured personas to maintain backward compatibility.
-        
+
         Args:
             value: Provided allowed_personas list (may be None)
             info: Validation context containing other field values
-            
+
         Returns:
             List of allowed persona names
         """
@@ -275,23 +275,23 @@ class AppConfig(BaseModel):
         return []
 
 
-def _config_env_paths() -> List[Path]:
+def _config_env_paths() -> list[Path]:
     """Discover configuration file paths from environment and standard locations.
-    
+
     Searches for configuration files in the following order:
     1. ADAPTIVEMIND_CONFIG environment variable (file path)
     2. ADAPTIVEMIND_HOME environment variable (directory with config.json)
     3. ~/.adaptivemind directory (config.json)
-    
+
     Returns:
         List of discovered configuration file paths
     """
-    candidates: List[str] = [
+    candidates: list[str] = [
         os.getenv("ADAPTIVEMIND_CONFIG"),
         os.getenv("ADAPTIVEMIND_HOME"),
         os.path.join(os.path.expanduser("~"), ".jarvis"),
     ]
-    paths: List[Path] = []
+    paths: list[Path] = []
     for candidate in candidates:
         if not candidate:
             continue
@@ -305,15 +305,15 @@ def _config_env_paths() -> List[Path]:
     return paths
 
 
-def _load_json(path: Path) -> Dict[str, Any]:
+def _load_json(path: Path) -> dict[str, Any]:
     """Load and parse JSON configuration file.
-    
+
     Args:
         path: Path to JSON configuration file
-        
+
     Returns:
         Parsed configuration dictionary
-        
+
     Raises:
         FileNotFoundError: If file doesn't exist
         json.JSONDecodeError: If file contains invalid JSON
@@ -322,16 +322,16 @@ def _load_json(path: Path) -> Dict[str, Any]:
         return json.load(handle)
 
 
-def _merge_dict(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
+def _merge_dict(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
     """Recursively merge overlay dictionary into base dictionary.
-    
+
     Performs deep merge where nested dictionaries are merged rather
     than replaced, allowing partial configuration overrides.
-    
+
     Args:
         base: Base configuration dictionary to merge into
         overlay: Override configuration dictionary
-        
+
     Returns:
         Merged configuration dictionary
     """
@@ -344,33 +344,33 @@ def _merge_dict(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]
 
 
 @lru_cache(maxsize=1)
-def load_config(explicit_path: Optional[str] = None) -> AppConfig:
+def load_config(explicit_path: str | None = None) -> AppConfig:
     """Load complete application configuration from multiple sources.
-    
+
     Configuration loading priority (highest to lowest):
     1. Explicit file path (if provided)
     2. Environment variable files (ADAPTIVEMIND_CONFIG, ADAPTIVEMIND_HOME, ~/.adaptivemind)
     3. Environment variable overrides
     4. Default values from AppConfig model
-    
+
     Environment variable overrides supported:
     - OLLAMA_HOST: Override Ollama service URL
     - OLLAMA_MODEL: Override default Ollama model
     - OPENROUTER_API_KEY: Override OpenRouter API key
     - ADAPTIVEMIND_API_KEYS: Override security API keys (comma-separated)
     - ADAPTIVEMIND_DEFAULT_PERSONA: Set default allowed persona
-    
+
     Args:
         explicit_path: Optional explicit path to configuration file
-        
+
     Returns:
         Validated AppConfig instance
-        
+
     Raises:
         FileNotFoundError: If explicit config file doesn't exist
         ValidationError: If configuration validation fails
     """
-    base_data: Dict[str, Any] = {}
+    base_data: dict[str, Any] = {}
     if explicit_path:
         path = Path(explicit_path).expanduser().resolve()
         if not path.exists():
@@ -383,7 +383,7 @@ def load_config(explicit_path: Optional[str] = None) -> AppConfig:
                 base_data = _merge_dict(base_data, _load_json(candidate))
 
     # Apply environment variable overrides
-    env_overrides: Dict[str, Any] = {}
+    env_overrides: dict[str, Any] = {}
     if host := os.getenv("OLLAMA_HOST"):
         env_overrides.setdefault("ollama", {})["host"] = host
     if model := os.getenv("OLLAMA_MODEL"):
@@ -404,12 +404,12 @@ def load_config(explicit_path: Optional[str] = None) -> AppConfig:
 
 __all__ = [
     "AppConfig",
-    "OllamaConfig",
-    "OpenRouterConfig",
-    "WindowsMLConfig",
-    "SecurityConfig",
-    "PersonaConfig",
     "ContextPipelineConfig",
     "MonitoringConfig",
+    "OllamaConfig",
+    "OpenRouterConfig",
+    "PersonaConfig",
+    "SecurityConfig",
+    "WindowsMLConfig",
     "load_config",
 ]

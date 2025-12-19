@@ -9,12 +9,14 @@
 
 
 # tools/autotune.py
-import config
 from evaluation import run_evaluation
 from logger_config import log
 
+import config
+
+
 def find_optimal_threshold():
-    threshold_range = [i * 0.5 for i in range(2, 31)] 
+    threshold_range = [i * 0.5 for i in range(2, 31)]
 
     best_result = {
         "threshold": None,

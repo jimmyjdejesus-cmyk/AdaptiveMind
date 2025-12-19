@@ -11,6 +11,7 @@
 import logging
 import sys
 
+
 def setup_logger():
     logger = logging.getLogger('J.A.R.V.I.S.')
     logger.setLevel(logging.INFO)

@@ -14,8 +14,7 @@
 # Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
 # See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
-"""
-Audit data models for AdaptiveMind AI audit system.
+"""Audit data models for AdaptiveMind AI audit system.
 
 This module defines the core data structures used throughout the audit system
 including findings, reports, and scan configurations.
@@ -23,7 +22,8 @@ including findings, reports, and scan configurations.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -54,9 +54,8 @@ class ScanDepth(str, Enum):
 
 
 class AuditFinding(BaseModel):
-    """
-    Represents a single audit finding or vulnerability.
-    
+    """Represents a single audit finding or vulnerability.
+
     Attributes:
         id: Unique identifier for the finding
         category: Category of the audit finding
@@ -77,21 +76,20 @@ class AuditFinding(BaseModel):
     title: str = Field(..., description="Concise description of the issue")
     description: str = Field(..., description="Detailed analysis and context")
     file_path: str = Field(..., description="Path to the file containing the issue")
-    line_number: Optional[int] = Field(None, description="Specific line number if applicable")
+    line_number: int | None = Field(None, description="Specific line number if applicable")
     remediation: str = Field(..., description="Recommended fix or remediation steps")
-    cwe_id: Optional[str] = Field(None, description="CWE ID if security related")
-    cvss_score: Optional[float] = Field(None, description="CVSS score (0.0-10.0)", ge=0.0, le=10.0)
+    cwe_id: str | None = Field(None, description="CWE ID if security related")
+    cvss_score: float | None = Field(None, description="CVSS score (0.0-10.0)", ge=0.0, le=10.0)
     timestamp: datetime = Field(default_factory=datetime.now, description="When finding was detected")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
-    
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
     class Config:
         use_enum_values = True
 
 
 class AuditReport(BaseModel):
-    """
-    Comprehensive audit report containing all findings and analysis.
-    
+    """Comprehensive audit report containing all findings and analysis.
+
     Attributes:
         report_id: Unique identifier for the report
         scan_timestamp: When the scan was performed
@@ -109,23 +107,22 @@ class AuditReport(BaseModel):
     scan_duration: float = Field(..., description="Duration of scan in seconds")
     total_files_scanned: int = Field(..., description="Number of files analyzed")
     total_findings: int = Field(..., description="Total number of findings")
-    findings_by_category: Dict[AuditCategory, List[AuditFinding]] = Field(
+    findings_by_category: dict[AuditCategory, list[AuditFinding]] = Field(
         default_factory=dict, description="Findings grouped by category"
     )
     risk_score: float = Field(..., description="Overall risk score (0.0-10.0)", ge=0.0, le=10.0)
-    compliance_status: Dict[str, bool] = Field(
+    compliance_status: dict[str, bool] = Field(
         default_factory=dict, description="Compliance status for various standards"
     )
-    recommendations: List[str] = Field(
+    recommendations: list[str] = Field(
         default_factory=list, description="Prioritized list of recommendations"
     )
     summary: str = Field(..., description="Executive summary of the audit")
 
 
 class ScanConfiguration(BaseModel):
-    """
-    Configuration for audit scanning operations.
-    
+    """Configuration for audit scanning operations.
+
     Attributes:
         scan_depth: Level of scanning depth (BASIC, STANDARD, COMPREHENSIVE)
         include_tests: Whether to include test files in scanning
@@ -137,28 +134,28 @@ class ScanConfiguration(BaseModel):
     """
     scan_depth: ScanDepth = Field(default=ScanDepth.STANDARD, description="Level of scanning depth")
     include_tests: bool = Field(default=False, description="Whether to include test files")
-    exclude_patterns: List[str] = Field(
+    exclude_patterns: list[str] = Field(
         default_factory=lambda: [
-            "*.pyc", "__pycache__", ".git", "node_modules", 
+            "*.pyc", "__pycache__", ".git", "node_modules",
             ".venv", "venv", "build", "dist", ".tox"
         ], description="Patterns to exclude from scanning"
     )
-    security_standards: List[str] = Field(
+    security_standards: list[str] = Field(
         default_factory=lambda: ["OWASP", "NIST"], description="Security standards to check"
     )
-    performance_thresholds: Dict[str, float] = Field(
+    performance_thresholds: dict[str, float] = Field(
         default_factory=lambda: {
             "cyclomatic_complexity": 10.0,
             "maintainability_index": 65.0,
             "lines_of_code": 500
         }, description="Performance threshold configurations"
     )
-    code_quality_rules: List[str] = Field(
+    code_quality_rules: list[str] = Field(
         default_factory=lambda: ["flake8", "pylint", "mypy"], description="Code quality rules"
     )
-    custom_rules: Dict[str, Any] = Field(
+    custom_rules: dict[str, Any] = Field(
         default_factory=dict, description="Custom audit rules and configurations"
     )
-    
+
     class Config:
         use_enum_values = True

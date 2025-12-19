@@ -14,7 +14,7 @@ This is intentionally minimal and returns an empty dict for missing/empty
 input; it avoids adding PyYAML as a heavy dependency for CI collection.
 """
 
-from typing import Any, IO
+from typing import IO, Any
 
 
 def safe_load(stream: IO | str | None) -> Any:
@@ -22,10 +22,7 @@ def safe_load(stream: IO | str | None) -> Any:
     if stream is None:
         return {}
     try:
-        if hasattr(stream, "read"):
-            data = stream.read()
-        else:
-            data = str(stream)
+        data = stream.read() if hasattr(stream, "read") else str(stream)
         if not data.strip():
             return {}
         # Very small heuristic: if it looks like JSON, parse it; else return {}

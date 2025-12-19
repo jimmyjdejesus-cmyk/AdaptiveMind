@@ -9,12 +9,12 @@
 
 
 # utils/confidence.py
-"""
-Helper functions to optimize confidence calculations.
-"""
-import numpy as np
+"""Helper functions to optimize confidence calculations."""
 from collections import deque
+
+import numpy as np
 from logger_config import log
+
 
 def calculate_average_confidence(output):
     """Calculates the average token confidence from the model's output."""
@@ -52,7 +52,7 @@ def calculate_lowest_group_confidence(output, window_size=32):
     except (KeyError, IndexError, TypeError):
         log.warning("Could not calculate group confidence due to missing logprobs.")
         return 0.0
-    
+
 def calculate_lowest_single_token_confidence(output, window_size=32):
     """Calculates the lowest confidence of any single token in a sliding window."""
     try:

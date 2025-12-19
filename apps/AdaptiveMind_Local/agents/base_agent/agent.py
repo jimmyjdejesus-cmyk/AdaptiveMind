@@ -12,8 +12,10 @@
 """Base agent class for all agents in the system."""
 
 import ollama
+
 from ... import settings
 from ...logger_config import log
+
 
 class BaseAgent:
     def __init__(self, system_prompt=""):

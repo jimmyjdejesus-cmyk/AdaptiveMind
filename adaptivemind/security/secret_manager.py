@@ -9,9 +9,10 @@
 
 
 from __future__ import annotations
-from typing import Any, Dict
 
-_secrets_store: Dict[str, Any] = {}
+from typing import Any
+
+_secrets_store: dict[str, Any] = {}
 
 def set_secret(key: str, value: str) -> bool:
     _secrets_store[key] = value

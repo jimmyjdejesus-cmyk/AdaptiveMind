@@ -38,17 +38,16 @@ strategic considerations.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 
 @dataclass
 class Candidate:
     """Represents a candidate in the Vickrey auction.
-    
+
     A candidate represents an AI agent or specialist with their bid
     (typically representing confidence or quality score) and content
     (the actual result or response they produced).
-    
+
     Attributes:
         agent: Identifier for the agent/specialist making the bid
         bid: Numerical bid value (higher = better quality/confidence)
@@ -62,10 +61,10 @@ class Candidate:
 @dataclass
 class AuctionResult:
     """Result of a Vickrey auction execution.
-    
+
     Contains the winner selection, pricing information, and execution
     metrics for analysis and monitoring purposes.
-    
+
     Attributes:
         winner: Candidate object representing the auction winner
         price: Price paid by winner (second-highest bid)
@@ -76,26 +75,26 @@ class AuctionResult:
     metrics: dict
 
 
-def run_vickrey_auction(candidates: List[Candidate]) -> AuctionResult:
+def run_vickrey_auction(candidates: list[Candidate]) -> AuctionResult:
     """Execute a Vickrey auction to select the best candidate.
-    
+
     Implements a simplified Vickrey auction where:
     1. The candidate with the highest bid wins
     2. The winner pays the price of the second-highest bid
     3. This encourages honest bidding (agents bid their true value)
-    
+
     The auction is deterministic and uses simple sorting for performance.
     In case of only one candidate, the price is set to 0.0.
-    
+
     Args:
         candidates: List of Candidate objects participating in the auction
-        
+
     Returns:
         AuctionResult containing winner, price, and metrics
-        
+
     Raises:
         ValueError: If no candidates are provided
-        
+
     Example:
         >>> candidates = [
         ...     Candidate("agent1", 0.8, "Solution A"),
@@ -110,18 +109,18 @@ def run_vickrey_auction(candidates: List[Candidate]) -> AuctionResult:
     """
     if not candidates:
         raise ValueError("No candidates provided")
-    
+
     # Sort candidates by bid in descending order (highest first)
     sorted_cands = sorted(candidates, key=lambda c: c.bid, reverse=True)
-    
+
     # Winner is the highest bidder
     winner = sorted_cands[0]
-    
+
     # Price is the second-highest bid (Vickrey principle)
     # If only one candidate, price is 0.0
     price = sorted_cands[1].bid if len(sorted_cands) > 1 else 0.0
-    
+
     # Collect basic metrics for analysis
     metrics = {"num_candidates": len(sorted_cands)}
-    
+
     return AuctionResult(winner=winner, price=price, metrics=metrics)

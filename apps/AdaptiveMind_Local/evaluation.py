@@ -9,8 +9,8 @@
 
 
 # evaluation.py
-from orchestrator import Orchestrator
 from logger_config import log
+from orchestrator import Orchestrator
 
 # --- Test Suite Definition ---
 # Each test is a dictionary with a name, a prompt, and a validator function.
@@ -18,7 +18,7 @@ from logger_config import log
 TEST_SUITE = [
     {
         "name": "Forceful Chain of Though (CoT)",
-        "prompt": 
+        "prompt":
         """
         You are a meticulous logic and math expert. Your task is to solve the following problem by thinking step-by-step.
         1.  First, identify the known variables.
@@ -54,7 +54,7 @@ TEST_SUITE = [
 def run_evaluation():
     log.info("--- STARTING EVALUATION HARNESS ---")
     orchestrator = Orchestrator()
-    
+
     total_token_cost = 0
     passed_count = 0
     failed_tests = []
@@ -68,21 +68,21 @@ def run_evaluation():
         log.info(f"--- Running Test {i+1}/{total_count}: {test_name} ---")
 
         # Get the response and token cost from orchestrator
-        response, tokens_used, confidence = orchestrator.handle_request(prompt)
+        response, tokens_used, _confidence = orchestrator.handle_request(prompt)
         total_token_cost += tokens_used
 
         # Validate the response
         try:
             is_pass = validator(response)
             if is_pass:
-                log.info(f"--- RESULT: PASSED ---")
+                log.info("--- RESULT: PASSED ---")
                 passed_count += 1
             else:
-                log.warning(f"--- RESULT: FAILED ---")
+                log.warning("--- RESULT: FAILED ---")
                 log.warning(f"   - Response was: {response}")
-                failed_tests.append(test_name) 
+                failed_tests.append(test_name)
         except Exception as e:
-            log.error(f"--- RESULT: ERROR ---")
+            log.error("--- RESULT: ERROR ---")
             log.error(f"   - Validator function failed with error: {e}")
             log.error(f"   - Response was: {response}")
             failed_tests.append(test_name)

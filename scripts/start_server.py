@@ -15,8 +15,7 @@
 # See https://creativecommons.org/licenses/by/4.0/ for license terms.
 
 #!/usr/bin/env python3
-"""
-Simple AdaptiveMind AI Server Startup Script
+"""Simple AdaptiveMind AI Server Startup Script.
 
 This script starts the AdaptiveMind AI server with proper configuration
 and handles dependency issues.
@@ -24,58 +23,51 @@ and handles dependency issues.
 
 import os
 import sys
-import uvicorn
 from pathlib import Path
+
+import uvicorn
+
 
 def setup_environment():
     """Setup environment and check dependencies."""
-    print("🔧 Setting up AdaptiveMind AI environment...")
-    
     # Add current directory to Python path
     current_dir = Path(__file__).parent
     sys.path.insert(0, str(current_dir))
-    
+
     # Check Python version
-    if sys.version_info < (3, 8):
-        print("❌ Python 3.8+ required")
-        sys.exit(1)
-    
-    print(f"✅ Python {sys.version_info.major}.{sys.version_info.minor} detected")
-    
+
+
     # Try to import dependencies
     try:
         import fastapi
-        import uvicorn
         import pydantic
-        print(f"✅ FastAPI {fastapi.__version__}")
-        print(f"✅ Uvicorn {uvicorn.__version__}")
-        print(f"✅ Pydantic {pydantic.__version__}")
-    except ImportError as e:
-        print(f"❌ Missing dependency: {e}")
-        print("Installing requirements...")
+        import uvicorn
+    except ImportError:
         os.system(f"{sys.executable} -m pip install -r requirements.txt")
-    
+
     return True
 
 def load_config():
     """Load or create default configuration."""
-    print("📋 Loading configuration...")
-    
     try:
         # Try to import and load config
-        from adaptivemind_core.config import load_config, AppConfig, PersonaConfig
-        
+        from adaptivemind_core.config import AppConfig, PersonaConfig, load_config
+
         try:
             config = load_config()
-            print("✅ Configuration loaded from file")
             return config
-        except Exception as e:
-            print(f"⚠️  Could not load config file: {e}")
-            print("Creating default configuration...")
-            
+        except Exception:
+
             # Create default configuration
-            from adaptivemind_core.config import OllamaConfig, OpenRouterConfig, WindowsMLConfig, SecurityConfig, ContextPipelineConfig, MonitoringConfig
-            
+            from adaptivemind_core.config import (
+                ContextPipelineConfig,
+                MonitoringConfig,
+                OllamaConfig,
+                OpenRouterConfig,
+                SecurityConfig,
+                WindowsMLConfig,
+            )
+
             config = AppConfig(
                 ollama=OllamaConfig(host="http://127.0.0.1:11434"),
                 openrouter=OpenRouterConfig(api_key=""),
@@ -86,16 +78,13 @@ def load_config():
                 allowed_personas=["generalist"],
                 enable_research_features=False
             )
-            print("✅ Default configuration created")
             return config
-            
-    except Exception as e:
-        print(f"❌ Configuration error: {e}")
-        print("Trying minimal configuration...")
-        
+
+    except Exception:
+
         # Create minimal working configuration
         from adaptivemind_core.config import AppConfig, PersonaConfig
-        
+
         default_persona = PersonaConfig(
             name="generalist",
             description="Default test persona",
@@ -103,7 +92,7 @@ def load_config():
             max_context_window=2048,
             routing_hint="general"
         )
-        
+
         config = AppConfig(
             personas={"generalist": default_persona},
             allowed_personas=["generalist"],
@@ -113,41 +102,35 @@ def load_config():
 
 def start_server():
     """Start the AdaptiveMind AI server."""
-    print("🚀 Starting AdaptiveMind AI Server...")
-    
     # Setup environment
     setup_environment()
-    
+
     # Load configuration
     config = load_config()
-    
+
     try:
         # Try to build the app
         from adaptivemind_core.server import build_app
         app = build_app(config)
-        print("✅ FastAPI application created")
-    except Exception as e:
-        print(f"❌ Failed to build application: {e}")
-        print("Attempting to create minimal server...")
-        
+    except Exception:
+
         # Create minimal server as fallback
         from fastapi import FastAPI
-        from fastapi.responses import JSONResponse
-        
+
         app = FastAPI(title="AdaptiveMind AI", version="1.0.0")
-        
+
         @app.get("/health")
         async def health():
             return {"status": "ok", "available_models": ["test"]}
-        
+
         @app.get("/api/v1/models")
         async def models():
             return ["test-model"]
-        
+
         @app.get("/api/v1/personas")
         async def personas():
             return [{"name": "generalist", "description": "Default persona"}]
-        
+
         @app.post("/api/v1/chat")
         async def chat(request: dict):
             return {
@@ -156,29 +139,24 @@ def start_server():
                 "tokens": 10,
                 "diagnostics": {}
             }
-        
-        print("✅ Minimal server created")
-    
+
+
     # Start server
     port = int(os.getenv("ADAPTIVEMIND_PORT", "8000"))
     host = os.getenv("ADAPTIVEMIND_HOST", "127.0.0.1")
-    
-    print(f"🌐 Starting server on {host}:{port}")
-    print(f"🔗 Health check: http://{host}:{port}/health")
-    print(f"📖 API docs: http://{host}:{port}/docs")
-    
+
+
     try:
         uvicorn.run(
-            app, 
-            host=host, 
+            app,
+            host=host,
             port=port,
             log_level="info",
             access_log=True
         )
     except KeyboardInterrupt:
-        print("\n👋 Server stopped by user")
-    except Exception as e:
-        print(f"❌ Server error: {e}")
+        pass
+    except Exception:
         sys.exit(1)
 
 if __name__ == "__main__":

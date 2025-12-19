@@ -8,8 +8,7 @@
 
 
 
-"""
-Tier 3: Smart Cloud Escalation
+"""Tier 3: Smart Cloud Escalation.
 
 This module implements the third and final tier of the adaptive swarm system.
 It makes intelligent decisions about when to escalate from local execution
@@ -25,9 +24,9 @@ Features:
 
 import logging
 import time
-from typing import Dict, Any, Optional, Literal, Tuple
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class EscalationReason(Enum):
 @dataclass
 class EscalationAnalysis:
     """Result of escalation decision analysis."""
-    
+
     decision: EscalationDecision
     reason: EscalationReason
     confidence: float
@@ -57,21 +56,19 @@ class EscalationAnalysis:
     efficiency_threshold: float
     error_amplification_threshold: float
     recommendations: list[str]
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class CloudEscalationManager:
-    """
-    Smart Cloud Escalation Manager.
-    
+    """Smart Cloud Escalation Manager.
+
     Makes scientifically-informed decisions about when to escalate from
     local execution to cloud resources based on error amplification,
     efficiency metrics, and cost optimization.
     """
-    
+
     def __init__(self):
         """Initialize the cloud escalation manager."""
-        
         # Scientific thresholds from the paper
         self.escalation_thresholds = {
             "error_amplification": {
@@ -92,7 +89,7 @@ class CloudEscalationManager:
                 "very_complex": 0.9
             }
         }
-        
+
         # Cost estimation (simplified model)
         self.cost_model = {
             "local": {
@@ -107,77 +104,76 @@ class CloudEscalationManager:
                 "reliability_bonus": 0.8  # 80% reliability improvement
             }
         }
-        
+
         # Performance tracking
         self.performance_history = []
         self.escalation_history = []
-        
+
         logger.info("CloudEscalationManager initialized with scientific thresholds")
-    
+
     def should_escalate_to_cloud(
         self,
         swarm_result,
         task_complexity: float = 0.5,
-        user_preference: Optional[str] = None,
-        budget_constraints: Optional[Dict[str, float]] = None
+        user_preference: str | None = None,
+        budget_constraints: dict[str, float] | None = None
     ) -> EscalationAnalysis:
-        """
-        Determine if task should be escalated to cloud resources.
-        
+        """Determine if task should be escalated to cloud resources.
+
         Args:
             swarm_result: Result from Tier 2 swarm execution
             task_complexity: Estimated complexity of task (0.0 to 1.0)
             user_preference: User preference ('local', 'cloud', 'auto')
             budget_constraints: Budget limitations
-            
+
         Returns:
             EscalationAnalysis with decision and reasoning
         """
         start_time = time.time()
-        
+
         logger.info("🔍 Analyzing escalation decision...")
-        
+
         # Initialize analysis parameters
         decision_factors = []
         recommendations = []
         confidence = 0.5  # Start neutral
-        
+
         # Factor 1: Error Amplification Analysis
         error_analysis = self._analyze_error_amplification(swarm_result)
         decision_factors.append(error_analysis)
-        
+
         # Factor 2: Efficiency Analysis
         efficiency_analysis = self._analyze_efficiency(swarm_result, task_complexity)
         decision_factors.append(efficiency_analysis)
-        
+
         # Factor 3: Task Complexity Analysis
         complexity_analysis = self._analyze_task_complexity(task_complexity, swarm_result)
         decision_factors.append(complexity_analysis)
-        
+
         # Factor 4: Cost Analysis
         cost_analysis = self._analyze_costs(swarm_result, task_complexity, budget_constraints)
         decision_factors.append(cost_analysis)
-        
+
         # Factor 5: User Preferences
         preference_analysis = self._analyze_user_preferences(user_preference, swarm_result)
         decision_factors.append(preference_analysis)
-        
+
         # Make final decision based on all factors
         decision, reason, confidence = self._make_escalation_decision(
             decision_factors, swarm_result, task_complexity
         )
-        
+
         # Generate recommendations
         recommendations = self._generate_recommendations(
             decision_factors, decision, reason
         )
-        
+
         # Calculate cost estimates
         cost_estimate_local = cost_analysis["local_cost"]
         cost_estimate_cloud = cost_analysis["cloud_cost"]
-        
+
         processing_time = time.time() - start_time
-        
+
         # Create escalation analysis result
         analysis = EscalationAnalysis(
             decision=decision,
@@ -201,16 +197,16 @@ class CloudEscalationManager:
                 }
             }
         )
-        
+
         # Log decision for learning
         self._log_escalation_decision(analysis, swarm_result)
-        
+
         return analysis
-    
-    def _analyze_error_amplification(self, swarm_result) -> Dict[str, Any]:
+
+    def _analyze_error_amplification(self, swarm_result) -> dict[str, Any]:
         """Analyze error amplification risks."""
         error_amp = swarm_result.error_amplification
-        
+
         analysis = {
             "factor": "error_amplification",
             "value": error_amp,
@@ -218,7 +214,7 @@ class CloudEscalationManager:
             "recommendation": "continue_local",
             "weight": 0.3
         }
-        
+
         if error_amp >= self.escalation_thresholds["error_amplification"]["immediate_escalate"]:
             analysis.update({
                 "risk_level": "critical",
@@ -228,7 +224,7 @@ class CloudEscalationManager:
             })
         elif error_amp >= self.escalation_thresholds["error_amplification"]["critical"]:
             analysis.update({
-                "risk_level": "high", 
+                "risk_level": "high",
                 "recommendation": "escalate",
                 "weight": 0.7,
                 "reason": f"High error amplification: {error_amp:.1f}x (approaching {self.escalation_thresholds['error_amplification']['critical']} failure threshold)"
@@ -244,14 +240,14 @@ class CloudEscalationManager:
             analysis.update({
                 "reason": f"Acceptable error amplification: {error_amp:.1f}x"
             })
-        
+
         return analysis
-    
-    def _analyze_efficiency(self, swarm_result, task_complexity: float) -> Dict[str, Any]:
+
+    def _analyze_efficiency(self, swarm_result, task_complexity: float) -> dict[str, Any]:
         """Analyze efficiency performance."""
         efficiency = swarm_result.efficiency
         architecture = swarm_result.architecture
-        
+
         # Get target efficiency for this architecture
         if architecture == "single":
             target_efficiency = self.escalation_thresholds["efficiency"]["target_single"]
@@ -259,11 +255,11 @@ class CloudEscalationManager:
             target_efficiency = self.escalation_thresholds["efficiency"]["target_centralized"]
         else:
             target_efficiency = 1.0  # Default target
-        
+
         # Calculate performance gap
         performance_gap = (target_efficiency - efficiency) / target_efficiency
         efficiency_ratio = efficiency / target_efficiency
-        
+
         analysis = {
             "factor": "efficiency",
             "value": efficiency,
@@ -274,7 +270,7 @@ class CloudEscalationManager:
             "recommendation": "continue_local",
             "weight": 0.25
         }
-        
+
         # Efficiency-based escalation logic
         if efficiency < self.escalation_thresholds["efficiency"]["minimum_acceptable"]:
             analysis.update({
@@ -294,10 +290,10 @@ class CloudEscalationManager:
             analysis.update({
                 "reason": f"Acceptable efficiency: {efficiency:.3f} ({efficiency_ratio:.1%} of target)"
             })
-        
+
         return analysis
-    
-    def _analyze_task_complexity(self, task_complexity: float, swarm_result) -> Dict[str, Any]:
+
+    def _analyze_task_complexity(self, task_complexity: float, swarm_result) -> dict[str, Any]:
         """Analyze task complexity impact."""
         analysis = {
             "factor": "task_complexity",
@@ -306,7 +302,7 @@ class CloudEscalationManager:
             "recommendation": "continue_local",
             "weight": 0.2
         }
-        
+
         if task_complexity >= self.escalation_thresholds["task_complexity"]["very_complex"]:
             analysis.update({
                 "risk_level": "high",
@@ -319,44 +315,44 @@ class CloudEscalationManager:
                 "risk_level": "medium",
                 "recommendation": "monitor",
                 "weight": 0.3,
-                "reason": f"Complex task may need cloud escalation if local performance degrades"
+                "reason": "Complex task may need cloud escalation if local performance degrades"
             })
         else:
             analysis.update({
                 "reason": f"Manageable task complexity: {task_complexity:.1f}"
             })
-        
+
         return analysis
-    
+
     def _analyze_costs(
-        self, 
-        swarm_result, 
-        task_complexity: float, 
-        budget_constraints: Optional[Dict[str, float]]
-    ) -> Dict[str, Any]:
+        self,
+        swarm_result,
+        task_complexity: float,
+        budget_constraints: dict[str, float] | None
+    ) -> dict[str, Any]:
         """Analyze cost implications of escalation."""
         tokens_used = swarm_result.tokens_used + swarm_result.coordination_tokens
-        
+
         # Calculate local costs
         local_cost = (
             tokens_used * self.cost_model["local"]["base_cost_per_token"] +
             swarm_result.coordination_tokens * self.cost_model["local"]["coordination_overhead"] +
             self.cost_model["local"]["setup_cost"]
         )
-        
+
         # Calculate cloud costs
         cloud_cost = (
             tokens_used * self.cost_model["cloud"]["base_cost_per_token"] +
             swarm_result.coordination_tokens * self.cost_model["cloud"]["coordination_overhead"] +
             self.cost_model["cloud"]["setup_cost"]
         )
-        
+
         # Adjust for reliability bonus
         reliability_factor = self.cost_model["cloud"]["reliability_bonus"]
         effective_cloud_cost = cloud_cost * reliability_factor
-        
+
         cost_ratio = effective_cloud_cost / max(local_cost, 0.001)
-        
+
         analysis = {
             "factor": "cost",
             "local_cost": local_cost,
@@ -367,7 +363,7 @@ class CloudEscalationManager:
             "recommendation": "continue_local",
             "weight": 0.15
         }
-        
+
         # Cost-based escalation logic
         if budget_constraints and budget_constraints.get("max_cost", float('inf')) < effective_cloud_cost:
             analysis.update({
@@ -387,14 +383,14 @@ class CloudEscalationManager:
             analysis.update({
                 "reason": f"Acceptable cost difference: {cost_ratio:.1f}x (${effective_cloud_cost:.4f} cloud vs ${local_cost:.4f} local)"
             })
-        
+
         return analysis
-    
+
     def _analyze_user_preferences(
-        self, 
-        user_preference: Optional[str], 
+        self,
+        user_preference: str | None,
         swarm_result
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Analyze user preferences and constraints."""
         analysis = {
             "factor": "user_preference",
@@ -403,7 +399,7 @@ class CloudEscalationManager:
             "recommendation": "neutral",
             "weight": 0.1
         }
-        
+
         if user_preference == "cloud":
             analysis.update({
                 "recommendation": "escalate",
@@ -411,59 +407,58 @@ class CloudEscalationManager:
             })
         elif user_preference == "local":
             analysis.update({
-                "recommendation": "continue_local", 
+                "recommendation": "continue_local",
                 "reason": "User explicitly requested local execution"
             })
         else:
             analysis.update({
                 "reason": "No specific user preference, using algorithmic decision"
             })
-        
+
         return analysis
-    
+
     def _make_escalation_decision(
-        self, 
-        decision_factors: list[Dict[str, Any]], 
-        swarm_result, 
+        self,
+        decision_factors: list[dict[str, Any]],
+        swarm_result,
         task_complexity: float
-    ) -> Tuple[EscalationDecision, EscalationReason, float]:
+    ) -> tuple[EscalationDecision, EscalationReason, float]:
         """Make final escalation decision based on all factors."""
-        
         # Check for immediate escalation triggers
         error_factor = next(f for f in decision_factors if f["factor"] == "error_amplification")
         if error_factor["recommendation"] == "escalate_immediately":
             return "escalate", EscalationReason.HIGH_ERROR_AMPLIFICATION, 0.9
-        
+
         # Task failure = escalate
         if not swarm_result.success:
             return "escalate", EscalationReason.TASK_FAILURE, 0.8
-        
+
         # Calculate weighted scores for each decision
         escalate_score = 0.0
         continue_score = 0.0
         total_weight = 0.0
-        
+
         for factor in decision_factors:
             weight = factor["weight"]
             recommendation = factor["recommendation"]
-            
+
             if recommendation in ["escalate", "escalate_immediately"]:
                 escalate_score += weight
             elif recommendation == "continue_local":
                 continue_score += weight
-            
+
             total_weight += weight
-        
+
         # Normalize scores
         if total_weight > 0:
             escalate_normalized = escalate_score / total_weight
             continue_normalized = continue_score / total_weight
         else:
             escalate_normalized = continue_normalized = 0.5
-        
+
         # Make decision
         confidence = max(escalate_normalized, continue_normalized)
-        
+
         if escalate_normalized > 0.6:
             # Determine primary reason for escalation
             if error_factor["risk_level"] in ["high", "critical"]:
@@ -472,28 +467,28 @@ class CloudEscalationManager:
                 reason = EscalationReason.LOW_EFFICIENCY
             else:
                 reason = EscalationReason.COMPLEXITY_THRESHOLD
-            
+
             return "escalate", reason, confidence
-        
+
         elif continue_normalized > 0.6:
             return "continue_local", EscalationReason.COST_OPTIMIZATION, confidence
-        
+
         else:
             # Marginal case - continue with local but monitor
             return "continue_local", EscalationReason.COST_OPTIMIZATION, 0.6
-    
+
     def _generate_recommendations(
-        self, 
-        decision_factors: list[Dict[str, Any]], 
-        decision: EscalationDecision, 
+        self,
+        decision_factors: list[dict[str, Any]],
+        decision: EscalationDecision,
         reason: EscalationReason
     ) -> list[str]:
         """Generate actionable recommendations."""
         recommendations = []
-        
+
         if decision == "escalate":
             recommendations.append("🚀 Escalating to cloud resources for improved reliability")
-            
+
             # Add reason-specific recommendations
             if reason == EscalationReason.HIGH_ERROR_AMPLIFICATION:
                 recommendations.append("⚠️ Local multi-agent coordination showing high error rates")
@@ -504,22 +499,22 @@ class CloudEscalationManager:
             elif reason == EscalationReason.TASK_FAILURE:
                 recommendations.append("❌ Local execution failed, attempting cloud recovery")
                 recommendations.append("🔄 Cloud escalation provides fallback mechanism")
-        
+
         elif decision == "continue_local":
             recommendations.append("✅ Continuing with local execution")
             recommendations.append("💰 Cost-effective local processing maintained")
-            
+
             # Add optimization suggestions
             efficiency_factor = next(f for f in decision_factors if f["factor"] == "efficiency")
             if efficiency_factor.get("performance_gap", 0) > 0.2:
                 recommendations.append("📈 Consider optimizing local architecture for better efficiency")
-            
+
             error_factor = next(f for f in decision_factors if f["factor"] == "error_amplification")
             if error_factor.get("risk_level") == "medium":
                 recommendations.append("👁️ Monitor error rates for potential future escalation")
-        
+
         return recommendations
-    
+
     def _log_escalation_decision(self, analysis: EscalationAnalysis, swarm_result):
         """Log escalation decision for learning and monitoring."""
         log_entry = {
@@ -534,22 +529,21 @@ class CloudEscalationManager:
             "cost_cloud": analysis.cost_estimate_cloud,
             "processing_time": analysis.metadata["processing_time"]
         }
-        
+
         self.escalation_history.append(log_entry)
-        
+
         # Keep only recent history
         if len(self.escalation_history) > 1000:
             self.escalation_history = self.escalation_history[-500:]
-        
+
         logger.info(f"Escalation decision: {analysis.decision} (confidence: {analysis.confidence:.2f})")
-    
+
     def get_escalation_explanation(self, analysis: EscalationAnalysis) -> str:
-        """
-        Generate human-readable explanation of escalation decision.
-        
+        """Generate human-readable explanation of escalation decision.
+
         Args:
             analysis: Escalation analysis result
-            
+
         Returns:
             Human-readable explanation
         """
@@ -578,11 +572,11 @@ class CloudEscalationManager:
 
 **Recommendations:**
 """
-        
+
         for i, rec in enumerate(analysis.recommendations, 1):
             explanation += f"{i}. {rec}\n"
-        
-        explanation += f"""
+
+        explanation += """
 **Decision Factors:**
 """
         for factor in analysis.metadata["decision_factors"]:
@@ -590,23 +584,23 @@ class CloudEscalationManager:
                 factor["risk_level"], "⚪"
             )
             explanation += f"- {risk_emoji} **{factor['factor'].title()}:** {factor.get('reason', 'N/A')}\n"
-        
+
         return explanation
-    
-    def get_performance_stats(self) -> Dict[str, Any]:
+
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get performance statistics for monitoring."""
         if not self.escalation_history:
             return {"message": "No escalation history available"}
-        
+
         recent_decisions = self.escalation_history[-100:]  # Last 100 decisions
-        
+
         escalate_count = sum(1 for d in recent_decisions if d["decision"] == "escalate")
-        continue_count = sum(1 for d in recent_decisions if d["decision"] == "continue_local")
-        
+        sum(1 for d in recent_decisions if d["decision"] == "continue_local")
+
         avg_confidence = sum(d["confidence"] for d in recent_decisions) / len(recent_decisions)
         avg_efficiency = sum(d["efficiency"] for d in recent_decisions) / len(recent_decisions)
         avg_error_amp = sum(d["error_amplification"] for d in recent_decisions) / len(recent_decisions)
-        
+
         return {
             "total_decisions": len(recent_decisions),
             "escalation_rate": escalate_count / len(recent_decisions),
@@ -620,10 +614,10 @@ class CloudEscalationManager:
 # Example usage
 if __name__ == "__main__":
     from .tier2_swarm_factory_standalone import SwarmExecutionResult
-    
+
     # Test escalation manager
     escalation_manager = CloudEscalationManager()
-    
+
     # Test with different swarm results
     test_cases = [
         # Good local performance
@@ -666,15 +660,10 @@ if __name__ == "__main__":
             metadata={}
         )
     ]
-    
-    for i, result in enumerate(test_cases, 1):
-        print(f"\n{'='*60}")
-        print(f"Test Case {i}: {result.architecture.upper()} Architecture")
-        print('='*60)
-        
+
+    for _i, result in enumerate(test_cases, 1):
+
         analysis = escalation_manager.should_escalate_to_cloud(result, task_complexity=0.7)
-        print(escalation_manager.get_escalation_explanation(analysis))
-        
+
         # Print performance stats
         stats = escalation_manager.get_performance_stats()
-        print(f"\nPerformance Stats: {stats}")

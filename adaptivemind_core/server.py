@@ -10,13 +10,10 @@
 
 from __future__ import annotations
 
-import json
-from typing import List, Optional
-
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from .app import AdaptiveMindApplication
@@ -32,13 +29,13 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    messages: List[Message]
+    messages: list[Message]
     persona: str = Field("generalist", description="Persona to route the request")
     # Constrain temperature to sensible range for the model
     temperature: float = Field(0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(512, ge=32, le=4096)
-    metadata: Optional[dict] = None
-    external_context: Optional[List[str]] = None
+    metadata: dict | None = None
+    external_context: list[str] | None = None
 
 
 class ChatResponse(BaseModel):
@@ -50,20 +47,20 @@ class ChatResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
-    available_models: List[str]
+    available_models: list[str]
 
 
 class MetricsResponse(BaseModel):
-    history: List[dict]
+    history: list[dict]
 
 
 class TracesResponse(BaseModel):
-    traces: List[dict]
+    traces: list[dict]
 
 
 class OpenAIChatRequest(BaseModel):
     model: str = "adaptivemind-default"
-    messages: List[Message]
+    messages: list[Message]
     temperature: float = 0.7
     max_tokens: int = Field(512, ge=32, le=4096)
     stream: bool = False
@@ -74,7 +71,7 @@ class OpenAIChatResponse(BaseModel):
     object: str = "chat.completion"
     created: int
     model: str
-    choices: List[dict]
+    choices: list[dict]
     usage: dict
 
 
@@ -89,7 +86,7 @@ class OpenAIModel(BaseModel):
 
 class OpenAIModelsResponse(BaseModel):
     object: str = "list"
-    data: List[OpenAIModel]
+    data: list[OpenAIModel]
 
 
 # Management API Models --------------------------------------------------
@@ -97,20 +94,20 @@ class OpenAIModelsResponse(BaseModel):
 class ComponentHealth(BaseModel):
     name: str
     status: str  # "healthy", "degraded", "unhealthy"
-    details: Optional[dict] = None
+    details: dict | None = None
 
 
 class SystemStatusResponse(BaseModel):
     status: str  # "healthy", "degraded", "unhealthy"
     uptime_seconds: float
     version: str
-    active_backends: List[str]
-    active_personas: List[str]
+    active_backends: list[str]
+    active_personas: list[str]
     config_hash: str  # For detecting config changes
 
 
 class RoutingConfigResponse(BaseModel):
-    allowed_personas: List[str]
+    allowed_personas: list[str]
     enable_adaptive_routing: bool = True
 
 
@@ -118,24 +115,24 @@ class BackendStatus(BaseModel):
     name: str
     type: str  # "ollama", "windowsml", "fallback"
     is_available: bool
-    last_checked: Optional[float] = None  # timestamp
+    last_checked: float | None = None  # timestamp
     config: dict  # Backend-specific config
 
 
 class BackendListResponse(BaseModel):
-    backends: List[BackendStatus]
+    backends: list[BackendStatus]
 
 
 class ContextConfigResponse(BaseModel):
-    extra_documents_dir: Optional[str]
+    extra_documents_dir: str | None
     enable_semantic_chunking: bool
     max_combined_context_tokens: int
 
 
 class APIKeyInfo(BaseModel):
     hash: str  # SHA256 hash
-    created_at: Optional[float] = None  # timestamp
-    last_used: Optional[float] = None  # timestamp
+    created_at: float | None = None  # timestamp
+    last_used: float | None = None  # timestamp
 
 
 class SecurityStatusResponse(BaseModel):
@@ -154,10 +151,10 @@ class PersonaCreateRequest(BaseModel):
 
 
 class PersonaUpdateRequest(BaseModel):
-    description: Optional[str] = Field(None, min_length=1, max_length=200)
-    system_prompt: Optional[str] = Field(None, min_length=1)
-    max_context_window: Optional[int] = Field(None, ge=512, le=32768)
-    routing_hint: Optional[str] = Field(None, min_length=1, max_length=50)
+    description: str | None = Field(None, min_length=1, max_length=200)
+    system_prompt: str | None = Field(None, min_length=1)
+    max_context_window: int | None = Field(None, ge=512, le=32768)
+    routing_hint: str | None = Field(None, min_length=1, max_length=50)
 
 
 class PersonaResponse(BaseModel):
@@ -170,20 +167,20 @@ class PersonaResponse(BaseModel):
 
 
 class RoutingConfigUpdateRequest(BaseModel):
-    allowed_personas: Optional[List[str]] = None
-    enable_adaptive_routing: Optional[bool] = None
+    allowed_personas: list[str] | None = None
+    enable_adaptive_routing: bool | None = None
 
 
 class ContextConfigUpdateRequest(BaseModel):
-    extra_documents_dir: Optional[str] = None
-    enable_semantic_chunking: Optional[bool] = None
-    max_combined_context_tokens: Optional[int] = Field(None, ge=1024, le=65536)
+    extra_documents_dir: str | None = None
+    enable_semantic_chunking: bool | None = None
+    max_combined_context_tokens: int | None = Field(None, ge=1024, le=65536)
 
 
 class BackendTestResponse(BaseModel):
     success: bool
-    latency_ms: Optional[float] = None
-    error: Optional[str] = None
+    latency_ms: float | None = None
+    error: str | None = None
 
 
 class ConfigSaveResponse(BaseModel):
@@ -192,7 +189,7 @@ class ConfigSaveResponse(BaseModel):
     message: str
 
 
-def build_app(config: Optional[AppConfig] = None) -> FastAPI:
+def build_app(config: AppConfig | None = None) -> FastAPI:
     # Allow tests and external code to patch the legacy `jarvis_core.server`
     # AdaptiveMindApplication symbol; resolve dynamically so that mocking
     # `jarvis_core.server.AdaptiveMindApplication` affects app construction.
@@ -233,12 +230,17 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
         # Use safe imports so the compatibility wrapper doesn't fail due to missing
         # modules across different FastAPI/Starlette versions.
         try:
-            from starlette.middleware.errors import ServerErrorMiddleware, ExceptionMiddleware  # type: ignore
+            from starlette.middleware.errors import (  # type: ignore
+                ExceptionMiddleware,
+                ServerErrorMiddleware,
+            )
         except Exception:
             ServerErrorMiddleware = None
             ExceptionMiddleware = None
         try:
-            from fastapi.middleware.asyncexitstack import AsyncExitStackMiddleware  # type: ignore
+            from fastapi.middleware.asyncexitstack import (
+                AsyncExitStackMiddleware,  # type: ignore
+            )
         except Exception:
             AsyncExitStackMiddleware = None
 
@@ -340,12 +342,12 @@ def build_app(config: Optional[AppConfig] = None) -> FastAPI:
     def index() -> str:
         return _OLLAMA_UI_HTML
 
-    @fastapi_app.get("/api/v1/models", response_model=List[str])
-    def models(app: AdaptiveMindApplication = Depends(_app_dependency)) -> List[str]:
+    @fastapi_app.get("/api/v1/models", response_model=list[str])
+    def models(app: AdaptiveMindApplication = Depends(_app_dependency)) -> list[str]:
         return app.models()
 
-    @fastapi_app.get("/api/v1/personas", response_model=List[dict])
-    def personas(app: AdaptiveMindApplication = Depends(_app_dependency)) -> List[dict]:
+    @fastapi_app.get("/api/v1/personas", response_model=list[dict])
+    def personas(app: AdaptiveMindApplication = Depends(_app_dependency)) -> list[dict]:
         try:
             return app.personas()
         except Exception as e:
@@ -631,17 +633,18 @@ _OLLAMA_UI_HTML = """
 __all__ = ["build_app"]
 
 if __name__ == "__main__":
-    import uvicorn
     import os
-    
+
+    import uvicorn
+
     port = int(os.getenv("ADAPTIVEMIND_PORT", 8000))
     # SECURITY FIX: Default to localhost for production safety
     host = os.getenv("ADAPTIVEMIND_HOST", "127.0.0.1")
-    
+
     # Initialize config
     from .config import load_config
     config = load_config()
-    
+
     app = build_app(config)
-    
+
     uvicorn.run(app, host=host, port=port)

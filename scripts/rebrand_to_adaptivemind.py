@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-# Copyright (c) 2025 Jimmy De Jesus (Bravetto)
+"""# Copyright (c) 2025 Jimmy De Jesus (Bravetto).
 
 # Licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0).
 # See https://creativecommons.org/licenses/by/4.0/ for license terms.
@@ -8,10 +7,8 @@
 Rebrand Jarvis to AdaptiveMind across the codebase.
 Preserves compatibility shims and handles special cases.
 """
-import os
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 # Directories to exclude from rebranding
 EXCLUDE_DIRS = {
@@ -25,30 +22,30 @@ EXCLUDE_FILES = {
 }
 
 # Replacement mappings (order matters!)
-REPLACEMENTS: List[Tuple[str, str]] = [
+REPLACEMENTS: list[tuple[str, str]] = [
     # Class names
     (r'\bJarvisApplication\b', 'AdaptiveMindApplication'),
     (r'\bJarvisBackend\b', 'AdaptiveMindBackend'),
     (r'\bJarvisHandler\b', 'AdaptiveMindHandler'),
     (r'\bJarvisDemoHandler\b', 'AdaptiveMindDemoHandler'),
     (r'\bMCPJarvisAgent\b', 'MCPAdaptiveMindAgent'),
-    
+
     # Environment variables
     (r'\bJARVIS_([A-Z_]+)\b', r'ADAPTIVEMIND_\1'),
-    
+
     # File paths and config
     (r'\.adaptivemind/', '.adaptivemind/'),
     (r'~/.adaptivemind', '~/.adaptivemind'),
     (r'jarvis_config\.json', 'adaptivemind_config.json'),
     (r'jarvis_local\.log', 'adaptivemind_local.log'),
     (r'jarvis\.log', 'adaptivemind.log'),
-    
+
     # API/Service names
     (r'"adaptivemind-default"', '"adaptivemind-default"'),
     (r'"adaptivemind-local"', '"adaptivemind-local"'),
     (r'"owned_by": "adaptivemind"', '"owned_by": "adaptivemind"'),
     (r'"adaptivemind_local_ai"', '"adaptivemind_local_ai"'),
-    
+
     # UI/Display text
     (r'AdaptiveMind Local Assistant', 'AdaptiveMind Local Assistant'),
     (r'AdaptiveMind Ollama Console', 'AdaptiveMind Ollama Console'),
@@ -58,16 +55,16 @@ REPLACEMENTS: List[Tuple[str, str]] = [
     (r'Ask AdaptiveMind', 'Ask AdaptiveMind'),
     (r'AdaptiveMind is thinking', 'AdaptiveMind is thinking'),
     (r'You are AdaptiveMind,', 'You are AdaptiveMind,'),
-    
+
     # Email/URLs (if any - these would need manual review)
     (r'support@jarvis\.ai', 'support@adaptivemind.ai'),
     (r'api\.jarvis\.ai', 'api.adaptivemind.ai'),
-    
+
     # Documentation
     (r'AdaptiveMind Framework', 'AdaptiveMind Framework'),
     (r'AdaptiveMind system', 'AdaptiveMind system'),
     (r'AdaptiveMind framework', 'AdaptiveMind framework'),
-    
+
     # Generic mentions (be careful with these)
     (r'Starting AdaptiveMind', 'Starting AdaptiveMind'),
     (r'initialize AdaptiveMind', 'initialize AdaptiveMind'),
@@ -79,50 +76,45 @@ def should_process(path: Path) -> bool:
     """Check if file should be processed."""
     if not path.is_file():
         return False
-    
+
     # Check excluded directories
     if any(exc in path.parts for exc in EXCLUDE_DIRS):
         return False
-    
+
     # Check excluded files
     rel_path = str(path.relative_to(Path.cwd()))
     if rel_path in EXCLUDE_FILES:
         return False
-    
-    # Only process text files
-    if path.suffix in {'.pyc', '.png', '.jpg', '.jpeg', '.gif', '.zip', '.tar', '.ico'}:
-        return False
-    
-    return True
 
-def apply_replacements(content: str) -> Tuple[str, int]:
+    # Only process text files
+    return path.suffix not in {'.pyc', '.png', '.jpg', '.jpeg', '.gif', '.zip', '.tar', '.ico'}
+
+def apply_replacements(content: str) -> tuple[str, int]:
     """Apply all replacements to content. Returns (new_content, count)."""
     count = 0
     new_content = content
-    
+
     for pattern, replacement in REPLACEMENTS:
         new_content, n = re.subn(pattern, replacement, new_content)
         count += n
-    
+
     return new_content, count
 
 def rebrand_file(path: Path) -> bool:
     """Rebrand a single file. Returns True if modified."""
     try:
-        with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(path, encoding='utf-8', errors='ignore') as f:
             original = f.read()
-        
+
         new_content, count = apply_replacements(original)
-        
+
         if count > 0:
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(new_content)
-            print(f"✓ {path.relative_to(Path.cwd())}: {count} replacements")
             return True
-        
+
         return False
-    except Exception as e:
-        print(f"✗ Error processing {path}: {e}")
+    except Exception:
         return False
 
 def main():
@@ -130,39 +122,25 @@ def main():
     root = Path.cwd()
     files_modified = 0
     total_replacements = 0
-    
-    print("🎨 Starting AdaptiveMind Rebranding...")
-    print(f"📁 Root directory: {root}")
-    print("─" * 60)
-    
+
+
     # Process all files
     for path in root.rglob('*'):
         if should_process(path):
             try:
-                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(path, encoding='utf-8', errors='ignore') as f:
                     original = f.read()
-                
+
                 new_content, count = apply_replacements(original)
-                
+
                 if count > 0:
                     with open(path, 'w', encoding='utf-8') as f:
                         f.write(new_content)
-                    print(f"✓ {path.relative_to(root)}: {count} replacements")
                     files_modified += 1
                     total_replacements += count
-            except Exception as e:
-                print(f"✗ Error processing {path}: {e}")
-    
-    print("─" * 60)
-    print(f"✅ Rebranding complete!")
-    print(f"📊 Files modified: {files_modified}")
-    print(f"🔄 Total replacements: {total_replacements}")
-    print()
-    print("Next steps:")
-    print("1. Review changes: git diff")
-    print("2. Run tests to verify functionality")
-    print("3. Update repository name on GitHub")
-    print("4. Update README and documentation")
+            except Exception:
+                pass
+
 
 if __name__ == "__main__":
     main()

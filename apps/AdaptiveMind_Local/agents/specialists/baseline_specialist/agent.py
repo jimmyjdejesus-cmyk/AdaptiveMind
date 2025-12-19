@@ -11,6 +11,7 @@
 # agents/specialists/baseline_specialist/agent.py
 from AdaptiveMind_Local.agents.base_agent.agent import BaseAgent
 
+
 class BaselineAgent(BaseAgent):
     def __init__(self):
         # Minimal system prompt - no chain of thought, no detailed instructions

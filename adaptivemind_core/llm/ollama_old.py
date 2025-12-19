@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Dict, Iterator
+from collections.abc import Iterator
 
 import requests
 
@@ -47,7 +47,7 @@ class OllamaBackend(LLMBackend):
         return self._health_cache
 
     def generate(self, request: GenerationRequest) -> GenerationResponse:
-        payload: Dict[str, object] = {
+        payload: dict[str, object] = {
             "model": self._model,
             "prompt": request.context,
             "stream": False,
@@ -72,7 +72,7 @@ class OllamaBackend(LLMBackend):
         return GenerationResponse(content=message, tokens=int(tokens), backend=self.name, diagnostics=diagnostics)
 
     def stream(self, request: GenerationRequest) -> Iterator[GenerationChunk]:
-        payload: Dict[str, object] = {
+        payload: dict[str, object] = {
             "model": self._model,
             "prompt": request.context,
             "stream": True,

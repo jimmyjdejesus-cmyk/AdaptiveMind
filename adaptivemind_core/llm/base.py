@@ -10,8 +10,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Dict, Iterator, Protocol, Sequence
+from typing import Protocol
 
 
 @dataclass
@@ -21,7 +22,7 @@ class GenerationRequest:
     context: str
     temperature: float = 0.7
     max_tokens: int = 512
-    metadata: Dict[str, str] | None = None
+    metadata: dict[str, str] | None = None
 
 
 @dataclass
@@ -29,7 +30,7 @@ class GenerationResponse:
     content: str
     tokens: int
     backend: str
-    diagnostics: Dict[str, str] | None = None
+    diagnostics: dict[str, str] | None = None
 
 
 @dataclass
@@ -38,7 +39,7 @@ class GenerationChunk:
     tokens: int  # Cumulative tokens generated so far
     backend: str
     finished: bool  # True if this is the final chunk
-    diagnostics: Dict[str, str] | None = None
+    diagnostics: dict[str, str] | None = None
 
 
 class LLMBackend(Protocol):
@@ -54,4 +55,4 @@ class LLMBackend(Protocol):
         ...
 
 
-__all__ = ["GenerationRequest", "GenerationResponse", "GenerationChunk", "LLMBackend"]
+__all__ = ["GenerationChunk", "GenerationRequest", "GenerationResponse", "LLMBackend"]

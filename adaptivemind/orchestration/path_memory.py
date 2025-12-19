@@ -9,7 +9,8 @@
 
 
 from __future__ import annotations
-from typing import Any, List
+
+from typing import Any
 
 
 class PathMemory:
@@ -19,11 +20,11 @@ class PathMemory:
     adding decisions and possibly reading them back.
     """
     def __init__(self) -> None:
-        self.decisions: List[Any] = []
-        self.steps: List[Any] = []
-        self.records: List[Any] = []
+        self.decisions: list[Any] = []
+        self.steps: list[Any] = []
+        self.records: list[Any] = []
 
-    def add_decisions(self, decisions: List[Any]) -> None:
+    def add_decisions(self, decisions: list[Any]) -> None:
         if decisions:
             self.decisions.extend(decisions)
 
@@ -38,15 +39,15 @@ class PathMemory:
         """
         return False, 0.0
 
-    def get_decisions(self) -> List[Any]:
+    def get_decisions(self) -> list[Any]:
         return list(self.decisions)
 
-    def get_steps(self) -> List[Any]:
+    def get_steps(self) -> list[Any]:
         return list(self.steps)
 
     def record(self, score: float) -> None:
         """Record the final score for this path."""
         self.records.append(score)
 
-    def get_records(self) -> List[Any]:
+    def get_records(self) -> list[Any]:
         return list(self.records)

@@ -9,8 +9,9 @@
 
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass
@@ -18,7 +19,7 @@ class Mission:
     id: str
     title: str
     goal: str
-    inputs: Dict[str, Any]
+    inputs: dict[str, Any]
     risk_level: str
     dag: Any
 

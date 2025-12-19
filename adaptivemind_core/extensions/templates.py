@@ -10,8 +10,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict, Protocol
+from typing import Protocol
 
 
 class ExtensionHook(Protocol):
@@ -25,7 +26,7 @@ class ExtensionTemplate:
     name: str
     description: str
     entrypoint: Callable[..., object]
-    config_schema: Dict[str, object]
+    config_schema: dict[str, object]
 
 
 MCP_TEMPLATE = ExtensionTemplate(
@@ -49,4 +50,4 @@ LSP_TEMPLATE = ExtensionTemplate(
     },
 )
 
-__all__ = ["ExtensionTemplate", "MCP_TEMPLATE", "LSP_TEMPLATE", "ExtensionHook"]
+__all__ = ["LSP_TEMPLATE", "MCP_TEMPLATE", "ExtensionHook", "ExtensionTemplate"]
