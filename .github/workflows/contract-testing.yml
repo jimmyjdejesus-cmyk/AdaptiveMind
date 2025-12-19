@@ -20,7 +20,7 @@ on:
     - cron: '0 2 * * *'
 
 env:
-  PYTHON_VERSION: '3.9'
+  PYTHON_VERSION: '3.11'
   TEST_BASE_URL: 'http://127.0.0.1:8000'
 
 jobs:
